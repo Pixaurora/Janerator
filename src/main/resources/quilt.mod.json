@@ -1,34 +1,31 @@
 {
 	"schema_version": 1,
 	"quilt_loader": {
-		"group": "com.example",
-		"id": "example_mod",
+		"group": "dev.pixirora",
+		"id": "janerator",
 		"version": "${version}",
 		"metadata": {
-			"name": "Mod Name",
-			"description": "A short description of your mod.",
+			"name": "Janerator",
+			"description": "A small server mod to generate superflat terrain in a normal world on the positive X coordinate.",
 			"contributors": {
-				"Your name here": "Owner"
+				"Your name here": "Pixirora"
 			},
 			"contact": {
-				"homepage": "https://example.com/",
-				"issues": "https://github.com/QuiltMC/quilt-template-mod/issues",
-				"sources": "https://github.com/QuiltMC/quilt-template-mod"
+				"homepage": "https://github.com/Pixirora/janerator",
+				"issues": "https://github.com/Pixirora/janerator/issues",
+				"sources": "https://github.com/Pixirora/janerator"
 			},
-			"icon": "assets/example_mod/icon.png"
+			"icon": "assets/janerator/icon.png",
+            "license": "MIT"
 		},
 		"intermediate_mappings": "net.fabricmc:intermediary",
 		"entrypoints": {
-			"init": "com.example.example_mod.ExampleMod"
+			"init": "dev.pixirora.janerator.Janerator"
 		},
 		"depends": [
 			{
 				"id": "quilt_loader",
 				"versions": ">=0.17.0-"
-			},
-			{
-				"id": "quilted_fabric_api",
-				"versions": ">=4.0.0-"
 			},
 			{
 				"id": "minecraft",

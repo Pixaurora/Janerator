@@ -1,6 +1,6 @@
-package com.example.example_mod.mixin;
+package dev.pixirora.janerator.mixin;
 
-import com.example.example_mod.ExampleMod;
+import dev.pixirora.janerator.Janerator;
 import net.minecraft.client.gui.screen.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,6 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class TitleScreenMixin {
 	@Inject(method = "init", at = @At("TAIL"))
 	public void exampleMod$onInit(CallbackInfo ci) {
-		ExampleMod.LOGGER.info("This line is printed by an example mod mixin!");
+		Janerator.LOGGER.info("This line is printed by an example mod mixin!");
 	}
 }

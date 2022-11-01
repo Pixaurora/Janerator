@@ -3,6 +3,10 @@ plugins {
 	alias libs.plugins.quilt.loom
 }
 
+// Version for logs and modmenu
+// Rather than output file name
+def modVersion = project.version
+
 archivesBaseName = project.archives_base_name
 version = "${project.version}-minecraft-${libs.versions.minecraft.get()}"
 group = project.maven_group
@@ -14,19 +18,17 @@ repositories {
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
 }
-// test
+
 // All the dependencies are declared at gradle/libs.version.toml and referenced with "libs.<id>"
 // See https://docs.gradle.org/current/userguide/platforms.html for information on how version catalogs work.
 dependencies {
 	minecraft libs.minecraft
-	mappings variantOf(libs.quilt.mappings) { classifier 'intermediary-v2' }
-	// Replace the above line with the block below if you want to use Mojang mappings as your primary mappings, falling back on QM for parameters and Javadocs
-	/*
+
 	mappings loom.layered {
 		mappings "org.quiltmc:quilt-mappings:${libs.versions.quilt.mappings.get()}:intermediary-v2"
 		officialMojangMappings()
 	}
-	*/
+
 	modImplementation libs.quilt.loader
 
 	// QSL is not a complete API; You will need Quilted Fabric API to fill in the gaps.
@@ -36,10 +38,10 @@ dependencies {
 }
 
 processResources {
-	inputs.property 'version', version
+	inputs.property 'version', modVersion
 
 	filesMatching('quilt.mod.json') {
-		expand "version": version
+		expand "version": modVersion
 	}
 }
 
@@ -85,3 +87,4 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+

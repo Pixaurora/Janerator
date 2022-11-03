@@ -8,7 +8,8 @@
 			"name": "Janerator",
 			"description": "A small server mod to generate superflat terrain in a normal world on the positive X coordinate.",
 			"contributors": {
-				"Your name here": "Pixirora"
+				"Pixirora": "Owner",
+                "LostLuma": "Contributor"
 			},
 			"contact": {
 				"homepage": "https://github.com/Pixirora/janerator",

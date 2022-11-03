@@ -8,7 +8,7 @@ plugins {
 def modVersion = project.version
 
 archivesBaseName = project.archives_base_name
-version = "${project.version}-minecraft-${libs.versions.minecraft.get()}"
+version = "${project.version}+minecraft-${libs.versions.minecraft.get()}"
 group = project.maven_group
 
 repositories {

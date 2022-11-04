@@ -37,7 +37,7 @@ public class ChunkStatusMixin {
 	public void overrideGeneratorType(Args args) {
 		ChunkAccess chunkAccess = args.get(8);
 
-        if (chunkAccess.getPos().getRegionX() < 0) {
+        if (chunkAccess.getPos().getRegionX() > 0) {
             args.set(3, generator);
         }
 	}

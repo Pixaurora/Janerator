@@ -1,13 +1,15 @@
 package dev.pixirora.janerator;
 
 import net.minecraft.core.HolderSet;
-import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
@@ -15,54 +17,47 @@ import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.common.collect.Maps;
 
 public class Janerator {
-    private static FlatLevelSource defaultGenerator;
-    private static FlatLevelSource netherGenerator;
-    private static FlatLevelSource endGenerator;
+    private static MinecraftServer server = null;
+    private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
 
-    private static boolean initialized = false;
-
-    public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
-
-    public static FlatLevelSource getGenerator(ResourceKey<Level> dimension) {
-        if (!initialized) {
-            initializeGenerators();
-            initialized = true;
-        }
-
-        if (dimension == Level.END) {
-            return endGenerator;
-        } else if (dimension == Level.NETHER) {
-            return netherGenerator;
-        } else {
-            return defaultGenerator;
-        }
-    }
-
-    public static FlatLevelSource getDefaultGenerator() {
-        return defaultGenerator;
-    }
-
-    private static synchronized void initializeGenerators() {
-        defaultGenerator = Janerator.createSource(Janerator.overworldLayers(), Biomes.MUSHROOM_FIELDS);
-        netherGenerator = Janerator.createSource(Janerator.netherLayers(), Biomes.DEEP_DARK);
-        endGenerator = Janerator.createSource(Janerator.endLayers(), Biomes.MUSHROOM_FIELDS);
+    public static boolean shouldOverride(int x, int z) {
+        return x >= 0;
     }
 
     public static boolean shouldOverride(ChunkPos chunkPos) {
         return shouldOverride(chunkPos.x, chunkPos.z);
     }
 
-    public static boolean shouldOverride(int x, int z) {
-        return x >= 0;
+    public static void setMinecraftServer(MinecraftServer server) {
+        Janerator.server = server;
     }
 
-    private static List<FlatLayerInfo> overworldLayers() {
+    public static synchronized ChunkGenerator getGenerator(ResourceKey<Level> dimension) {
+        if (Janerator.generators.isEmpty()) {
+            initializeGenerators();
+        }
+
+        ChunkGenerator generator = Janerator.generators.get(dimension);
+        return generator != null ? generator : Janerator.generators.get(Level.OVERWORLD);
+    }
+
+    private static <T> Registry<T> getRegistry(ResourceKey<? extends Registry<? extends T>> registryKey) {
+        return Janerator.server.registryAccess().registryOrThrow(registryKey);
+    }
+
+    private static void initializeGenerators() {
+        Janerator.generators.put(Level.OVERWORLD, createOverworldGenerator());
+        Janerator.generators.put(Level.NETHER, createNetherGenerator());
+        Janerator.generators.put(Level.END, createEndGenerator());
+    }
+
+    private static FlatLevelSource createOverworldGenerator() {
         List<FlatLayerInfo> layers = new ArrayList<>();
 
         layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
@@ -72,10 +67,10 @@ public class Janerator {
         layers.add(new FlatLayerInfo(2, Blocks.DIRT));
         layers.add(new FlatLayerInfo(1, Blocks.GRASS_BLOCK));
 
-        return layers;
+        return createGenerator(layers, Biomes.MUSHROOM_FIELDS);
     }
 
-    private static List<FlatLayerInfo> netherLayers() {
+    private static FlatLevelSource createNetherGenerator() {
         List<FlatLayerInfo> layers = new ArrayList<>();
 
         layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
@@ -83,10 +78,10 @@ public class Janerator {
         layers.add(new FlatLayerInfo(30, Blocks.NETHERRACK));
         layers.add(new FlatLayerInfo(1, Blocks.WARPED_NYLIUM));
 
-        return layers;
+        return createGenerator(layers, Biomes.DEEP_DARK);
     }
 
-    private static List<FlatLayerInfo> endLayers() {
+    private static FlatLevelSource createEndGenerator() {
         List<FlatLayerInfo> layers = new ArrayList<>();
 
         layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
@@ -95,16 +90,16 @@ public class Janerator {
         layers.add(new FlatLayerInfo(2, Blocks.DIRT));
         layers.add(new FlatLayerInfo(1, Blocks.GRASS_BLOCK));
 
-        return layers;
+        return createGenerator(layers, Biomes.DEEP_DARK);
     }
 
-    private static FlatLevelSource createSource(List<FlatLayerInfo> layers, ResourceKey<Biome> biomeResourceKey) {
+    private static FlatLevelSource createGenerator(List<FlatLayerInfo> layers, ResourceKey<Biome> biome) {
         Optional<HolderSet<StructureSet>> optional = Optional.empty();
-        FlatLevelGeneratorSettings settings = new FlatLevelGeneratorSettings(optional, BuiltinRegistries.BIOME)
-                .withLayers(layers, optional);
+        Registry<Biome> biomeRegistry = Janerator.getRegistry(Registry.BIOME_REGISTRY);
 
-        settings.setBiome(BuiltinRegistries.BIOME.getOrCreateHolderOrThrow(biomeResourceKey));
+        FlatLevelGeneratorSettings settings = new FlatLevelGeneratorSettings(optional, biomeRegistry).withLayers(layers, optional);
 
-        return new FlatLevelSource(BuiltinRegistries.STRUCTURE_SETS, settings);
+        settings.setBiome(biomeRegistry.getHolderOrThrow(biome));
+        return new FlatLevelSource(Janerator.getRegistry(Registry.STRUCTURE_SET_REGISTRY), settings);
     }
 }

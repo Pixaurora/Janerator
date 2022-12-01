@@ -94,7 +94,7 @@ public class Janerator {
     }
 
     private static FlatLevelSource createGenerator(List<FlatLayerInfo> layers, ResourceKey<Biome> biome) {
-        Optional<HolderSet<StructureSet>> optional = Optional.empty();
+        Optional<HolderSet<StructureSet>> optional = Optional.of(HolderSet.direct());
         Registry<Biome> biomeRegistry = Janerator.getRegistry(Registry.BIOME_REGISTRY);
 
         FlatLevelGeneratorSettings settings = new FlatLevelGeneratorSettings(optional, biomeRegistry).withLayers(layers, optional);

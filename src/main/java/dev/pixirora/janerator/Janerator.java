@@ -1,7 +1,9 @@
 package dev.pixirora.janerator;
 
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -13,6 +15,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
+import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 import java.util.ArrayList;
@@ -94,12 +97,10 @@ public class Janerator {
     }
 
     private static FlatLevelSource createGenerator(List<FlatLayerInfo> layers, ResourceKey<Biome> biome) {
+        List<Holder<PlacedFeature>> placedFeatures = List.of();
         Optional<HolderSet<StructureSet>> optional = Optional.of(HolderSet.direct());
-        Registry<Biome> biomeRegistry = Janerator.getRegistry(Registry.BIOME_REGISTRY);
 
-        FlatLevelGeneratorSettings settings = new FlatLevelGeneratorSettings(optional, biomeRegistry).withLayers(layers, optional);
-
-        settings.setBiome(biomeRegistry.getHolderOrThrow(biome));
-        return new FlatLevelSource(Janerator.getRegistry(Registry.STRUCTURE_SET_REGISTRY), settings);
+        Holder<Biome> biomeHolder = Janerator.getRegistry(Registries.BIOME).getHolderOrThrow(biome);
+        return new FlatLevelSource(new FlatLevelGeneratorSettings(optional, biomeHolder, placedFeatures).withBiomeAndLayers(layers, optional, biomeHolder));
     }
 }

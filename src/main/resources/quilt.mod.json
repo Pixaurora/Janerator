@@ -26,11 +26,11 @@
 		"depends": [
 			{
 				"id": "quilt_loader",
-				"versions": ">=0.17.0-"
+				"versions": "^0.18.1-"
 			},
 			{
 				"id": "minecraft",
-				"versions": ">=1.19.2"
+				"versions": "^1.19.3-rc.1"
 			}
 		]
 	},

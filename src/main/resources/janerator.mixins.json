@@ -4,6 +4,7 @@
 	"package": "dev.pixirora.janerator.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
+		"ChunkGeneratorMixin",
         "ChunkStatusMixin",
         "MinecraftServerMixin"
     ],

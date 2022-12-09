@@ -20,9 +20,7 @@
             "license": "MIT"
 		},
 		"intermediate_mappings": "net.fabricmc:intermediary",
-		"entrypoints": {
-			"init": "dev.pixirora.janerator.Janerator"
-		},
+		"entrypoints": {},
 		"depends": [
 			{
 				"id": "quilt_loader",

@@ -19,6 +19,8 @@ import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,9 +30,12 @@ import com.google.common.collect.Maps;
 public class Janerator {
     private static MinecraftServer server = null;
     private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
+    private static double log_phi = Math.log((1 + Math.sqrt(5)) / 2);
 
     public static boolean shouldOverride(int x, int z) {
-        return x >= 0;
+        double angle = Math.PI / 4 * Math.log(Math.pow(x, 2) + Math.pow(z, 2)) / log_phi + Math.PI;
+        double tan_angle = Math.tan(angle);
+        return (x * tan_angle - z) * Math.signum(tan_angle / Math.sin(angle)) > 0;
     }
 
     public static boolean shouldOverride(ChunkPos chunkPos) {
@@ -48,6 +53,42 @@ public class Janerator {
 
         ChunkGenerator generator = Janerator.generators.get(dimension);
         return generator != null ? generator : Janerator.generators.get(Level.OVERWORLD);
+    }
+
+    public static ChunkGenerator getGeneratorAt(
+        ChunkPos chunkPos, 
+        ResourceKey<Level> dimension,
+        ChunkGenerator defaultGenerator
+    ) {
+        HashMap<ChunkGenerator, Integer> scores = Maps.newHashMap();
+        ArrayList<ArrayList<? extends ChunkGenerator>> generatorMap = new ArrayList<ArrayList<? extends ChunkGenerator>>();
+
+        ChunkGenerator modifiedGenerator = getGenerator(dimension);
+
+        int actual_x = chunkPos.x * 16;
+        int actual_z = chunkPos.z * 16;
+
+        for (int x = actual_x; x < actual_x + 16; x++) {
+            ArrayList<ChunkGenerator> generatorLine = new ArrayList<ChunkGenerator>();
+
+            for (int z = actual_z; z < actual_z + 16; z++) {
+                ChunkGenerator generatorAtPos = shouldOverride(x, z) ? modifiedGenerator : defaultGenerator;
+
+                generatorLine.add(generatorAtPos);
+                scores.put(generatorAtPos, scores.getOrDefault(generatorAtPos, 0) + 1);
+            }
+
+            generatorMap.add(generatorLine);
+        }
+
+        ChunkGenerator majorityGenerator = Collections
+                .max(scores.entrySet(), (entry1, entry2) -> entry1.getValue() - entry2.getValue()).getKey();
+
+        if (scores.keySet().size() == 1) {
+            return majorityGenerator;
+        } else {
+            return new MultiGenerator(generatorMap, majorityGenerator);
+        }
     }
 
     private static <T> Registry<T> getRegistry(ResourceKey<? extends Registry<? extends T>> registryKey) {
@@ -101,6 +142,7 @@ public class Janerator {
         Optional<HolderSet<StructureSet>> optional = Optional.of(HolderSet.direct());
 
         Holder<Biome> biomeHolder = Janerator.getRegistry(Registries.BIOME).getHolderOrThrow(biome);
-        return new FlatLevelSource(new FlatLevelGeneratorSettings(optional, biomeHolder, placedFeatures).withBiomeAndLayers(layers, optional, biomeHolder));
+        return new FlatLevelSource(new FlatLevelGeneratorSettings(optional, biomeHolder, placedFeatures)
+                .withBiomeAndLayers(layers, optional, biomeHolder));
     }
 }

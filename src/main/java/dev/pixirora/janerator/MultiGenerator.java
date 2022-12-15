@@ -2,114 +2,94 @@ package dev.pixirora.janerator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
-import com.mojang.serialization.Codec;
+import com.mojang.datafixers.util.Either;
 
-import dev.pixirora.janerator.mixin.ChunkGeneratorAccessor;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.world.level.LevelHeightAccessor;
-import net.minecraft.world.level.NoiseColumn;
-import net.minecraft.world.level.StructureManager;
-import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.levelgen.GenerationStep;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.levelgen.RandomState;
-import net.minecraft.world.level.levelgen.blending.Blender;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
-public class MultiGenerator extends ChunkGenerator {
-    ArrayList<ArrayList<? extends ChunkGenerator>> generatorMap;
+public class MultiGenerator {
+    Map<ChunkGenerator, List<Integer[]>> generatorMap;
     ChunkGenerator majorityGenerator;
 
-    public MultiGenerator(
-        ArrayList<ArrayList<? extends ChunkGenerator>> generatorMap,
-        ChunkGenerator majorityGenerator
-    ) {
-        super(((ChunkGeneratorAccessor) majorityGenerator).getBiomeSource());
-
-        this.majorityGenerator = majorityGenerator;
+    public MultiGenerator(Map<ChunkGenerator, List<Integer[]>> generatorMap) {
         this.generatorMap = generatorMap;
     }
 
-    public Codec<? extends ChunkGenerator> codec() {
-        return null;
+    public boolean isOneGenerator() {
+        return this.generatorMap.keySet().size() == 1;
     }
 
-    public int getMinY() {
-        return 0;
-    }
-
-    public int getGenDepth() {
-        return 0;
-    }
-
-    public int getSeaLevel() {
-        return 0;
-    }
-
-    public void spawnOriginalMobs(WorldGenRegion region) {
-        majorityGenerator.spawnOriginalMobs(region);
-    }
-
-    public CompletableFuture<ChunkAccess> fillFromNoise(
-        Executor executor, 
-        Blender blender, 
-        RandomState randomState, 
-        StructureManager structureManager,
-        ChunkAccess chunk
-    ) {
-        return majorityGenerator.fillFromNoise(executor, blender, randomState, structureManager, chunk);
-    };
-
-    public void applyCarvers(
-        WorldGenRegion chunkRegion,
-        long seed,
-        RandomState randomState,
-        BiomeManager biomeAccess,
-        StructureManager structureManager,
+    public CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> doGeneration(
+        ChunkStatus.GenerationTask generationTask,
+        ChunkStatus chunkStatus,
+        Executor executor,
+        ServerLevel world,
+        StructureTemplateManager structureTemplateManager,
+        ThreadedLevelLightEngine threadedLevelLightEngine,
+        Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> function,
+        List<ChunkAccess> list,
         ChunkAccess chunk,
-        GenerationStep.Carving generationStep
+        boolean bl
     ) {
-        majorityGenerator.applyCarvers(
-            chunkRegion,
-            seed,
-            randomState,
-            biomeAccess,
-            structureManager,
-            chunk,
-            generationStep
+        if (this.generatorMap.size() == 1) {
+            ChunkGenerator onlyGenerator = (ChunkGenerator) this.generatorMap.keySet().toArray()[0];
+            return generationTask.doWork(chunkStatus, executor, world, onlyGenerator, structureTemplateManager, threadedLevelLightEngine, function, list, chunk, bl);
+        }
+
+        List<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> futures = new ArrayList<>();
+
+        for (Entry<ChunkGenerator, List<Integer[]>> generatorEntry : generatorMap.entrySet()) {
+            ChunkGenerator correctGenerator = generatorEntry.getKey();
+            // FakeAccess selectivePlacer = new FakeAccess(chunk, generatorEntry.getValue());
+
+            futures.add(
+                generationTask.doWork(chunkStatus, executor, world, correctGenerator, structureTemplateManager, threadedLevelLightEngine, function, list, chunk, bl)
+            );
+        }
+
+        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> generatedChunk = new CompletableFuture<>();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).whenCompleteAsync(
+            (result, error) -> {
+                if (error == null) {
+                    Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure> value = null;
+                    for (CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> future: futures) {
+                        try {
+                            value = future.get();
+                            if (value.right().isPresent()) {
+                                generatedChunk.complete(value);
+                                value = null;
+                            }
+                        } catch (InterruptedException | ExecutionException e) {
+                            generatedChunk.completeExceptionally(e);
+                            value = null;
+                        }
+                        if (value == null) {
+                            break;
+                        }
+                    }
+
+                    if (value != null) {
+                        generatedChunk.complete(value);
+                    }
+                } else {
+                    generatedChunk.completeExceptionally(error);
+                } 
+            }
         );
-    }
 
-    public void buildSurface(
-        WorldGenRegion region, 
-        StructureManager structureManager, 
-        RandomState randomState,
-        ChunkAccess chunk
-    ) {
-        majorityGenerator.buildSurface(region, structureManager, randomState, chunk);
+        return generatedChunk;
     }
-
-    public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
-        return majorityGenerator.getBaseColumn(x, z, world, randomState);
-    }
-
-    public void addDebugScreenInfo(List<String> list, RandomState randomState, BlockPos pos) {
-        majorityGenerator.addDebugScreenInfo(list, randomState, pos);
-    }
-
-    public int getBaseHeight(
-        int x, 
-        int z, 
-        Heightmap.Types heightmap, 
-        LevelHeightAccessor world,
-        RandomState randomState
-    ) {
-        return majorityGenerator.getBaseHeight(x, z, heightmap, world, randomState);
-    }
-
 }

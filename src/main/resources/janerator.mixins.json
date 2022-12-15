@@ -7,9 +7,10 @@
 		"ChunkGeneratorMixin",
         "ChunkStatusMixin",
         "MinecraftServerMixin",
-		"ChunkGeneratorAccessor"
+		"ChunkAccessAccessor"
     ],
 	"injectors": {
 		"defaultRequire": 1
-	}
+	},
+	"accessWidener" : "janerator.accesswidener"
 }

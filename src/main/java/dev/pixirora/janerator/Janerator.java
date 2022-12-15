@@ -19,16 +19,18 @@ import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
 public class Janerator {
     private static MinecraftServer server = null;
+    public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
     private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
     private static double log_phi = Math.log((1 + Math.sqrt(5)) / 2);
 
@@ -55,43 +57,36 @@ public class Janerator {
         return generator != null ? generator : Janerator.generators.get(Level.OVERWORLD);
     }
 
-    public static ChunkGenerator getGeneratorAt(
+    public static MultiGenerator getGeneratorAt(
         ChunkPos chunkPos, 
         ResourceKey<Level> dimension,
         ChunkGenerator defaultGenerator
     ) {
-        HashMap<ChunkGenerator, Integer> scores = Maps.newHashMap();
-        ArrayList<ArrayList<? extends ChunkGenerator>> generatorMap = new ArrayList<ArrayList<? extends ChunkGenerator>>();
+        Map<ChunkGenerator, List<Integer[]>> generatorMap = Maps.newHashMap();
 
         ChunkGenerator modifiedGenerator = getGenerator(dimension);
 
         int actual_x = chunkPos.x * 16;
         int actual_z = chunkPos.z * 16;
 
-        for (int x = actual_x; x < actual_x + 16; x++) {
-            ArrayList<ChunkGenerator> generatorLine = new ArrayList<ChunkGenerator>();
+        List<Integer[]> newCoordinateList = new ArrayList<>();
 
+        for (int x = actual_x; x < actual_x + 16; x++) {
             for (int z = actual_z; z < actual_z + 16; z++) {
                 ChunkGenerator generatorAtPos = shouldOverride(x, z) ? modifiedGenerator : defaultGenerator;
+                generatorMap.getOrDefault(generatorAtPos, newCoordinateList).add(new Integer[]{x, z});
 
-                generatorLine.add(generatorAtPos);
-                scores.put(generatorAtPos, scores.getOrDefault(generatorAtPos, 0) + 1);
+                if (newCoordinateList.size() != 0) {
+                    generatorMap.put(generatorAtPos, newCoordinateList);
+                    newCoordinateList = new ArrayList<>();
+                }
             }
-
-            generatorMap.add(generatorLine);
         }
 
-        ChunkGenerator majorityGenerator = Collections
-                .max(scores.entrySet(), (entry1, entry2) -> entry1.getValue() - entry2.getValue()).getKey();
-
-        if (scores.keySet().size() == 1) {
-            return majorityGenerator;
-        } else {
-            return new MultiGenerator(generatorMap, majorityGenerator);
-        }
+        return new MultiGenerator(generatorMap);
     }
 
-    private static <T> Registry<T> getRegistry(ResourceKey<? extends Registry<? extends T>> registryKey) {
+    public static <T> Registry<T> getRegistry(ResourceKey<? extends Registry<? extends T>> registryKey) {
         return Janerator.server.registryAccess().registryOrThrow(registryKey);
     }
 

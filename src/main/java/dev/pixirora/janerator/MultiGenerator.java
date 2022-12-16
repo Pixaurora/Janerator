@@ -20,10 +20,10 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
 public class MultiGenerator {
-    Map<ChunkGenerator, List<Integer[]>> generatorMap;
+    Map<ChunkGenerator, List<List<Integer>>> generatorMap;
     ChunkGenerator majorityGenerator;
 
-    public MultiGenerator(Map<ChunkGenerator, List<Integer[]>> generatorMap) {
+    public MultiGenerator(Map<ChunkGenerator, List<List<Integer>>> generatorMap) {
         this.generatorMap = generatorMap;
     }
 
@@ -50,12 +50,23 @@ public class MultiGenerator {
 
         List<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> futures = new ArrayList<>();
 
-        for (Entry<ChunkGenerator, List<Integer[]>> generatorEntry : generatorMap.entrySet()) {
+        for (Entry<ChunkGenerator, List<List<Integer>>> generatorEntry : generatorMap.entrySet()) {
             ChunkGenerator correctGenerator = generatorEntry.getKey();
-            // FakeAccess selectivePlacer = new FakeAccess(chunk, generatorEntry.getValue());
+            ChunkAccess selectivePlacer = SelectiveProtoChunk.getMeIfNecessary(chunk, generatorEntry.getValue());
 
             futures.add(
-                generationTask.doWork(chunkStatus, executor, world, correctGenerator, structureTemplateManager, threadedLevelLightEngine, function, list, chunk, bl)
+                generationTask.doWork(
+                    chunkStatus, 
+                    executor, 
+                    world, 
+                    correctGenerator, 
+                    structureTemplateManager, 
+                    threadedLevelLightEngine, 
+                    function, 
+                    list, 
+                    selectivePlacer, 
+                    bl
+                )
             );
         }
 

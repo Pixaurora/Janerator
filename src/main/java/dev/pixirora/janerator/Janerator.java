@@ -19,6 +19,7 @@ import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,7 +42,7 @@ public class Janerator {
     }
 
     public static boolean shouldOverride(ChunkPos chunkPos) {
-        return shouldOverride(chunkPos.x, chunkPos.z);
+        return shouldOverride(chunkPos.x*16, chunkPos.z*16);
     }
 
     public static void setMinecraftServer(MinecraftServer server) {
@@ -62,23 +63,23 @@ public class Janerator {
         ResourceKey<Level> dimension,
         ChunkGenerator defaultGenerator
     ) {
-        Map<ChunkGenerator, List<Integer[]>> generatorMap = Maps.newHashMap();
+        Map<ChunkGenerator, List<List<Integer>>> generatorMap = Maps.newHashMap();
 
         ChunkGenerator modifiedGenerator = getGenerator(dimension);
 
-        int actual_x = chunkPos.x * 16;
-        int actual_z = chunkPos.z * 16;
+        int actual_x = chunkPos.getMinBlockX();
+        int actual_z = chunkPos.getMinBlockZ();
 
-        List<Integer[]> newCoordinateList = new ArrayList<>();
+        List<List<Integer>> newCoordinates = new ArrayList<>();
 
         for (int x = actual_x; x < actual_x + 16; x++) {
             for (int z = actual_z; z < actual_z + 16; z++) {
                 ChunkGenerator generatorAtPos = shouldOverride(x, z) ? modifiedGenerator : defaultGenerator;
-                generatorMap.getOrDefault(generatorAtPos, newCoordinateList).add(new Integer[]{x, z});
+                generatorMap.getOrDefault(generatorAtPos, newCoordinates).add(Arrays.asList(x, z));
 
-                if (newCoordinateList.size() != 0) {
-                    generatorMap.put(generatorAtPos, newCoordinateList);
-                    newCoordinateList = new ArrayList<>();
+                if (newCoordinates.size() != 0) {
+                    generatorMap.put(generatorAtPos, newCoordinates);
+                    newCoordinates = new ArrayList<>();
                 }
             }
         }

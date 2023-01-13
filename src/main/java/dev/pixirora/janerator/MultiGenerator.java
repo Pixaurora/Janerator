@@ -56,15 +56,15 @@ public class MultiGenerator {
 
             futures.add(
                 generationTask.doWork(
-                    chunkStatus, 
-                    executor, 
-                    world, 
-                    correctGenerator, 
-                    structureTemplateManager, 
-                    threadedLevelLightEngine, 
-                    function, 
-                    list, 
-                    selectivePlacer, 
+                    chunkStatus,
+                    executor,
+                    world,
+                    correctGenerator,
+                    structureTemplateManager,
+                    threadedLevelLightEngine,
+                    function,
+                    list,
+                    selectivePlacer,
                     bl
                 )
             );
@@ -97,7 +97,7 @@ public class MultiGenerator {
                     }
                 } else {
                     generatedChunk.completeExceptionally(error);
-                } 
+                }
             }
         );
 

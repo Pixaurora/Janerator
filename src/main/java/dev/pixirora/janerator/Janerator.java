@@ -59,7 +59,7 @@ public class Janerator {
     }
 
     public static MultiGenerator getGeneratorAt(
-        ChunkPos chunkPos, 
+        ChunkPos chunkPos,
         ResourceKey<Level> dimension,
         ChunkGenerator defaultGenerator
     ) {

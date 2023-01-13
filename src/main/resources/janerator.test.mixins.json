@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "dev.pixirora.janerator.mixin.test",
+	"compatibilityLevel": "JAVA_17",
+	"mixins": [
+		"ChunkStatusMixin"
+    ],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"accessWidener" : "janerator.accesswidener",
+	"plugin": "dev.pixirora.janerator.TestMixinConfig"
+}

@@ -21,7 +21,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
             chunk.getPos(),
             chunk.getUpgradeData(),
             chunk.getSections(),
-            new ProtoChunkTicks<>(), 
+            new ProtoChunkTicks<>(),
             new ProtoChunkTicks<>(),
             ((ChunkAccessAccessor)((ChunkAccess) chunk)).getLevelHeight(),
             Janerator.getRegistry(Registries.BIOME),
@@ -39,7 +39,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
         if (chunk instanceof ProtoChunk) {
             return new SelectiveProtoChunk((ProtoChunk) chunk, placedPositions);
         }
-        
+       
         return chunk;
     }
 

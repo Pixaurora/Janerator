@@ -32,5 +32,8 @@
 			}
 		]
 	},
-	"mixin": "janerator.mixins.json"
+	"mixin": [
+        "janerator.mixins.json",
+        "janerator.test.mixins.json"
+    ]
 }

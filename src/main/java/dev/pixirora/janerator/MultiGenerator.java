@@ -3,104 +3,232 @@ package dev.pixirora.janerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.function.Function;
 
-import com.mojang.datafixers.util.Either;
+import com.mojang.serialization.Codec;
 
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.NoiseColumn;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
+import net.minecraft.world.level.levelgen.GenerationStep;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
-public class MultiGenerator {
-    Map<ChunkGenerator, List<List<Integer>>> generatorMap;
-    ChunkGenerator majorityGenerator;
+public class MultiGenerator extends ChunkGenerator {
+    List<GeneratorHolder> generators;
+    ChunkGenerator fallbackGenerator;
 
-    public MultiGenerator(Map<ChunkGenerator, List<List<Integer>>> generatorMap) {
-        this.generatorMap = generatorMap;
+    public MultiGenerator(BiomeSource biomeSource, Map<ChunkGenerator, List<List<Integer>>> generatorMap, ChunkGenerator fallbackGenerator) {
+        super(biomeSource);
+
+        this.fallbackGenerator = fallbackGenerator;
+
+        this.generators = new ArrayList<>();
+        generatorMap.forEach(
+            (generator, placements) -> {
+                this.generators.add(new GeneratorHolder(generator, placements));
+            }
+        );        
     }
 
-    public boolean isOneGenerator() {
-        return this.generatorMap.keySet().size() == 1;
-    }
-
-    public CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> doGeneration(
-        ChunkStatus.GenerationTask generationTask,
-        ChunkStatus chunkStatus,
-        Executor executor,
-        ServerLevel world,
-        StructureTemplateManager structureTemplateManager,
-        ThreadedLevelLightEngine threadedLevelLightEngine,
-        Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> function,
-        List<ChunkAccess> list,
-        ChunkAccess chunk,
-        boolean bl
-    ) {
-        if (this.generatorMap.size() == 1) {
-            ChunkGenerator onlyGenerator = (ChunkGenerator) this.generatorMap.keySet().toArray()[0];
-            return generationTask.doWork(chunkStatus, executor, world, onlyGenerator, structureTemplateManager, threadedLevelLightEngine, function, list, chunk, bl);
+    private ChunkGenerator getGeneratorAt(int x, int z) {
+        for (GeneratorHolder holder : generators) {
+            if (holder.isWanted(x, z)) {
+                return holder.generator;
+            }
         }
 
-        List<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> futures = new ArrayList<>();
+        return fallbackGenerator;
+    }
 
-        for (Entry<ChunkGenerator, List<List<Integer>>> generatorEntry : generatorMap.entrySet()) {
-            ChunkGenerator correctGenerator = generatorEntry.getKey();
-            ChunkAccess selectivePlacer = SelectiveProtoChunk.getMeIfNecessary(chunk, generatorEntry.getValue());
+	@Override
+	protected Codec<? extends ChunkGenerator> codec() {
+		return null;
+	}
 
-            futures.add(
-                generationTask.doWork(
-                    chunkStatus,
-                    executor,
-                    world,
-                    correctGenerator,
-                    structureTemplateManager,
-                    threadedLevelLightEngine,
-                    function,
-                    list,
-                    selectivePlacer,
-                    bl
+
+	@Override
+	public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
+        for (GeneratorHolder holder : this.generators) {
+            holder.generator.buildSurface(
+                region,
+                structureManager,
+                randomState,
+                holder.getWrappedAccess(chunk)
+            );
+        }
+	}
+
+	@Override
+	public int getSpawnHeight(LevelHeightAccessor world) {
+		return fallbackGenerator.getSpawnHeight(world);
+	}
+
+	@Override
+	public CompletableFuture<ChunkAccess> fillFromNoise(
+		Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk
+	) {
+        GeneratorHolder first = generators.get(0);
+
+        CompletableFuture<ChunkAccess> future = first.generator.fillFromNoise(
+            executor,
+            blender,
+            randomState,
+            structureManager,
+            first.getWrappedAccess(chunk)
+        );
+
+        for(GeneratorHolder holder : generators) {
+            if (holder == first) {
+                continue;
+            }
+
+            future = future.thenCompose(
+                (access) -> holder.generator.fillFromNoise(
+                    executor, 
+                    blender, 
+                    randomState, 
+                    structureManager, 
+                    holder.getWrappedAccess(chunk)
                 )
             );
         }
+        
+        future.thenCompose((access) -> CompletableFuture.completedFuture(chunk));
+        
+        return future;
+	}
 
-        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> generatedChunk = new CompletableFuture<>();
+	@Override
+	public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState) {
+		return this.getGeneratorAt(x, z).getBaseHeight(x, z, heightmap, world, randomState);
+	}
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).whenCompleteAsync(
-            (result, error) -> {
-                if (error == null) {
-                    Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure> value = null;
-                    for (CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> future: futures) {
-                        try {
-                            value = future.get();
-                            if (value.right().isPresent()) {
-                                generatedChunk.complete(value);
-                                value = null;
-                            }
-                        } catch (InterruptedException | ExecutionException e) {
-                            generatedChunk.completeExceptionally(e);
-                            value = null;
-                        }
-                        if (value == null) {
-                            break;
-                        }
-                    }
+	@Override
+	public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
+		return this.getGeneratorAt(x, z).getBaseColumn(x, z, world, randomState);
+	}
 
-                    if (value != null) {
-                        generatedChunk.complete(value);
-                    }
-                } else {
-                    generatedChunk.completeExceptionally(error);
-                }
-            }
+	@Override
+	public void addDebugScreenInfo(List<String> list, RandomState randomState, BlockPos pos) {}
+    
+    @Override
+	public CompletableFuture<ChunkAccess> createBiomes(
+		Executor executor, RandomState randomState, Blender blender, StructureManager structureManager, ChunkAccess chunk
+	) {
+        GeneratorHolder first = generators.get(0);
+
+        CompletableFuture<ChunkAccess> future = first.generator.createBiomes(
+            executor, 
+            randomState, 
+            blender, 
+            structureManager, 
+            chunk
         );
 
-        return generatedChunk;
+        for(GeneratorHolder holder : generators) {
+            if (holder == first) {
+                continue;
+            }
+
+            future = future.thenCompose(
+                (access) -> holder.generator.createBiomes(
+                    executor,
+                    randomState,
+                    blender,
+                    structureManager,
+                    chunk
+                )
+            );
+        }
+        
+        future.thenCompose((access) -> CompletableFuture.completedFuture(chunk));
+        
+        return future;
+	}
+
+	@Override
+	public void applyCarvers(
+		WorldGenRegion chunkRegion,
+		long seed,
+		RandomState randomState,
+		BiomeManager biomeAccess,
+		StructureManager structureManager,
+		ChunkAccess chunk,
+		GenerationStep.Carving generationStep
+	) {
+        for (GeneratorHolder holder : this.generators) {
+            holder.generator.applyCarvers(
+                chunkRegion,
+                seed,
+                randomState,
+                biomeAccess,
+                structureManager,
+                holder.getWrappedAccess(chunk),
+                generationStep
+            );
+        }
+	}
+
+	@Override
+	public void spawnOriginalMobs(WorldGenRegion region) {
+        this.fallbackGenerator.spawnOriginalMobs(region);
+	}
+
+    @Override
+    public void applyBiomeDecoration(WorldGenLevel world, ChunkAccess chunk, StructureManager structureManager) {
+        for (GeneratorHolder holder : this.generators) {
+            holder.generator.applyBiomeDecoration(
+                world,
+                holder.getWrappedAccess(chunk),
+                structureManager
+            );
+        }
     }
+
+    @Override
+    public void createStructures(
+		RegistryAccess registryManager,
+		ChunkGeneratorStructureState chunkGeneratorStructureState,
+		StructureManager structureManager,
+		ChunkAccess chunk,
+		StructureTemplateManager templateManager
+	) {
+        for (GeneratorHolder holder : this.generators) {
+            holder.generator.createStructures(
+                registryManager,
+                chunkGeneratorStructureState,
+                structureManager,
+                holder.getWrappedAccess(chunk),
+                templateManager
+            );
+        }
+    }
+
+	@Override
+	public int getMinY() {
+		return 0;
+	}
+
+	@Override
+	public int getGenDepth() {
+		return 384;
+	}
+
+	@Override
+	public int getSeaLevel() {
+		return -63;
+	}
 }

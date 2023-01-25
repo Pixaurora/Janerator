@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import com.mojang.datafixers.util.Either;
 
 import dev.pixirora.janerator.Janerator;
-import dev.pixirora.janerator.MultiGenerator;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
@@ -43,8 +42,17 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         boolean bl
     ) {
-        MultiGenerator finalGenerator = Janerator.getGeneratorAt(chunk.getPos(), world.dimension(), normalGenerator);
-
-        return finalGenerator.doGeneration(generationTask, chunkStatus, executor, world, structureTemplateManager, threadedLevelLightEngine, function, list, chunk, bl);
+        return generationTask.doWork(
+            chunkStatus,
+            executor,
+            world,
+            Janerator.getGeneratorAt(chunk.getPos(), world.dimension(), normalGenerator, chunk),
+            structureTemplateManager,
+            threadedLevelLightEngine,
+            function,
+            list,
+            chunk,
+            bl
+        );
     }
 }

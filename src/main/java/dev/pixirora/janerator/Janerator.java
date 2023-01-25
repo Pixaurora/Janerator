@@ -11,7 +11,9 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
@@ -41,6 +43,10 @@ public class Janerator {
         return (x * tan_angle - z) * Math.signum(tan_angle / Math.sin(angle)) > 0;
     }
 
+    public static int normalize(int value) {
+        return value - 16 * Math.floorDiv(value, 16);
+    }
+
     public static boolean shouldOverride(ChunkPos chunkPos) {
         return shouldOverride(chunkPos.x*16, chunkPos.z*16);
     }
@@ -58,10 +64,11 @@ public class Janerator {
         return generator != null ? generator : Janerator.generators.get(Level.OVERWORLD);
     }
 
-    public static MultiGenerator getGeneratorAt(
+    public static ChunkGenerator getGeneratorAt(
         ChunkPos chunkPos,
         ResourceKey<Level> dimension,
-        ChunkGenerator defaultGenerator
+        ChunkGenerator defaultGenerator,
+        ChunkAccess chunk
     ) {
         Map<ChunkGenerator, List<List<Integer>>> generatorMap = Maps.newHashMap();
 
@@ -75,7 +82,7 @@ public class Janerator {
         for (int x = actual_x; x < actual_x + 16; x++) {
             for (int z = actual_z; z < actual_z + 16; z++) {
                 ChunkGenerator generatorAtPos = shouldOverride(x, z) ? modifiedGenerator : defaultGenerator;
-                generatorMap.getOrDefault(generatorAtPos, newCoordinates).add(Arrays.asList(x, z));
+                generatorMap.getOrDefault(generatorAtPos, newCoordinates).add(Arrays.asList(normalize(x), normalize(z)));
 
                 if (newCoordinates.size() != 0) {
                     generatorMap.put(generatorAtPos, newCoordinates);
@@ -84,7 +91,17 @@ public class Janerator {
             }
         }
 
-        return new MultiGenerator(generatorMap);
+        ChunkGenerator majorityGenerator = generatorMap
+            .entrySet()
+            .stream()
+            .max((entry1, entry2) -> entry1.getValue().size() > entry2.getValue().size() ? 1 : -1)
+            .get().getKey();
+
+        if (generatorMap.size() > 1 && chunk instanceof ProtoChunk) {
+            return new MultiGenerator(defaultGenerator.getBiomeSource(), generatorMap, majorityGenerator);
+        } else {
+            return majorityGenerator;
+        }
     }
 
     public static <T> Registry<T> getRegistry(ResourceKey<? extends Registry<? extends T>> registryKey) {

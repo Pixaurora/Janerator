@@ -29,7 +29,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 public class ChunkStatusMixin {
     private static void processChunkStuff(ChunkStatus targetStatus, ChunkAccess chunk) {
         ChunkPos pos = chunk.getPos();
-        if (Math.abs(pos.x) + Math.abs(pos.z) < 3) {
+        if (Math.abs(pos.x) + Math.abs(pos.z) < 1) {
             Janerator.LOGGER.info(
                 "Status of Chunk " + String.valueOf(pos.x) + ", " + String.valueOf(pos.z) + ": " + targetStatus.toString());
         }

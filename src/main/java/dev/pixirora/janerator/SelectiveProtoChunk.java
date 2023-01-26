@@ -54,11 +54,6 @@ public class SelectiveProtoChunk extends ProtoChunk {
         return this.placementVerifier.isWanted(pos.getX(), pos.getZ());
     }
 
-    public void resetStatus() {
-        this.wrapped.setStatus(this.firstStatus);
-        this.setStatus(this.firstStatus);
-    }
-
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pos) {
@@ -93,16 +88,12 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public void setBlockEntity(BlockEntity blockEntity) {
-		if (this.allowWrites(blockEntity.getBlockPos())) {
-			this.wrapped.setBlockEntity(blockEntity);
-		}
+		this.wrapped.setBlockEntity(blockEntity);
 	}
 
 	@Override
 	public void addEntity(Entity entity) {
-		if (this.allowWrites(entity.getOnPos())) {
-			this.wrapped.addEntity(entity);
-		}
+		this.wrapped.addEntity(entity);
 	}
 
 	@Override
@@ -118,6 +109,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public void setHeightmap(Heightmap.Types type, long[] heightmap) {
+        this.wrapped.setHeightmap(type, heightmap);
 	}
 
 	private Heightmap.Types fixType(Heightmap.Types type) {
@@ -156,6 +148,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public void setStartForStructure(Structure structure, StructureStart start) {
+        this.wrapped.setStartForStructure(structure, start);
 	}
 
 	@Override
@@ -165,6 +158,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public void setAllStarts(Map<Structure, StructureStart> structureStarts) {
+        this.wrapped.setAllStarts(structureStarts);
 	}
 
 	@Override
@@ -174,6 +168,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public void addReferenceForStructure(Structure structure, long reference) {
+        this.wrapped.addReferenceForStructure(structure, reference);
 	}
 
 	@Override
@@ -183,6 +178,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public void setAllReferences(Map<Structure, LongSet> structureReferences) {
+        this.wrapped.setAllReferences(structureReferences);
 	}
 
 	@Override
@@ -202,14 +198,17 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public void removeBlockEntity(BlockPos pos) {
+        this.wrapped.removeBlockEntity(pos);
 	}
 
 	@Override
 	public void markPosForPostprocessing(BlockPos pos) {
+        this.wrapped.markPosForPostprocessing(pos);
 	}
 
 	@Override
 	public void setBlockEntityNbt(CompoundTag nbt) {
+        this.wrapped.setBlockEntityNbt(nbt);
 	}
 
 	@Nullable

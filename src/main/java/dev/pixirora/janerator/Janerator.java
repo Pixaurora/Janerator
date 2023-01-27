@@ -82,7 +82,14 @@ public class Janerator {
         for (int x = actual_x; x < actual_x + 16; x++) {
             for (int z = actual_z; z < actual_z + 16; z++) {
                 ChunkGenerator generatorAtPos = shouldOverride(x, z) ? modifiedGenerator : defaultGenerator;
-                generatorMap.getOrDefault(generatorAtPos, newCoordinates).add(Arrays.asList(normalize(x), normalize(z)));
+                generatorMap
+                    .getOrDefault(generatorAtPos, newCoordinates)
+                    .add(
+                        Arrays.asList(
+                            normalize(x), 
+                            normalize(z)
+                        )
+                    );
 
                 if (newCoordinates.size() != 0) {
                     generatorMap.put(generatorAtPos, newCoordinates);

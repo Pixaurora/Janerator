@@ -11,6 +11,10 @@ public class PlacementVerifier {
     } 
 
     public boolean isWanted(int x, int z) {
-        return this.wantedPlacements.contains(Arrays.asList(Janerator.normalize(x), Janerator.normalize(z)));
+        return this.wantedPlacements.contains(
+            Arrays.asList(
+                Janerator.normalize(x), Janerator.normalize(z)
+            )
+        );
     }
 }

@@ -80,34 +80,24 @@ public class MultiGenerator extends ChunkGenerator {
 	public CompletableFuture<ChunkAccess> fillFromNoise(
 		Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk
 	) {
-        GeneratorHolder first = generators.get(0);
-
-        CompletableFuture<ChunkAccess> future = first.generator.fillFromNoise(
-            executor,
-            blender,
-            randomState,
-            structureManager,
-            first.getWrappedAccess(chunk)
-        );
+        CompletableFuture<ChunkAccess> placeHolderFuture = new CompletableFuture<>();
+        CompletableFuture<ChunkAccess> future = placeHolderFuture;
 
         for(GeneratorHolder holder : generators) {
-            if (holder == first) {
-                continue;
-            }
-
             future = future.thenCompose(
                 (access) -> holder.generator.fillFromNoise(
-                    executor, 
-                    blender, 
-                    randomState, 
-                    structureManager, 
+                    executor,
+                    blender,
+                    randomState,
+                    structureManager,
                     holder.getWrappedAccess(chunk)
                 )
             );
         }
-        
+
         future.thenCompose((access) -> CompletableFuture.completedFuture(chunk));
-        
+        placeHolderFuture.complete(chunk);
+
         return future;
 	}
 
@@ -128,21 +118,10 @@ public class MultiGenerator extends ChunkGenerator {
 	public CompletableFuture<ChunkAccess> createBiomes(
 		Executor executor, RandomState randomState, Blender blender, StructureManager structureManager, ChunkAccess chunk
 	) {
-        GeneratorHolder first = generators.get(0);
-
-        CompletableFuture<ChunkAccess> future = first.generator.createBiomes(
-            executor, 
-            randomState, 
-            blender, 
-            structureManager, 
-            chunk
-        );
+        CompletableFuture<ChunkAccess> placeholderFuture = new CompletableFuture<>();
+        CompletableFuture<ChunkAccess> future = placeholderFuture;
 
         for(GeneratorHolder holder : generators) {
-            if (holder == first) {
-                continue;
-            }
-
             future = future.thenCompose(
                 (access) -> holder.generator.createBiomes(
                     executor,
@@ -153,9 +132,10 @@ public class MultiGenerator extends ChunkGenerator {
                 )
             );
         }
-        
+
         future.thenCompose((access) -> CompletableFuture.completedFuture(chunk));
-        
+        placeholderFuture.complete(chunk);
+
         return future;
 	}
 
@@ -192,7 +172,7 @@ public class MultiGenerator extends ChunkGenerator {
         for (GeneratorHolder holder : this.generators) {
             holder.generator.applyBiomeDecoration(
                 world,
-                holder.getWrappedAccess(chunk),
+                chunk,
                 structureManager
             );
         }
@@ -211,7 +191,7 @@ public class MultiGenerator extends ChunkGenerator {
                 registryManager,
                 chunkGeneratorStructureState,
                 structureManager,
-                holder.getWrappedAccess(chunk),
+                chunk,
                 templateManager
             );
         }

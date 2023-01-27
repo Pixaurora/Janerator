@@ -38,16 +38,12 @@ public class SelectiveProtoChunk extends ProtoChunk {
     private PlacementVerifier placementVerifier;
 	private final ProtoChunk wrapped;
 
-    private ChunkStatus firstStatus; 
-
 	public SelectiveProtoChunk(ProtoChunk chunk, PlacementVerifier placementVerifier) {
 		super(
 			chunk.getPos(), UpgradeData.EMPTY, ((ChunkAccessAccessor) chunk).getLevelHeight(), Janerator.getRegistry(Registries.BIOME), chunk.getBlendingData()
 		);
 		this.wrapped = chunk;
 		this.placementVerifier = placementVerifier;
-
-        this.firstStatus = chunk.getStatus();
 	}
 
     public boolean allowWrites(BlockPos pos) {
@@ -94,6 +90,14 @@ public class SelectiveProtoChunk extends ProtoChunk {
 	@Override
 	public void addEntity(Entity entity) {
 		this.wrapped.addEntity(entity);
+	}
+
+    public void addLight(short chunkSliceRel, int sectionY) {
+		this.wrapped.addLight(unpackOffsetCoordinates(chunkSliceRel, this.getSectionYFromSectionIndex(sectionY), this.chunkPos));
+	}
+
+	public void addLight(BlockPos pos) {
+		this.wrapped.addLight(pos.immutable());
 	}
 
 	@Override

@@ -15,8 +15,8 @@ public class GeneratorHolder {
         this.verifier = new PlacementVerifier(wantedPlacements);
     }
 
-    public SelectiveProtoChunk getWrappedAccess(ChunkAccess chunk) {
-        return new SelectiveProtoChunk((ProtoChunk) chunk, this.verifier);
+    public SelectiveChunk getWrappedAccess(ChunkAccess chunk) {
+        return new SelectiveChunk((ProtoChunk) chunk, this.verifier);
     }
 
     public boolean isWanted(int x, int z) {

@@ -34,23 +34,19 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.ticks.TickContainerAccess;
 
-public class SelectiveProtoChunk extends ProtoChunk {
-    private PlacementVerifier placementVerifier;
+public abstract class WrappedProtoChunk extends ProtoChunk {
 	private final ProtoChunk wrapped;
 
-	public SelectiveProtoChunk(ProtoChunk chunk, PlacementVerifier placementVerifier) {
+    public WrappedProtoChunk(ProtoChunk chunk) {
 		super(
 			chunk.getPos(), UpgradeData.EMPTY, ((ChunkAccessAccessor) chunk).getLevelHeight(), Janerator.getRegistry(Registries.BIOME), chunk.getBlendingData()
 		);
 		this.wrapped = chunk;
-		this.placementVerifier = placementVerifier;
 	}
 
-    public boolean allowWrites(BlockPos pos) {
-        return this.placementVerifier.isWanted(pos.getX(), pos.getZ());
-    }
+    public abstract boolean allowWrites(BlockPos pos);
 
-	@Nullable
+    @Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pos) {
 		return this.wrapped.getBlockEntity(pos);
@@ -73,7 +69,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public LevelChunkSection getSection(int section) {
-		return super.getSection(section);
+		return this.wrapped.getSection(section);
 	}
 
 	@Nullable
@@ -84,7 +80,9 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public void setBlockEntity(BlockEntity blockEntity) {
-		this.wrapped.setBlockEntity(blockEntity);
+        if (this.allowWrites(blockEntity.getBlockPos())){
+		    this.wrapped.setBlockEntity(blockEntity);
+        }
 	}
 
 	@Override
@@ -192,7 +190,7 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public boolean isUnsaved() {
-		return false;
+		return this.wrapped.isUnsaved();
 	}
 
 	@Override
@@ -260,12 +258,12 @@ public class SelectiveProtoChunk extends ProtoChunk {
 
 	@Override
 	public CarvingMask getCarvingMask(GenerationStep.Carving carver) {
-		return super.getCarvingMask(carver);
+		return this.wrapped.getCarvingMask(carver);
 	}
 
 	@Override
 	public CarvingMask getOrCreateCarvingMask(GenerationStep.Carving carver) {
-		return super.getOrCreateCarvingMask(carver);
+		return this.wrapped.getOrCreateCarvingMask(carver);
 	}
 
 	public ProtoChunk getWrapped() {
@@ -286,4 +284,6 @@ public class SelectiveProtoChunk extends ProtoChunk {
 	public void fillBiomesFromNoise(BiomeResolver biomeSupplier, Climate.Sampler sampler) {
 		this.wrapped.fillBiomesFromNoise(biomeSupplier, sampler);
 	}
+
+    
 }

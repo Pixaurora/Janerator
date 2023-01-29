@@ -85,7 +85,7 @@ public class MultiGenerator extends ChunkGenerator {
 
         for(GeneratorHolder holder : generators) {
             future = future.thenCompose(
-                (access) -> holder.generator.fillFromNoise(
+                access -> holder.generator.fillFromNoise(
                     executor,
                     blender,
                     randomState,
@@ -95,10 +95,9 @@ public class MultiGenerator extends ChunkGenerator {
             );
         }
 
-        future.thenCompose((access) -> CompletableFuture.completedFuture(chunk));
         placeHolderFuture.complete(chunk);
 
-        return future;
+        return future.thenApply(access -> chunk);
 	}
 
 	@Override
@@ -123,7 +122,7 @@ public class MultiGenerator extends ChunkGenerator {
 
         for(GeneratorHolder holder : generators) {
             future = future.thenCompose(
-                (access) -> holder.generator.createBiomes(
+                access -> holder.generator.createBiomes(
                     executor,
                     randomState,
                     blender,
@@ -133,10 +132,9 @@ public class MultiGenerator extends ChunkGenerator {
             );
         }
 
-        future.thenCompose((access) -> CompletableFuture.completedFuture(chunk));
         placeholderFuture.complete(chunk);
 
-        return future;
+        return future.thenApply(access -> chunk);
 	}
 
 	@Override

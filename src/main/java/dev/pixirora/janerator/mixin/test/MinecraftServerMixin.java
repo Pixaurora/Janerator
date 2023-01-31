@@ -1,15 +1,12 @@
 package dev.pixirora.janerator.mixin.test;
 
-import java.beans.MethodDescriptor;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -63,6 +60,10 @@ public class MinecraftServerMixin {
             Sets.difference(allMethods, wrappedMethods),
             getDescriptors(Object.class.getMethods())
         );
+
+        if (unimplementedMethods.isEmpty()) {
+            return;
+        }
 
         Janerator.LOGGER.info("Unimplemented methods found! Here they are:");
 

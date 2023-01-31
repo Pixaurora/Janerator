@@ -27,7 +27,7 @@ import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
 public class MultiGenerator extends ChunkGenerator {
-    GeneratorHolders generators;
+    private GeneratorHolders generators;
 
     public MultiGenerator(BiomeSource biomeSource, Map<ChunkGenerator, List<List<Integer>>> generatorMap, ChunkGenerator fallbackGenerator) {
         super(biomeSource);
@@ -35,8 +35,8 @@ public class MultiGenerator extends ChunkGenerator {
     }
 
 	@Override
-	protected Codec<? extends ChunkGenerator> codec() {
-		return null;
+	public Codec<? extends ChunkGenerator> codec() {
+		return CODEC;
 	}
 
 

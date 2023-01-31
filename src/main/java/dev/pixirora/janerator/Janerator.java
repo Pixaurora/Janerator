@@ -65,7 +65,6 @@ public class Janerator {
     }
 
     public static ChunkGenerator getGeneratorAt(
-        ChunkPos chunkPos,
         ResourceKey<Level> dimension,
         ChunkGenerator defaultGenerator,
         ChunkAccess chunk
@@ -74,8 +73,10 @@ public class Janerator {
 
         ChunkGenerator modifiedGenerator = getGenerator(dimension);
 
-        int actual_x = chunkPos.getMinBlockX();
-        int actual_z = chunkPos.getMinBlockZ();
+        ChunkPos pos = chunk.getPos();
+
+        int actual_x = pos.getMinBlockX();
+        int actual_z = pos.getMinBlockZ();
 
         List<List<Integer>> newCoordinates = new ArrayList<>();
 

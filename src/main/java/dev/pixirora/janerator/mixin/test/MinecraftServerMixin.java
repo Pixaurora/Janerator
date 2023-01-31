@@ -31,31 +31,14 @@ import net.minecraft.server.MinecraftServer;
 public class MinecraftServerMixin {
     @Inject(method = "loadLevel()V", at = @At("HEAD"))
     private void beforeLoadLevel(CallbackInfo callbackInfo) throws IOException {
-        String[] paths = new String[]{
-            "world/poi",
-            "world/region",
-            "world/stats",
-            "world/DIM1",
-            "world/DIM-1",
-            "world/entities",
-            "world/data",
-            "world/advancements",
-            "world/playerdata"
-        };
+        Path path = Paths.get("world");
 
-        for (String pathString : paths) {
-            try{
-                Path path = Paths.get(pathString);
-                try (Stream<Path> walk = Files.walk(path)) {
-                    walk.sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
-                }
-            } catch (NoSuchFileException e) {
-                continue;
-            }
-
+        try (Stream<Path> walk = Files.walk(path)) {
+            walk.sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
         }
+
         Janerator.LOGGER.info("World deleted.");
     }
 

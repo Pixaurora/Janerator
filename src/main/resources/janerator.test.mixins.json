@@ -10,6 +10,5 @@
 	"injectors": {
 		"defaultRequire": 1
 	},
-	"accessWidener" : "janerator.accesswidener",
 	"plugin": "dev.pixirora.janerator.TestMixinConfig"
 }

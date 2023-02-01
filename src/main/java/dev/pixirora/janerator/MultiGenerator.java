@@ -1,7 +1,6 @@
 package dev.pixirora.janerator;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -37,7 +36,6 @@ public class MultiGenerator extends ChunkGenerator {
 	public Codec<? extends ChunkGenerator> codec() {
 		return CODEC;
 	}
-
 
 	@Override
 	public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {

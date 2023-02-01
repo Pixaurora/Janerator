@@ -21,7 +21,6 @@ import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +46,10 @@ public class Janerator {
         return value - 16 * Math.floorDiv(value, 16);
     }
 
+    public static int toListCoordinate(int x, int z) {
+        return 16 * normalize(x) + normalize(z);
+    }
+
     public static boolean shouldOverride(ChunkPos chunkPos) {
         return shouldOverride(chunkPos.x*16, chunkPos.z*16);
     }
@@ -69,46 +72,14 @@ public class Janerator {
         ChunkGenerator defaultGenerator,
         ChunkAccess chunk
     ) {
-        Map<ChunkGenerator, List<List<Integer>>> generatorMap = Maps.newHashMap();
+        ChunkGenerator modifiedGenerator = Janerator.getGenerator(dimension);
 
-        ChunkGenerator modifiedGenerator = getGenerator(dimension);
+        GeneratorFinder generators = new GeneratorFinder(defaultGenerator, modifiedGenerator, chunk);
 
-        ChunkPos pos = chunk.getPos();
-
-        int actual_x = pos.getMinBlockX();
-        int actual_z = pos.getMinBlockZ();
-
-        List<List<Integer>> newCoordinates = new ArrayList<>();
-
-        for (int x = actual_x; x < actual_x + 16; x++) {
-            for (int z = actual_z; z < actual_z + 16; z++) {
-                ChunkGenerator generatorAtPos = shouldOverride(x, z) ? modifiedGenerator : defaultGenerator;
-                generatorMap
-                    .getOrDefault(generatorAtPos, newCoordinates)
-                    .add(
-                        Arrays.asList(
-                            normalize(x), 
-                            normalize(z)
-                        )
-                    );
-
-                if (newCoordinates.size() != 0) {
-                    generatorMap.put(generatorAtPos, newCoordinates);
-                    newCoordinates = new ArrayList<>();
-                }
-            }
-        }
-
-        ChunkGenerator majorityGenerator = generatorMap
-            .entrySet()
-            .stream()
-            .max((entry1, entry2) -> entry1.getValue().size() > entry2.getValue().size() ? 1 : -1)
-            .get().getKey();
-
-        if (generatorMap.size() > 1 && chunk instanceof ProtoChunk) {
-            return new MultiGenerator(defaultGenerator.getBiomeSource(), generatorMap, majorityGenerator);
+        if (generators.size() > 1 && chunk instanceof ProtoChunk) {
+            return new MultiGenerator(modifiedGenerator.getBiomeSource(), generators);
         } else {
-            return majorityGenerator;
+            return generators.getDefault();
         }
     }
 

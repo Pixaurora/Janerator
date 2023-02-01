@@ -10,7 +10,7 @@ public class GeneratorHolder {
     public ChunkGenerator generator;
     private PlacementVerifier verifier;
 
-    public GeneratorHolder(ChunkGenerator generator, List<List<Integer>> wantedPlacements) {
+    public GeneratorHolder(ChunkGenerator generator, List<Integer> wantedPlacements) {
         this.generator = generator;
         this.verifier = new PlacementVerifier(wantedPlacements);
     }
@@ -19,7 +19,7 @@ public class GeneratorHolder {
         return new SelectiveChunk((ProtoChunk) chunk, this.verifier);
     }
 
-    public boolean isWanted(int x, int z) {
-        return verifier.isWanted(x, z);
+    public int size() {
+        return verifier.size();
     }
 }

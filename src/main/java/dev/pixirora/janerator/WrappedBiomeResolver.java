@@ -21,12 +21,12 @@ import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 
 public class WrappedBiomeResolver implements BiomeResolver {
-    GeneratorHolders generators;
+    GeneratorFinder generators;
     Map<ChunkGenerator, BiomeResolver> biomeResolvers;
     Map<ChunkGenerator, Sampler> samplers;
 
     public WrappedBiomeResolver(
-        GeneratorHolders generators,
+        GeneratorFinder generators,
         Blender blender,
         ChunkAccess chunk,
         StructureManager structureManager,

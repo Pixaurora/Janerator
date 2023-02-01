@@ -26,11 +26,11 @@ import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
 public class MultiGenerator extends ChunkGenerator {
-    private GeneratorHolders generators;
+    private GeneratorFinder generators;
 
-    public MultiGenerator(BiomeSource biomeSource, Map<ChunkGenerator, List<List<Integer>>> generatorMap, ChunkGenerator fallbackGenerator) {
+    public MultiGenerator(BiomeSource biomeSource, GeneratorFinder generators) {
         super(biomeSource);
-        generators = new GeneratorHolders(generatorMap, fallbackGenerator);
+        this.generators = generators;
     }
 
 	@Override
@@ -60,10 +60,10 @@ public class MultiGenerator extends ChunkGenerator {
 	public CompletableFuture<ChunkAccess> fillFromNoise(
 		Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk
 	) {
-        CompletableFuture<ChunkAccess> placeHolderFuture = new CompletableFuture<>();
-        CompletableFuture<ChunkAccess> future = placeHolderFuture;
+        CompletableFuture<ChunkAccess> placeholderFuture = new CompletableFuture<>();
+        CompletableFuture<ChunkAccess> future = placeholderFuture;
 
-        for(GeneratorHolder holder : generators.getAll()) {
+        for(GeneratorHolder holder : this.generators.getAll()) {
             future = future.thenCompose(
                 access -> holder.generator.fillFromNoise(
                     executor,
@@ -75,7 +75,7 @@ public class MultiGenerator extends ChunkGenerator {
             );
         }
 
-        placeHolderFuture.complete(chunk);
+        placeholderFuture.complete(chunk);
 
         return future.thenApply(access -> chunk);
 	}
@@ -101,7 +101,7 @@ public class MultiGenerator extends ChunkGenerator {
             () -> {
                 chunk.fillBiomesFromNoise(
                     new WrappedBiomeResolver(
-                        generators,
+                        this.generators,
                         blender,
                         chunk,
                         structureManager,

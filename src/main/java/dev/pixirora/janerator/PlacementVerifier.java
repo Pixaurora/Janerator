@@ -1,20 +1,21 @@
 package dev.pixirora.janerator;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class PlacementVerifier {
-    private List<List<Integer>> wantedPlacements;
+    private List<Integer> placements;
 
-    public PlacementVerifier(List<List<Integer>> wantedPlacements) {
-        this.wantedPlacements = wantedPlacements;
+    public PlacementVerifier(List<Integer> placements) {
+        this.placements = placements;
     } 
 
     public boolean isWanted(int x, int z) {
-        return this.wantedPlacements.contains(
-            Arrays.asList(
-                Janerator.normalize(x), Janerator.normalize(z)
-            )
+        return this.placements.contains(
+            Janerator.toListCoordinate(x, z)
         );
+    }
+
+    public int size() {
+        return this.placements.size();
     }
 }

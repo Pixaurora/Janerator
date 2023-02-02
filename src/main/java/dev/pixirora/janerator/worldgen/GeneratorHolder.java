@@ -1,5 +1,6 @@
 package dev.pixirora.janerator.worldgen;
 
+import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -17,6 +18,11 @@ public class GeneratorHolder {
 
     public SelectiveChunk getWrappedAccess(ChunkAccess chunk) {
         return new SelectiveChunk((ProtoChunk) chunk, this.verifier);
+    }
+
+    public void unwrap(ChunkAccess chunk) {
+        Arrays.stream(chunk.getSections())
+            .forEach(section -> section.janerator$setVerifier(null));
     }
 
     public int size() {

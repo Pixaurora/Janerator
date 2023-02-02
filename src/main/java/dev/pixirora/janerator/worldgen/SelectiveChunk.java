@@ -1,26 +1,26 @@
 package dev.pixirora.janerator.worldgen;
 
-import dev.pixirora.janerator.wrapped.WrappedChunkSection;
 import dev.pixirora.janerator.wrapped.WrappedProtoChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
 
 public class SelectiveChunk extends WrappedProtoChunk {
-    private PlacementVerifier placementVerifier;
+    private PlacementVerifier verifier;
 
 	public SelectiveChunk(ProtoChunk chunk, PlacementVerifier placementVerifier) {
 		super(chunk);
-		this.placementVerifier = placementVerifier;
+		this.verifier = placementVerifier;
+        this.wrapSections();
 	}
 
     @Override
     public boolean allowWrites(BlockPos pos) {
-        return this.placementVerifier.isWanted(pos.getX(), pos.getZ());
+        return this.verifier.isWanted(pos.getX(), pos.getZ());
     }
 
     @Override
-    public WrappedChunkSection wrapSection(LevelChunkSection section) {
-        return new WrappedChunkSection(section, this.placementVerifier);
+    public void wrapSection(LevelChunkSection section) {
+        section.janerator$setVerifier(verifier);
     }
 }

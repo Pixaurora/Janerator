@@ -47,6 +47,8 @@ public class MultiGenerator extends ChunkGenerator {
                 randomState,
                 holder.getWrappedAccess(chunk)
             );
+
+            holder.unwrap(chunk);
         }
 	}
 
@@ -70,7 +72,10 @@ public class MultiGenerator extends ChunkGenerator {
                     randomState,
                     structureManager,
                     holder.getWrappedAccess(chunk)
-                )
+                ).thenApply((chunk2) -> {
+                    holder.unwrap(chunk2);
+                    return chunk2;
+                })
             );
         }
 
@@ -133,6 +138,8 @@ public class MultiGenerator extends ChunkGenerator {
                 holder.getWrappedAccess(chunk),
                 generationStep
             );
+
+            holder.unwrap(chunk);
         }
 	}
 
@@ -146,7 +153,7 @@ public class MultiGenerator extends ChunkGenerator {
         for (GeneratorHolder holder : this.generators.getAll()) {
             holder.generator.applyBiomeDecoration(
                 world,
-                holder.getWrappedAccess(chunk),
+                chunk,
                 structureManager
             );
         }
@@ -165,7 +172,7 @@ public class MultiGenerator extends ChunkGenerator {
                 registryManager,
                 chunkGeneratorStructureState,
                 structureManager,
-                holder.getWrappedAccess(chunk),
+                chunk,
                 templateManager
             );
         }

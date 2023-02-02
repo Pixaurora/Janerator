@@ -12,9 +12,9 @@
                 "LostLuma": "Contributor"
 			},
 			"contact": {
-				"homepage": "https://github.com/Pixirora/janerator",
-				"issues": "https://github.com/Pixirora/janerator/issues",
-				"sources": "https://github.com/Pixirora/janerator"
+				"homepage": "https://github.com/Pixirora/Janerator",
+				"issues": "https://github.com/Pixirora/Janerator/issues",
+				"sources": "https://github.com/Pixirora/Janerator"
 			},
 			"icon": "assets/janerator/icon.png",
             "license": "MIT"
@@ -35,5 +35,12 @@
 	"mixin": [
         "janerator.mixins.json",
         "janerator.test.mixins.json"
-    ]
+    ],
+    "quilt_loom": {
+        "injected_interfaces": {
+            "net/minecraft/class_2826": [
+                "dev/pixirora/janerator/JaneratorSection"
+            ]
+        }
+    }
 }

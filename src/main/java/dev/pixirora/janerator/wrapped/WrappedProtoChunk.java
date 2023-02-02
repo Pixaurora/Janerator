@@ -51,19 +51,20 @@ public abstract class WrappedProtoChunk extends ProtoChunk {
 
     public abstract boolean allowWrites(BlockPos pos);
 
-    public abstract WrappedChunkSection wrapSection(LevelChunkSection section);
+    public abstract void wrapSection(LevelChunkSection section);
 
-	@Override
-	public LevelChunkSection getSection(int section) {
-		return this.wrapSection(this.wrapped.getSection(section));
+	public void wrapSections() {
+		Arrays.stream(this.wrapped.getSections())
+            .forEach(this::wrapSection);
 	}
 
-    @Override
-	public LevelChunkSection[] getSections() {
-		return (LevelChunkSection[]) Arrays.stream(this.wrapped.getSections())
-            .map(this::wrapSection)
-            .toArray();
-	}
+    public LevelChunkSection getSection(int section) {
+        return this.wrapped.getSection(section);
+    }
+
+    public LevelChunkSection[] getSections() {
+        return this.wrapped.getSections();
+    }
 
     @Nullable
 	@Override

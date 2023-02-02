@@ -10,7 +10,7 @@
 		"ChunkAccessAccessor",
         "NoiseBasedChunkGeneratorAccessor",
         "NoiseChunkAccessor",
-        "LevelChunkSectionAccessor"
+        "LevelChunkSectionMixin"
     ],
 	"injectors": {
 		"defaultRequire": 1

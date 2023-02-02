@@ -9,7 +9,8 @@
         "MinecraftServerMixin",
 		"ChunkAccessAccessor",
         "NoiseBasedChunkGeneratorAccessor",
-        "NoiseChunkAccessor"
+        "NoiseChunkAccessor",
+        "LevelChunkSectionAccessor"
     ],
 	"injectors": {
 		"defaultRequire": 1

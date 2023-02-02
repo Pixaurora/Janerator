@@ -1,5 +1,6 @@
 package dev.pixirora.janerator;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -39,12 +40,30 @@ public abstract class WrappedProtoChunk extends ProtoChunk {
 
     public WrappedProtoChunk(ProtoChunk chunk) {
 		super(
-			chunk.getPos(), UpgradeData.EMPTY, ((ChunkAccessAccessor) chunk).getLevelHeight(), Janerator.getRegistry(Registries.BIOME), chunk.getBlendingData()
+			chunk.getPos(),
+            chunk.getUpgradeData(),
+            ((ChunkAccessAccessor) chunk).getLevelHeight(),
+            Janerator.getRegistry(Registries.BIOME),
+            chunk.getBlendingData()
 		);
 		this.wrapped = chunk;
 	}
 
     public abstract boolean allowWrites(BlockPos pos);
+
+    public abstract WrappedChunkSection wrapSection(LevelChunkSection section);
+
+	@Override
+	public LevelChunkSection getSection(int section) {
+		return this.wrapSection(this.wrapped.getSection(section));
+	}
+
+    @Override
+	public LevelChunkSection[] getSections() {
+		return (LevelChunkSection[]) Arrays.stream(this.wrapped.getSections())
+            .map(this::wrapSection)
+            .toArray();
+	}
 
     @Nullable
 	@Override
@@ -65,11 +84,6 @@ public abstract class WrappedProtoChunk extends ProtoChunk {
 	@Override
 	public int getMaxLightLevel() {
 		return this.wrapped.getMaxLightLevel();
-	}
-
-	@Override
-	public LevelChunkSection getSection(int section) {
-		return this.wrapped.getSection(section);
 	}
 
 	@Nullable
@@ -102,11 +116,6 @@ public abstract class WrappedProtoChunk extends ProtoChunk {
 	public void setStatus(ChunkStatus status) {
 		super.setStatus(status);
         wrapped.setStatus(status);
-	}
-
-	@Override
-	public LevelChunkSection[] getSections() {
-		return this.wrapped.getSections();
 	}
 
 	@Override
@@ -284,6 +293,4 @@ public abstract class WrappedProtoChunk extends ProtoChunk {
 	public void fillBiomesFromNoise(BiomeResolver biomeSupplier, Climate.Sampler sampler) {
 		this.wrapped.fillBiomesFromNoise(biomeSupplier, sampler);
 	}
-
-    
 }

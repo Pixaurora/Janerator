@@ -1,4 +1,4 @@
-package dev.pixirora.janerator;
+package dev.pixirora.janerator.worldgen;
 
 import java.util.List;
 

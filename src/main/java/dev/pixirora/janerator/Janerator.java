@@ -30,6 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
+import dev.pixirora.janerator.worldgen.GeneratorFinder;
+import dev.pixirora.janerator.worldgen.MultiGenerator;
+
 public class Janerator {
     private static MinecraftServer server = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");

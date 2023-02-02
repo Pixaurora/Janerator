@@ -1,9 +1,10 @@
-package dev.pixirora.janerator;
+package dev.pixirora.janerator.worldgen;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import dev.pixirora.janerator.Janerator;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;

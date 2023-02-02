@@ -1,6 +1,7 @@
-package dev.pixirora.janerator;
+package dev.pixirora.janerator.wrapped;
 
 import dev.pixirora.janerator.mixin.LevelChunkSectionAccessor;
+import dev.pixirora.janerator.worldgen.PlacementVerifier;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.biome.Climate;

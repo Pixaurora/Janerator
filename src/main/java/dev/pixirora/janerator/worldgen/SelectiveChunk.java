@@ -1,5 +1,7 @@
-package dev.pixirora.janerator;
+package dev.pixirora.janerator.worldgen;
 
+import dev.pixirora.janerator.wrapped.WrappedChunkSection;
+import dev.pixirora.janerator.wrapped.WrappedProtoChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;

@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.google.common.collect.Sets;
 
 import dev.pixirora.janerator.Janerator;
-import dev.pixirora.janerator.WrappedProtoChunk;
+import dev.pixirora.janerator.wrapped.WrappedProtoChunk;
 import net.minecraft.server.MinecraftServer;
 
 @Mixin(MinecraftServer.class)

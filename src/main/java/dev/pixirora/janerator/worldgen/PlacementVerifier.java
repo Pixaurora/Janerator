@@ -1,6 +1,8 @@
-package dev.pixirora.janerator;
+package dev.pixirora.janerator.worldgen;
 
 import java.util.List;
+
+import dev.pixirora.janerator.Janerator;
 
 public class PlacementVerifier {
     private List<Integer> placements;

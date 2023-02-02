@@ -1,4 +1,4 @@
-package dev.pixirora.janerator;
+package dev.pixirora.janerator.worldgen;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -6,6 +6,7 @@ import java.util.concurrent.Executor;
 
 import com.mojang.serialization.Codec;
 
+import dev.pixirora.janerator.wrapped.WrappedBiomeResolver;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.level.WorldGenRegion;

@@ -37,10 +37,12 @@ public class Janerator {
     private static MinecraftServer server = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
     private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
-    private static double log_phi = Math.log((1 + Math.sqrt(5)) / 2);
+
+    private static double scale_factor = 1.3;
+    private static double log_scale_factor = Math.log(scale_factor);
 
     public static boolean shouldOverride(int x, int z) {
-        double angle = Math.PI / 4 * Math.log(Math.pow(x, 2) + Math.pow(z, 2)) / log_phi + Math.PI;
+        double angle = Math.PI / 4 * Math.log(Math.pow(x, 2) + Math.pow(z, 2)) / log_scale_factor + Math.PI;
         double tan_angle = Math.tan(angle);
         return (x * tan_angle - z) * Math.signum(tan_angle / Math.sin(angle)) > 0;
     }

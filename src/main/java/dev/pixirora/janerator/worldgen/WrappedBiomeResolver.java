@@ -1,12 +1,10 @@
-package dev.pixirora.janerator.wrapped;
+package dev.pixirora.janerator.worldgen;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import dev.pixirora.janerator.mixin.NoiseBasedChunkGeneratorAccessor;
 import dev.pixirora.janerator.mixin.NoiseChunkAccessor;
-import dev.pixirora.janerator.worldgen.GeneratorFinder;
-import dev.pixirora.janerator.worldgen.GeneratorHolder;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biome;

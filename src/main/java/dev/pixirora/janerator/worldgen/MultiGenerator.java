@@ -6,7 +6,6 @@ import java.util.concurrent.Executor;
 
 import com.mojang.serialization.Codec;
 
-import dev.pixirora.janerator.wrapped.WrappedBiomeResolver;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.level.WorldGenRegion;
@@ -45,11 +44,11 @@ public class MultiGenerator extends ChunkGenerator {
                 region,
                 structureManager,
                 randomState,
-                holder.getWrappedAccess(chunk)
+                holder.makeSelective(chunk, false)
             );
-
-            holder.unwrap(chunk);
         }
+
+        chunk.janerator$stopSelecting();
 	}
 
 	@Override
@@ -71,17 +70,17 @@ public class MultiGenerator extends ChunkGenerator {
                     blender,
                     randomState,
                     structureManager,
-                    holder.getWrappedAccess(chunk)
-                ).thenApply((chunk2) -> {
-                    holder.unwrap(chunk2);
-                    return chunk2;
-                })
+                    holder.makeSelective(chunk, true)
+                )
             );
         }
 
         placeholderFuture.complete(chunk);
 
-        return future.thenApply(access -> chunk);
+        return future.thenApply(access -> {
+            chunk.janerator$stopSelecting();
+            return chunk;
+        });
 	}
 
 	@Override
@@ -135,12 +134,12 @@ public class MultiGenerator extends ChunkGenerator {
                 randomState,
                 biomeAccess,
                 structureManager,
-                holder.getWrappedAccess(chunk),
+                holder.makeSelective(chunk, true),
                 generationStep
             );
-
-            holder.unwrap(chunk);
         }
+
+        chunk.janerator$stopSelecting();
 	}
 
 	@Override
@@ -153,10 +152,12 @@ public class MultiGenerator extends ChunkGenerator {
         for (GeneratorHolder holder : this.generators.getAll()) {
             holder.generator.applyBiomeDecoration(
                 world,
-                chunk,
+                holder.makeSelective(chunk, false),
                 structureManager
             );
         }
+
+        chunk.janerator$stopSelecting();
     }
 
     @Override

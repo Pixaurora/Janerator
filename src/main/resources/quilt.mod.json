@@ -39,7 +39,10 @@
     "quilt_loom": {
         "injected_interfaces": {
             "net/minecraft/class_2826": [
-                "dev/pixirora/janerator/JaneratorSection"
+                "dev/pixirora/janerator/worldgen/JaneratorSection"
+            ],
+            "net/minecraft/class_2791": [
+                "dev/pixirora/janerator/worldgen/JaneratorChunk"
             ]
         }
     }

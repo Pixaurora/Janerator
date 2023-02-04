@@ -4,10 +4,10 @@ import java.util.List;
 
 import dev.pixirora.janerator.Janerator;
 
-public class PlacementVerifier {
+public class PlacementSelector {
     private List<Integer> placements;
 
-    public PlacementVerifier(List<Integer> placements) {
+    public PlacementSelector(List<Integer> placements) {
         this.placements = placements;
     } 
 

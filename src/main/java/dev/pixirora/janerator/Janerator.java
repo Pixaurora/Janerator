@@ -38,13 +38,21 @@ public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
     private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
 
-    private static double scale_factor = 1.3;
-    private static double log_scale_factor = Math.log(scale_factor);
+    private static double phi = (1 + Math.sqrt(5)) / 2;
+    private static double log_phi = Math.log(phi);
 
-    public static boolean shouldOverride(int x, int z) {
-        double angle = Math.PI / 4 * Math.log(Math.pow(x, 2) + Math.pow(z, 2)) / log_scale_factor + Math.PI;
-        double tan_angle = Math.tan(angle);
-        return (x * tan_angle - z) * Math.signum(tan_angle / Math.sin(angle)) > 0;
+    public static boolean shouldOverride(double x, double z) {
+        x += 0.01; // We do this because at X=0, the formula can never be greater than 0 creating a line of false
+                   // Example at https://www.desmos.com/calculator/vsxlf0u9mt
+
+        double distance_squared = Math.pow(x, 2) + Math.pow(z, 2);
+
+        double angle = Math.PI / 4 * Math.log(distance_squared) / log_phi - Math.PI;
+        double tan_of_angle = Math.tan(angle);
+
+        double spiral_result = (x * tan_of_angle - z) * Math.signum(tan_of_angle / Math.sin(angle));
+
+        return (Math.sqrt(distance_squared) - Math.abs(spiral_result)) * Math.signum(x) < 0;
     }
 
     public static int normalize(int value, int divisor) {

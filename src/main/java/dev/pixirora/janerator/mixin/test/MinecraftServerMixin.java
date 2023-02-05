@@ -19,7 +19,7 @@ import net.minecraft.server.MinecraftServer;
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
     @Inject(method = "loadLevel()V", at = @At("HEAD"))
-    private void beforeLoadLevel(CallbackInfo callbackInfo) throws IOException {
+    private void janerator$beforeLoadLevel(CallbackInfo callbackInfo) throws IOException {
         Path path = Paths.get("world");
 
         try (Stream<Path> walk = Files.walk(path)) {

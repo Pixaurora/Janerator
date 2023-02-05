@@ -13,5 +13,5 @@ import net.minecraft.world.level.levelgen.NoiseRouter;
 @Mixin(NoiseChunk.class)
 public interface NoiseChunkAccessor {
     @Invoker("cachedClimateSampler")
-    Climate.Sampler invokeCachedClimateSampler(NoiseRouter noiseRouter, List<ParameterPoint> list);
+    Climate.Sampler janerator$invokeCachedClimateSampler(NoiseRouter noiseRouter, List<ParameterPoint> list);
 }

@@ -16,8 +16,8 @@ import net.minecraft.world.level.levelgen.blending.Blender;
 @Mixin(NoiseBasedChunkGenerator.class)
 public interface NoiseBasedChunkGeneratorAccessor {
     @Accessor("settings")
-    public Holder<NoiseGeneratorSettings> getSettings();
+    public Holder<NoiseGeneratorSettings> janerator$getSettings();
 
     @Invoker("createNoiseChunk")
-    public NoiseChunk invokeCreateNoiseChunk(ChunkAccess chunkAccess, StructureManager structureManager, Blender blender, RandomState randomState);
+    public NoiseChunk janerator$invokeCreateNoiseChunk(ChunkAccess chunkAccess, StructureManager structureManager, Blender blender, RandomState randomState);
 }

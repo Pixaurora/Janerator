@@ -26,16 +26,18 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 
 @Mixin(ChunkStatus.class)
 public class ChunkStatusMixin {
-    private static void processChunkStuff(ChunkStatus targetStatus, ChunkAccess chunk) {
+    private static void janerator$processChunkStuff(ChunkStatus targetStatus, ChunkAccess chunk) {
         ChunkPos pos = chunk.getPos();
+        ChunkStatus currentStatus = chunk.getStatus();
+
         if (Math.abs(pos.x) + Math.abs(pos.z) < 1) {
             Janerator.LOGGER.info(
-                "Status of Chunk " + String.valueOf(pos.x) + ", " + String.valueOf(pos.z) + ": " + targetStatus.toString());
+                "Status of Chunk " + String.valueOf(pos.x) + ", " + String.valueOf(pos.z) + ": " + currentStatus.toString() + " -> " + targetStatus.toString());
         }
     }
 
     @Inject(method = "m_vbgdocyn", at = @At("HEAD"))
-    private static void lambdaInjector1(
+    private static void janerator$lambdaInjector1(
         ChunkStatus targetStatus,
         ServerLevel level,
         StructureTemplateManager structureManager,
@@ -44,11 +46,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_kmlmrqsn", at = @At("HEAD"))
-    private static void lambdaInjector2(
+    private static void janerator$lambdaInjector2(
         ChunkStatus targetStatus,
         Executor executor,
         ServerLevel level,
@@ -61,22 +63,22 @@ public class ChunkStatusMixin {
         boolean bl,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_fkhswqxw", at = @At("HEAD"))
-    private static void lambdaInjector3(
+    private static void janerator$lambdaInjector3(
         ChunkStatus targetStatus,
         ServerLevel level,
         ChunkGenerator generator,
         List<ChunkAccess> chunks,
         ChunkAccess chunk,
         CallbackInfo ci) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_nzdcnnbt", at = @At("HEAD"))
-    private static void lambdaInjector4(
+    private static void janerator$lambdaInjector4(
         ChunkStatus targetStatus,
         ServerLevel level,
         ChunkGenerator generator,
@@ -84,7 +86,7 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfo ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_lebfctff", at = @At("HEAD"))
@@ -97,11 +99,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_wclifdrn", at = @At("HEAD"))
-    private static void lambdaInjector6(
+    private static void janerator$lambdaInjector6(
         ChunkStatus targetStatus,
         Executor executor,
         ServerLevel level,
@@ -114,11 +116,11 @@ public class ChunkStatusMixin {
         boolean bl,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_xccpmyhv", at = @At("HEAD"))
-    private static void lambdaInjector7(
+    private static void janerator$lambdaInjector7(
         ChunkStatus targetStatus,
         ServerLevel level,
         StructureTemplateManager structureManager,
@@ -127,11 +129,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_qhvbhtvf", at = @At("HEAD"))
-    private static void lambdaInjector8(
+    private static void janerator$lambdaInjector8(
         ChunkStatus targetStatus,
         Executor executor,
         ServerLevel level,
@@ -144,11 +146,11 @@ public class ChunkStatusMixin {
         boolean bl,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_tmdxarkg", at = @At("HEAD"))
-    private static void lambdaInjector9(
+    private static void janerator$lambdaInjector9(
         ChunkStatus targetStatus,
         ServerLevel level,
         ChunkGenerator generator,
@@ -156,11 +158,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfo ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_jfkmhrnr", at = @At("HEAD"))
-    private static void lambdaInjector10(
+    private static void janerator$lambdaInjector10(
         ChunkStatus targetStatus,
         ServerLevel level,
         ChunkGenerator generator,
@@ -168,11 +170,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfo ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_vqbbnlkp", at = @At("HEAD"))
-    private static void lambdaInjector11(
+    private static void janerator$lambdaInjector11(
         ChunkStatus targetStatus,
         ServerLevel level,
         ChunkGenerator generator,
@@ -180,11 +182,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfo ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_meahrkeh", at = @At("HEAD"))
-    private static void lambdaInjector12(
+    private static void janerator$lambdaInjector12(
         ChunkStatus targetStatus,
         Executor executor,
         ServerLevel level,
@@ -197,20 +199,20 @@ public class ChunkStatusMixin {
         boolean bl,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_uutycyes", at = @At("HEAD"))
-    private static void lambdaInjector13(
+    private static void janerator$lambdaInjector13(
         ChunkStatus targetStatus,
         ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_dttkcvbh", at = @At("HEAD"))
-    private static void lambdaInjector14(
+    private static void janerator$lambdaInjector14(
         ChunkStatus targetStatus,
         Executor executor,
         ServerLevel level,
@@ -223,20 +225,20 @@ public class ChunkStatusMixin {
         boolean bl,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_wmvnnjtz", at = @At("HEAD"))
-    private static void lambdaInjector15(
+    private static void janerator$lambdaInjector15(
         ChunkStatus targetStatus,
         ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_unftbcnr", at = @At("HEAD"))
-    private static void lambdaInjector16(
+    private static void janerator$lambdaInjector16(
         ChunkStatus targetStatus,
         ServerLevel level,
         ChunkGenerator generator,
@@ -244,11 +246,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfo ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_yioizakj", at = @At("HEAD"))
-    private static void lambdaInjector17(
+    private static void janerator$lambdaInjector17(
         ChunkStatus targetStatus,
         ServerLevel level,
         StructureTemplateManager structureManager,
@@ -257,11 +259,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_dffwbojp", at = @At("HEAD"))
-    private static void lambdaInjector18(
+    private static void janerator$lambdaInjector18(
         ChunkStatus targetStatus,
         Executor executor,
         ServerLevel level,
@@ -274,11 +276,11 @@ public class ChunkStatusMixin {
         boolean bl,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_pqesvfts", at = @At("HEAD"))
-    private static void lambdaInjector19(
+    private static void janerator$lambdaInjector19(
         ChunkStatus targetStatus,
         ServerLevel level,
         ChunkGenerator generator,
@@ -286,11 +288,11 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfo ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 
     @Inject(method = "m_cyfvgftu", at = @At("HEAD"))
-    private static void lambdaInjector20(
+    private static void janerator$lambdaInjector20(
         ChunkStatus targetStatus,
         ServerLevel level,
         StructureTemplateManager structureManager,
@@ -299,6 +301,6 @@ public class ChunkStatusMixin {
         ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci
     ) {
-        processChunkStuff(targetStatus, chunk);
+        janerator$processChunkStuff(targetStatus, chunk);
     }
 }

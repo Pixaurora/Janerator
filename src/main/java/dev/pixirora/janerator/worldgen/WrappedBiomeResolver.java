@@ -63,7 +63,7 @@ public class WrappedBiomeResolver implements BiomeResolver {
         RandomState randomState
     ) {
         NoiseChunk noiseChunk = chunk.getOrCreateNoiseChunk(
-            chunkAccess -> generator.invokeCreateNoiseChunk(
+            chunkAccess -> generator.janerator$invokeCreateNoiseChunk(
                 chunkAccess,
                 structureManager,
                 blender,
@@ -71,9 +71,9 @@ public class WrappedBiomeResolver implements BiomeResolver {
             )
         );
     
-        return ((NoiseChunkAccessor) noiseChunk).invokeCachedClimateSampler(
+        return ((NoiseChunkAccessor) noiseChunk).janerator$invokeCachedClimateSampler(
             randomState.router(),
-            ((NoiseGeneratorSettings)generator.getSettings().value()).spawnTarget()
+            ((NoiseGeneratorSettings)generator.janerator$getSettings().value()).spawnTarget()
         );
     }
 

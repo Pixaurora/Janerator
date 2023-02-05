@@ -1,5 +1,6 @@
 package dev.pixirora.janerator;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
@@ -13,6 +14,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ImposterProtoChunk;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
@@ -71,6 +74,10 @@ public class Janerator {
         return shouldOverride(chunkPos.x*16, chunkPos.z*16);
     }
 
+    public static boolean shouldOverride(BlockPos pos) {
+        return shouldOverride(pos.getX(), pos.getZ());
+    }
+
     public static void setMinecraftServer(MinecraftServer server) {
         Janerator.server = server;
     }
@@ -89,11 +96,15 @@ public class Janerator {
         ChunkGenerator defaultGenerator,
         ChunkAccess chunk
     ) {
+        if (chunk instanceof LevelChunk || chunk instanceof ImposterProtoChunk) {
+            return defaultGenerator;
+        }
+
         ChunkGenerator modifiedGenerator = Janerator.getGenerator(dimension);
 
         GeneratorFinder generators = new GeneratorFinder(defaultGenerator, modifiedGenerator, chunk);
 
-        if (generators.size() > 1 && chunk instanceof ProtoChunk) {
+        if (generators.size() > 1) {
             return new MultiGenerator(modifiedGenerator.getBiomeSource(), generators);
         } else {
             return generators.getDefault();

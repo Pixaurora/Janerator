@@ -152,7 +152,7 @@ public class MultiGenerator extends ChunkGenerator {
         for (GeneratorHolder holder : this.generators.getAll()) {
             holder.generator.applyBiomeDecoration(
                 world,
-                holder.makeSelective(chunk, false),
+                chunk,
                 structureManager
             );
         }

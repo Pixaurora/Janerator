@@ -11,6 +11,7 @@
         "MinecraftServerMixin",
         "NoiseBasedChunkGeneratorAccessor",
         "NoiseChunkAccessor",
+        "PlacedFeatureMixin",
         "ProtoChunkMixin"
     ],
 	"injectors": {

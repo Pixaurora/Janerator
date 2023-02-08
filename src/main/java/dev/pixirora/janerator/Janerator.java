@@ -49,7 +49,7 @@ public class Janerator {
 
         double distance_squared = Math.pow(x, 2) + Math.pow(z, 2);
 
-        double angle = Math.PI / 4 * Math.log(distance_squared) / log_phi - Math.PI;
+        double angle = Math.PI / 4 * Math.log(distance_squared + Math.pow(phi, 2)) / log_phi - Math.PI;
         double tan_of_angle = Math.tan(angle);
 
         double spiral_result = (x * tan_of_angle - z) * Math.signum(tan_of_angle / Math.sin(angle));

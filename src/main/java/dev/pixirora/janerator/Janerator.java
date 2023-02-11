@@ -40,21 +40,24 @@ public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
     private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
 
-    private static double phi = (1 + Math.sqrt(5)) / 2;
-    private static double log_phi = Math.log(phi);
+    private static double phi = (1.0 + Math.sqrt(5)) / 2.0;
+    private static double log10 = Math.log(10);
 
     public static boolean shouldOverride(double x, double z) {
         x += 0.01; // We do this because at X=0, the formula can never be greater than 0 creating a line of false
                    // Example at https://www.desmos.com/calculator/vsxlf0u9mt
 
-        double distance_squared = Math.pow(x, 2) + Math.pow(z, 2);
+        double distanceSquared = Math.pow(x, 2) + Math.pow(z, 2);
+        double logDistanceSquared = Math.log(distanceSquared) / log10;
 
-        double angle = Math.PI / 4 * Math.log(distance_squared + Math.pow(phi, 2)) / log_phi - Math.PI;
-        double tan_of_angle = Math.tan(angle);
+        double base = Math.max(Math.min(phi, 0.8 + 2 * 3.17 / logDistanceSquared), 1.5);
 
-        double spiral_result = (x * tan_of_angle - z) * Math.signum(tan_of_angle / Math.sin(angle));
+        double angle = Math.PI / 4 * Math.log(distanceSquared + Math.pow(phi, 2.0)) / Math.log(base) - Math.PI;
+        double tanAngle = Math.tan(angle);
 
-        return (Math.sqrt(distance_squared) - Math.abs(spiral_result)) * Math.signum(x) < 0;
+        double spiralResult = x * tanAngle - z;
+
+        return (Math.sqrt(distanceSquared) - Math.abs(spiralResult)) * Math.signum(x) < 0;
     }
 
     public static int normalize(int value, int divisor) {

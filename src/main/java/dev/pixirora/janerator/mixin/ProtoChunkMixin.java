@@ -10,14 +10,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ProtoChunk;
 
 @Mixin(ProtoChunk.class)
-public class ProtoChunkMixin extends ChunkAccessMixin {
+public class ProtoChunkMixin {
     @Inject(
         method = "setBlockState(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)Lnet/minecraft/world/level/block/state/BlockState;",
         at = @At("HEAD"),
         cancellable = true
     )
     public void janerator$stopBlockSet(BlockPos pos, BlockState block, boolean moved, CallbackInfoReturnable<BlockState> cir) {
-        if (this.janerator$disallowWrites(pos.getX(), pos.getZ())) {
+        if (((ProtoChunk) (Object) this).janerator$disallowWrites(pos.getX(), pos.getZ())) {
             cir.setReturnValue(null);
         }
     }

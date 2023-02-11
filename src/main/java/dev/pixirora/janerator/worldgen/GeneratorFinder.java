@@ -2,7 +2,10 @@ package dev.pixirora.janerator.worldgen;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
+
+import com.google.common.collect.Maps;
 
 import dev.pixirora.janerator.Janerator;
 import net.minecraft.world.level.ChunkPos;
@@ -18,7 +21,6 @@ public class GeneratorFinder {
     public GeneratorFinder(
         ChunkGenerator defaultGenerator,
         ChunkGenerator modifiedGenerator,
-
         ChunkAccess chunk
     ) {
         this.generatorMap = new ArrayList<>();
@@ -40,23 +42,27 @@ public class GeneratorFinder {
 
         // Because biomes are placed per every 4 blocks, we sample 
         // the most common generator in 4 block sections throughout the chunk
-        // so that the biome placements line up with the blocks better  
+        // so that the biome placements line up with the blocks better
         for (int section_x = 0; section_x < 16; section_x += 4) {
             for (int section_z = 0; section_z < 16; section_z += 4) {
-                List<ChunkGenerator> generatorSample = new ArrayList<>();
+                Map<ChunkGenerator, Integer> generatorSample = Maps.newHashMap();
 
                 for (int x = section_x; x < section_x + 4; x++) {
                     for (int z = section_z; z < section_z + 4; z++) {
-                        generatorSample.add(this.getAt(x, z));
+                        ChunkGenerator generator = this.getAt(x, z);
+
+                        int currentScore = generatorSample.getOrDefault(generator, 0);
+                        int scoreIncrease = generator == defaultGenerator ? 16 : 1;
+
+                        generatorSample.put(generator, currentScore + scoreIncrease);
                     }
                 }
 
                 generatorMapForBiomes.add(
-                    generatorSample.stream()
-                        .distinct()
-                        .max(
-                            (generator1, generator2) -> countOf(generator1, generatorSample) - countOf(generator2, generatorSample)
-                        ).get()
+                    generatorSample.entrySet()
+                        .stream()
+                        .max((entry1, entry2) -> entry1.getValue() - entry2.getValue())
+                        .get().getKey()
                 );
             }
         }
@@ -70,10 +76,6 @@ public class GeneratorFinder {
         this.fallbackGenerator = this.generators.stream()
             .max((holder1, holder2) -> holder1.size()-holder2.size())
             .get().generator;
-    }
-
-    private static <T> int countOf(T searchItem, List<T> items) {
-        return (int) items.stream().filter(item -> item == searchItem).count();
     }
 
     private List<Integer> getIndices(ChunkGenerator generator) {

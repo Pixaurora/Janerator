@@ -43,6 +43,9 @@
             ],
             "net/minecraft/class_2791": [
                 "dev/pixirora/janerator/worldgen/JaneratorChunk"
+            ],
+            "net/minecraft/class_2794": [
+                "dev/pixirora/janerator/worldgen/JaneratorGenerator"
             ]
         }
     }

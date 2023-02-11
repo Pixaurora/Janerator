@@ -10,6 +10,7 @@
         "LevelChunkSectionMixin",
         "MinecraftServerMixin",
         "NoiseBasedChunkGeneratorAccessor",
+        "NoiseBasedChunkGeneratorMixin",
         "NoiseChunkAccessor",
         "PlacedFeatureMixin",
         "ProtoChunkMixin"

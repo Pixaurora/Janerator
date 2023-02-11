@@ -24,6 +24,9 @@ public class MinecraftServerMixin {
 
         try (Stream<Path> walk = Files.walk(path)) {
             walk.sorted(Comparator.reverseOrder())
+                .filter(item -> !item.endsWith("playerdata"))
+                .filter(item -> !item.endsWith("carpet.conf"))
+                .filter(item -> !item.endsWith("level.dat"))
                 .map(Path::toFile)
                 .forEach(File::delete);
         }

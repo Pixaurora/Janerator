@@ -6,7 +6,9 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import dev.pixirora.janerator.Janerator;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -24,9 +26,11 @@ public class ChunkStatusMixin {
         Args args
     ) {
         ChunkAccess chunk = args.get(8);
-        ServerLevel world = args.get(2);
+        ResourceKey<Level> dimension = ((ServerLevel) args.get(2)).dimension();
         ChunkGenerator normalGenerator = args.get(3);
 
-        args.set(3, Janerator.getGeneratorAt(world.dimension(), normalGenerator, chunk));
+        normalGenerator.janerator$setDimension(dimension);
+
+        args.set(3, Janerator.getGeneratorAt(dimension, normalGenerator, chunk));
     }
 }

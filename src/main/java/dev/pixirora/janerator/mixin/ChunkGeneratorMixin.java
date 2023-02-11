@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import dev.pixirora.janerator.Janerator;
+import dev.pixirora.janerator.worldgen.MultiGenerator;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -28,6 +29,10 @@ public class ChunkGeneratorMixin {
         StructureTemplateManager templateManager,
         CallbackInfo callbackInfo
     ) {
+        if (((ChunkGenerator) (Object) this) instanceof MultiGenerator) {
+            return;
+        }
+
         if (Janerator.shouldOverride(chunk.getPos())) {
             callbackInfo.cancel();
         }

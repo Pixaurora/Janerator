@@ -20,6 +20,7 @@ import net.minecraft.data.worldgen.features.CaveFeatures;
 import net.minecraft.data.worldgen.features.EndFeatures;
 import net.minecraft.data.worldgen.features.MiscOverworldFeatures;
 import net.minecraft.data.worldgen.features.NetherFeatures;
+import net.minecraft.data.worldgen.features.TreeFeatures;
 import net.minecraft.data.worldgen.features.VegetationFeatures;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -75,7 +76,42 @@ public class PlacedFeatureMixin {
             VegetationFeatures.TREES_JUNGLE,
             VegetationFeatures.BAMBOO_VEGETATION,
             VegetationFeatures.MUSHROOM_ISLAND_VEGETATION,
-            VegetationFeatures.MANGROVE_VEGETATION
+            VegetationFeatures.MANGROVE_VEGETATION,
+            TreeFeatures.CRIMSON_FUNGUS,
+            TreeFeatures.CRIMSON_FUNGUS_PLANTED,
+            TreeFeatures.WARPED_FUNGUS,
+            TreeFeatures.WARPED_FUNGUS_PLANTED,
+            TreeFeatures.HUGE_BROWN_MUSHROOM,
+            TreeFeatures.HUGE_RED_MUSHROOM,
+            TreeFeatures.OAK,
+            TreeFeatures.DARK_OAK,
+            TreeFeatures.BIRCH,
+            TreeFeatures.ACACIA,
+            TreeFeatures.SPRUCE,
+            TreeFeatures.PINE,
+            TreeFeatures.JUNGLE_TREE,
+            TreeFeatures.FANCY_OAK,
+            TreeFeatures.JUNGLE_TREE_NO_VINE,
+            TreeFeatures.MEGA_JUNGLE_TREE,
+            TreeFeatures.MEGA_SPRUCE,
+            TreeFeatures.MEGA_PINE,
+            TreeFeatures.SUPER_BIRCH_BEES_0002,
+            TreeFeatures.SUPER_BIRCH_BEES,
+            TreeFeatures.SWAMP_OAK,
+            TreeFeatures.JUNGLE_BUSH,
+            TreeFeatures.AZALEA_TREE,
+            TreeFeatures.MANGROVE,
+            TreeFeatures.TALL_MANGROVE,
+            TreeFeatures.OAK_BEES_0002,
+            TreeFeatures.OAK_BEES_002,
+            TreeFeatures.OAK_BEES_005,
+            TreeFeatures.BIRCH_BEES_0002,
+            TreeFeatures.BIRCH_BEES_002,
+            TreeFeatures.BIRCH_BEES_005,
+            TreeFeatures.FANCY_OAK_BEES_0002,
+            TreeFeatures.FANCY_OAK_BEES_002,
+            TreeFeatures.FANCY_OAK_BEES_005,
+            TreeFeatures.FANCY_OAK_BEES
         );
 
         janerator$checkedFeatures = new ArrayList<>();

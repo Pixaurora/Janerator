@@ -27,14 +27,17 @@
 				"versions": ">=0.18.1- <2.0.0"
 			},
 			{
-				"id": "minecraft",
-				"versions": "=1.19.4-"
-			}
+                "id": "minecraft",
+                "versions": ">=1.20-"
+            },
+            {
+            "id": "minecraft",
+            "versions": "<=1.20"
+            }
 		]
 	},
 	"mixin": [
-        "janerator.mixins.json",
-        "janerator.test.mixins.json"
+        "janerator.mixins.json"
     ],
     "quilt_loom": {
         "injected_interfaces": {

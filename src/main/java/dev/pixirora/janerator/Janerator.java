@@ -123,6 +123,10 @@ public class Janerator {
         Janerator.generators.put(Level.END, createEndGenerator());
     }
 
+    public static void cleanup() {
+        Janerator.generators.clear();
+    }
+
     private static FlatLevelSource createOverworldGenerator() {
         List<FlatLayerInfo> layers = new ArrayList<>();
 

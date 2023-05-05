@@ -14,4 +14,9 @@ public class MinecraftServerMixin {
     private void janerator$onLoadLevel(CallbackInfo callbackInfo) {
         Janerator.setMinecraftServer((MinecraftServer)(Object)this);
     }
+
+    @Inject(method = "onServerExit", at = @At("HEAD"))
+    private void janerator$onServerExit(CallbackInfo callbackInfo) {
+        Janerator.cleanup();
+    }
 }

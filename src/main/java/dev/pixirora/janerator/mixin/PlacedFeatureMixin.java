@@ -102,6 +102,7 @@ public class PlacedFeatureMixin {
             TreeFeatures.AZALEA_TREE,
             TreeFeatures.MANGROVE,
             TreeFeatures.TALL_MANGROVE,
+            TreeFeatures.CHERRY,
             TreeFeatures.OAK_BEES_0002,
             TreeFeatures.OAK_BEES_002,
             TreeFeatures.OAK_BEES_005,
@@ -111,7 +112,8 @@ public class PlacedFeatureMixin {
             TreeFeatures.FANCY_OAK_BEES_0002,
             TreeFeatures.FANCY_OAK_BEES_002,
             TreeFeatures.FANCY_OAK_BEES_005,
-            TreeFeatures.FANCY_OAK_BEES
+            TreeFeatures.FANCY_OAK_BEES,
+            TreeFeatures.CHERRY_BEES_005
         );
 
         janerator$checkedFeatures = new ArrayList<>();

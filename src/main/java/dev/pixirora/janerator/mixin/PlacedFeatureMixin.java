@@ -1,8 +1,5 @@
 package dev.pixirora.janerator.mixin;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -14,15 +11,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import dev.pixirora.janerator.Janerator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.data.worldgen.features.CaveFeatures;
-import net.minecraft.data.worldgen.features.EndFeatures;
-import net.minecraft.data.worldgen.features.MiscOverworldFeatures;
-import net.minecraft.data.worldgen.features.NetherFeatures;
-import net.minecraft.data.worldgen.features.TreeFeatures;
-import net.minecraft.data.worldgen.features.VegetationFeatures;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
@@ -30,107 +18,6 @@ import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 public class PlacedFeatureMixin {
     @Shadow
     private Holder<ConfiguredFeature<?, ?>> feature;
-
-    private static List<ConfiguredFeature<?, ?>> janerator$checkedFeatures;
-
-    private static synchronized void janerator$makeRemovedFeatures() {
-        Registry<ConfiguredFeature<?, ?>> featureRegistry = Janerator.getRegistry(Registries.CONFIGURED_FEATURE);
-        List<ResourceKey<ConfiguredFeature<?, ?>>> keys = List.of(
-            CaveFeatures.SCULK_PATCH_DEEP_DARK,
-            CaveFeatures.SCULK_PATCH_ANCIENT_CITY,
-            CaveFeatures.SCULK_VEIN,
-            EndFeatures.CHORUS_PLANT,
-            MiscOverworldFeatures.LAKE_LAVA,
-            MiscOverworldFeatures.DISK_CLAY,
-            MiscOverworldFeatures.DISK_GRAVEL,
-            MiscOverworldFeatures.DISK_SAND,
-            MiscOverworldFeatures.SPRING_LAVA_FROZEN,
-            NetherFeatures.DELTA,
-            NetherFeatures.SMALL_BASALT_COLUMNS,
-            NetherFeatures.LARGE_BASALT_COLUMNS,
-            NetherFeatures.BASALT_BLOBS,
-            NetherFeatures.BLACKSTONE_BLOBS,
-            NetherFeatures.GLOWSTONE_EXTRA,
-            NetherFeatures.CRIMSON_FOREST_VEGETATION,
-            NetherFeatures.WARPED_FOREST_VEGETION, // Yes, this is typoed in the code
-            NetherFeatures.BASALT_PILLAR,
-            NetherFeatures.SPRING_LAVA_NETHER,
-            NetherFeatures.SPRING_NETHER_CLOSED,
-            NetherFeatures.SPRING_NETHER_OPEN,
-            NetherFeatures.PATCH_FIRE,
-            NetherFeatures.PATCH_SOUL_FIRE,
-            VegetationFeatures.DARK_FOREST_VEGETATION,
-            VegetationFeatures.TREES_FLOWER_FOREST,
-            VegetationFeatures.MEADOW_TREES,
-            VegetationFeatures.TREES_TAIGA,
-            VegetationFeatures.TREES_GROVE,
-            VegetationFeatures.TREES_SAVANNA,
-            VegetationFeatures.BIRCH_TALL,
-            VegetationFeatures.TREES_WINDSWEPT_HILLS,
-            VegetationFeatures.TREES_WATER,
-            VegetationFeatures.TREES_BIRCH_AND_OAK,
-            VegetationFeatures.TREES_PLAINS,
-            VegetationFeatures.TREES_SPARSE_JUNGLE,
-            VegetationFeatures.TREES_OLD_GROWTH_SPRUCE_TAIGA,
-            VegetationFeatures.TREES_OLD_GROWTH_PINE_TAIGA,
-            VegetationFeatures.TREES_JUNGLE,
-            VegetationFeatures.BAMBOO_VEGETATION,
-            VegetationFeatures.MUSHROOM_ISLAND_VEGETATION,
-            VegetationFeatures.MANGROVE_VEGETATION,
-            TreeFeatures.CRIMSON_FUNGUS,
-            TreeFeatures.CRIMSON_FUNGUS_PLANTED,
-            TreeFeatures.WARPED_FUNGUS,
-            TreeFeatures.WARPED_FUNGUS_PLANTED,
-            TreeFeatures.HUGE_BROWN_MUSHROOM,
-            TreeFeatures.HUGE_RED_MUSHROOM,
-            TreeFeatures.OAK,
-            TreeFeatures.DARK_OAK,
-            TreeFeatures.BIRCH,
-            TreeFeatures.ACACIA,
-            TreeFeatures.SPRUCE,
-            TreeFeatures.PINE,
-            TreeFeatures.JUNGLE_TREE,
-            TreeFeatures.FANCY_OAK,
-            TreeFeatures.JUNGLE_TREE_NO_VINE,
-            TreeFeatures.MEGA_JUNGLE_TREE,
-            TreeFeatures.MEGA_SPRUCE,
-            TreeFeatures.MEGA_PINE,
-            TreeFeatures.SUPER_BIRCH_BEES_0002,
-            TreeFeatures.SUPER_BIRCH_BEES,
-            TreeFeatures.SWAMP_OAK,
-            TreeFeatures.JUNGLE_BUSH,
-            TreeFeatures.AZALEA_TREE,
-            TreeFeatures.MANGROVE,
-            TreeFeatures.TALL_MANGROVE,
-            TreeFeatures.CHERRY,
-            TreeFeatures.OAK_BEES_0002,
-            TreeFeatures.OAK_BEES_002,
-            TreeFeatures.OAK_BEES_005,
-            TreeFeatures.BIRCH_BEES_0002,
-            TreeFeatures.BIRCH_BEES_002,
-            TreeFeatures.BIRCH_BEES_005,
-            TreeFeatures.FANCY_OAK_BEES_0002,
-            TreeFeatures.FANCY_OAK_BEES_002,
-            TreeFeatures.FANCY_OAK_BEES_005,
-            TreeFeatures.FANCY_OAK_BEES,
-            TreeFeatures.CHERRY_BEES_005
-        );
-
-        janerator$checkedFeatures = new ArrayList<>();
-        for (ResourceKey<ConfiguredFeature<?, ?>> key: keys) {
-            janerator$checkedFeatures.add(
-                featureRegistry.getHolderOrThrow(key).value()
-            );
-        }
-    }
-
-    private static List<ConfiguredFeature<?, ?>> janerator$getRemovedFeatures() {
-        if (Objects.isNull(janerator$checkedFeatures)) {
-            janerator$makeRemovedFeatures();
-        }
-
-        return janerator$checkedFeatures;
-    }
 
     @Redirect(
         method = "placeWithContext(Lnet/minecraft/world/level/levelgen/placement/PlacementContext;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z",
@@ -140,7 +27,7 @@ public class PlacedFeatureMixin {
         )
     )
     public void janerator$decideIfPlace(Stream<BlockPos> posStream, Consumer<BlockPos> function) {
-        if (janerator$getRemovedFeatures().contains(this.feature.value())) {
+        if (Janerator.getRegistryCache().getRemovedFeatures().contains(this.feature.value())) {
             posStream = posStream.filter(pos -> !Janerator.shouldOverride(pos));
         }
 

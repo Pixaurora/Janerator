@@ -12,7 +12,7 @@ import net.minecraft.server.MinecraftServer;
 public class MinecraftServerMixin {
     @Inject(method = "loadLevel()V", at = @At("HEAD"))
     private void janerator$onLoadLevel(CallbackInfo callbackInfo) {
-        Janerator.setMinecraftServer((MinecraftServer)(Object)this);
+        Janerator.makeRegistryCache((MinecraftServer)(Object)this);
     }
 
     @Inject(method = "onServerExit", at = @At("HEAD"))

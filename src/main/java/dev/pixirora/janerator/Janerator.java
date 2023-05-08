@@ -1,27 +1,5 @@
 package dev.pixirora.janerator;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderSet;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.chunk.ImposterProtoChunk;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.levelgen.FlatLevelSource;
-import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
-import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
-import net.minecraft.world.level.levelgen.placement.PlacedFeature;
-import net.minecraft.world.level.levelgen.structure.StructureSet;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,16 +12,75 @@ import com.google.common.collect.Maps;
 
 import dev.pixirora.janerator.worldgen.GeneratorFinder;
 import dev.pixirora.janerator.worldgen.MultiGenerator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.worldgen.features.CaveFeatures;
+import net.minecraft.data.worldgen.features.EndFeatures;
+import net.minecraft.data.worldgen.features.MiscOverworldFeatures;
+import net.minecraft.data.worldgen.features.NetherFeatures;
+import net.minecraft.data.worldgen.features.TreeFeatures;
+import net.minecraft.data.worldgen.features.VegetationFeatures;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ImposterProtoChunk;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
+import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
+import net.minecraft.world.level.levelgen.placement.PlacedFeature;
+import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 public class Janerator {
-    private static MinecraftServer server = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
+
     private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
 
-    private static double phi = (1.0 + Math.sqrt(5)) / 2.0;
-    private static double log10 = Math.log(10);
+    private static RegistryCache cache;
 
-    public static boolean shouldOverride(double x, double z) {
+    private static double phi = (1.0 + Math.sqrt(5)) / 2.0;
+    private static double log10 = Math.log(10.0);
+    private static double log2 = Math.log(2.0);
+
+    private static int squareSpiralImage[][] = new int[][]{
+        new int[]{0,0,0,0,0,0,0,0},
+        new int[]{1,1,1,1,1,1,1,0},
+        new int[]{1,0,0,0,0,0,1,0},
+        new int[]{1,0,1,1,1,0,1,0},
+        new int[]{1,0,1,0,1,0,1,0},
+        new int[]{1,0,1,0,0,0,1,0},
+        new int[]{1,0,1,1,1,1,1,0},
+        new int[]{1,0,0,0,0,0,0,0}
+    };
+
+    private static double fractalizeValueSquarely(double value, double otherValue) {
+        value += 0.5; 
+        otherValue += 0.5;
+
+        double furthestCoordinate = Math.max(Math.abs(value), Math.abs(otherValue));
+
+        double exponent = furthestCoordinate < 4 ? 2.0 : Math.floor(Math.log(2.0*furthestCoordinate) / Janerator.log2);
+
+        return Math.floor(4.0 * value / Math.pow(2.0, Math.max(2.0, exponent)));
+    }
+
+    private static int positionInSquareSpiral(double x, double z) {
+        double newX = Janerator.fractalizeValueSquarely(x, z) + 4;
+        double newZ = Janerator.fractalizeValueSquarely(z, x) + 4;
+
+        return Janerator.squareSpiralImage[(int) newX][(int) newZ];
+    }
+
+    private static double positionInCircleSpiral(double x, double z) {
         x += 0.01; // We do this because at X=0, the formula can never be greater than 0 creating a line of false
                    // Example at https://www.desmos.com/calculator/vsxlf0u9mt
 
@@ -57,7 +94,11 @@ public class Janerator {
 
         double spiralResult = x * tanAngle - z;
 
-        return (Math.sqrt(distanceSquared) - Math.abs(spiralResult)) * Math.signum(x) < 0;
+        return (Math.sqrt(distanceSquared) - Math.abs(spiralResult)) * Math.signum(x);
+    }
+
+    public static boolean shouldOverride(double x, double z) {
+        return positionInSquareSpiral(x, z) == 0;
     }
 
     public static int normalize(int value, int divisor) {
@@ -80,8 +121,12 @@ public class Janerator {
         return shouldOverride(pos.getX(), pos.getZ());
     }
 
-    public static void setMinecraftServer(MinecraftServer server) {
-        Janerator.server = server;
+    public static void makeRegistryCache(MinecraftServer server) {
+        Janerator.cache = new RegistryCache(server);
+    }
+
+    public static RegistryCache getRegistryCache() {
+        return Janerator.cache;
     }
 
     public static synchronized ChunkGenerator getGenerator(ResourceKey<Level> dimension) {
@@ -113,10 +158,6 @@ public class Janerator {
         }
     }
 
-    public static <T> Registry<T> getRegistry(ResourceKey<? extends Registry<? extends T>> registryKey) {
-        return Janerator.server.registryAccess().registryOrThrow(registryKey);
-    }
-
     private static void initializeGenerators() {
         Janerator.generators.put(Level.OVERWORLD, createOverworldGenerator());
         Janerator.generators.put(Level.NETHER, createNetherGenerator());
@@ -124,7 +165,7 @@ public class Janerator {
     }
 
     public static void cleanup() {
-        Janerator.generators.clear();
+        Janerator.cache = null;
     }
 
     private static FlatLevelSource createOverworldGenerator() {
@@ -167,8 +208,91 @@ public class Janerator {
         List<Holder<PlacedFeature>> placedFeatures = List.of();
         Optional<HolderSet<StructureSet>> optional = Optional.of(HolderSet.direct());
 
-        Holder<Biome> biomeHolder = Janerator.getRegistry(Registries.BIOME).getHolderOrThrow(biome);
+        Holder<Biome> biomeHolder = cache.getRegistry(Registries.BIOME).getHolderOrThrow(biome);
         return new FlatLevelSource(new FlatLevelGeneratorSettings(optional, biomeHolder, placedFeatures)
                 .withBiomeAndLayers(layers, optional, biomeHolder));
+    }
+
+    public static List<ResourceKey<ConfiguredFeature<?, ?>>> getFilteredFeatures() {
+        return List.of(
+            CaveFeatures.SCULK_PATCH_ANCIENT_CITY,
+            CaveFeatures.SCULK_PATCH_DEEP_DARK,
+            CaveFeatures.SCULK_VEIN,
+            EndFeatures.CHORUS_PLANT,
+            MiscOverworldFeatures.DISK_CLAY,
+            MiscOverworldFeatures.DISK_GRAVEL,
+            MiscOverworldFeatures.DISK_SAND,
+            MiscOverworldFeatures.LAKE_LAVA,
+            MiscOverworldFeatures.SPRING_LAVA_FROZEN,
+            NetherFeatures.BASALT_BLOBS,
+            NetherFeatures.BASALT_PILLAR,
+            NetherFeatures.BLACKSTONE_BLOBS,
+            NetherFeatures.CRIMSON_FOREST_VEGETATION,
+            NetherFeatures.DELTA,
+            NetherFeatures.GLOWSTONE_EXTRA,
+            NetherFeatures.LARGE_BASALT_COLUMNS,
+            NetherFeatures.PATCH_FIRE,
+            NetherFeatures.PATCH_SOUL_FIRE,
+            NetherFeatures.SMALL_BASALT_COLUMNS,
+            NetherFeatures.SPRING_LAVA_NETHER,
+            NetherFeatures.SPRING_NETHER_CLOSED,
+            NetherFeatures.SPRING_NETHER_OPEN,
+            NetherFeatures.WARPED_FOREST_VEGETION, // Yes, this is typoed in the code
+            TreeFeatures.ACACIA,
+            TreeFeatures.AZALEA_TREE,
+            TreeFeatures.BIRCH,
+            TreeFeatures.BIRCH_BEES_0002,
+            TreeFeatures.BIRCH_BEES_002,
+            TreeFeatures.BIRCH_BEES_005,
+            TreeFeatures.CHERRY,
+            TreeFeatures.CHERRY_BEES_005,
+            TreeFeatures.CRIMSON_FUNGUS,
+            TreeFeatures.CRIMSON_FUNGUS_PLANTED,
+            TreeFeatures.DARK_OAK,
+            TreeFeatures.FANCY_OAK,
+            TreeFeatures.FANCY_OAK_BEES,
+            TreeFeatures.FANCY_OAK_BEES_0002,
+            TreeFeatures.FANCY_OAK_BEES_002,
+            TreeFeatures.FANCY_OAK_BEES_005,
+            TreeFeatures.HUGE_BROWN_MUSHROOM,
+            TreeFeatures.HUGE_RED_MUSHROOM,
+            TreeFeatures.JUNGLE_BUSH,
+            TreeFeatures.JUNGLE_TREE,
+            TreeFeatures.JUNGLE_TREE_NO_VINE,
+            TreeFeatures.MANGROVE,
+            TreeFeatures.MEGA_JUNGLE_TREE,
+            TreeFeatures.MEGA_PINE,
+            TreeFeatures.MEGA_SPRUCE,
+            TreeFeatures.OAK,
+            TreeFeatures.OAK_BEES_0002,
+            TreeFeatures.OAK_BEES_002,
+            TreeFeatures.OAK_BEES_005,
+            TreeFeatures.PINE,
+            TreeFeatures.SPRUCE,
+            TreeFeatures.SUPER_BIRCH_BEES,
+            TreeFeatures.SUPER_BIRCH_BEES_0002,
+            TreeFeatures.SWAMP_OAK,
+            TreeFeatures.TALL_MANGROVE,
+            TreeFeatures.WARPED_FUNGUS,
+            TreeFeatures.WARPED_FUNGUS_PLANTED,
+            VegetationFeatures.BAMBOO_VEGETATION,
+            VegetationFeatures.BIRCH_TALL,
+            VegetationFeatures.DARK_FOREST_VEGETATION,
+            VegetationFeatures.MANGROVE_VEGETATION,
+            VegetationFeatures.MEADOW_TREES,
+            VegetationFeatures.MUSHROOM_ISLAND_VEGETATION,
+            VegetationFeatures.TREES_BIRCH_AND_OAK,
+            VegetationFeatures.TREES_FLOWER_FOREST,
+            VegetationFeatures.TREES_GROVE,
+            VegetationFeatures.TREES_JUNGLE,
+            VegetationFeatures.TREES_OLD_GROWTH_PINE_TAIGA,
+            VegetationFeatures.TREES_OLD_GROWTH_SPRUCE_TAIGA,
+            VegetationFeatures.TREES_PLAINS,
+            VegetationFeatures.TREES_SAVANNA,
+            VegetationFeatures.TREES_SPARSE_JUNGLE,
+            VegetationFeatures.TREES_TAIGA,
+            VegetationFeatures.TREES_WATER,
+            VegetationFeatures.TREES_WINDSWEPT_HILLS
+        );
     }
 }

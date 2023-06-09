@@ -26,13 +26,9 @@
 				"id": "quilt_loader",
 				"versions": ">=0.18.1- <2.0.0"
 			},
-			{
-                "id": "minecraft",
-                "versions": ">=1.20-"
-            },
             {
             "id": "minecraft",
-            "versions": "<=1.20"
+            "versions": "=1.20"
             }
 		]
 	},

@@ -30,8 +30,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ImposterProtoChunk;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -47,10 +47,6 @@ public class Janerator {
 
     private static RegistryCache cache;
 
-    private static double phi = (1.0 + Math.sqrt(5)) / 2.0;
-    private static double log10 = Math.log(10.0);
-    private static double log2 = Math.log(2.0);
-
     private static int squareSpiralImage[][] = new int[][]{
         new int[]{0,0,0,0,0,0,0,0},
         new int[]{1,1,1,1,1,1,1,0},
@@ -62,51 +58,60 @@ public class Janerator {
         new int[]{1,0,0,0,0,0,0,0}
     };
 
-    private static double fractalizeValueSquarely(double value, double otherValue) {
-        value += 0.5; 
-        otherValue += 0.5;
-
-        double furthestCoordinate = Math.max(Math.abs(value), Math.abs(otherValue));
-
-        double exponent = furthestCoordinate < 4 ? 2.0 : Math.floor(Math.log(2.0*furthestCoordinate) / Janerator.log2);
-
-        return Math.floor(4.0 * value / Math.pow(2.0, Math.max(2.0, exponent)));
-    }
-
-    private static int positionInSquareSpiral(double x, double z) {
-        double newX = Janerator.fractalizeValueSquarely(x, z) + 4;
-        double newZ = Janerator.fractalizeValueSquarely(z, x) + 4;
-
-        return Janerator.squareSpiralImage[(int) newX][(int) newZ];
-    }
-
-    private static double positionInCircleSpiral(double x, double z) {
-        x += 0.01; // We do this because at X=0, the formula can never be greater than 0 creating a line of false
-                   // Example at https://www.desmos.com/calculator/vsxlf0u9mt
-
-        double distanceSquared = Math.pow(x, 2) + Math.pow(z, 2);
-        double logDistanceSquared = Math.log(distanceSquared) / log10;
-
-        double base = Math.max(Math.min(phi, 0.8 + 2 * 3.17 / logDistanceSquared), 1.5);
-
-        double angle = Math.PI / 4 * Math.log(distanceSquared + Math.pow(phi, 2.0)) / Math.log(base) - Math.PI;
-        double tanAngle = Math.tan(angle);
-
-        double spiralResult = x * tanAngle - z;
-
-        return (Math.sqrt(distanceSquared) - Math.abs(spiralResult)) * Math.signum(x);
-    }
-
-    public static boolean shouldOverride(double x, double z) {
-        return positionInSquareSpiral(x, z) == 0;
-    }
-
     public static int normalize(int value, int divisor) {
         return value - divisor * Math.floorDiv(value, divisor);
     }
 
     public static int toListCoordinate(int x, int z, int divisor) {
         return divisor * normalize(x, divisor) + normalize(z, divisor);
+    }
+
+    private static double inverseSumOfSquares(double value) {
+        if (value == 0.0) {
+            return 0.0;
+        }
+
+        double repeatedFactor = Math.pow(Math.sqrt(3.0) * Math.sqrt(3888.0 * Math.pow(value, 2.0) + 1.0) - 108.0 * value, 1.0 / 3.0);
+        return (1.0 / 2.0) * (repeatedFactor / (Math.pow(3.0, 2.0 / 3.0)) + (1.0 / (Math.pow(3.0, 1.0 / 3.0) * repeatedFactor)) + 1.0);
+    }
+
+    private static double slowValueGrowth(double value) {
+        double absOfValue = Math.abs(value);
+        if (absOfValue <= 4.0) {
+            return value;
+        }
+
+        return Math.floor((inverseSumOfSquares(absOfValue - 4.0) + 4.0) * Math.signum(value));
+    }
+
+    private static double mod(double value, double divisor) {
+        // I use my own implementation of the modulo function, because Java's acts weird with negative numbers
+        return value - divisor * Math.floor(value / divisor);
+    }
+
+    private static double makeRepeatingForInfiniteSquareSpiral(double value, double otherValue) {
+        double maxValue = Math.max(Math.abs(value), Math.abs(otherValue));
+        double oneIfMaxValueIsNegative = value + otherValue < 0.0 ? 1.0 : 0.0;
+
+        if (maxValue < 4.0 + oneIfMaxValueIsNegative) {
+            return value;
+        }
+
+        double slope = (2.0 + mod(maxValue, 2.0)) / maxValue;
+
+        return slope * value;
+    }
+
+    private static int positionInSquareSpiral(double x, double z) {
+        return Janerator.squareSpiralImage[(int) x + 4][(int) z + 4];
+    }
+
+    private static int positionInInfiniteSquareSpiral(double x, double z) {
+        return positionInSquareSpiral(makeRepeatingForInfiniteSquareSpiral(x, z), makeRepeatingForInfiniteSquareSpiral(z, x));
+    }
+
+    public static boolean shouldOverride(double x, double z) {
+        return positionInInfiniteSquareSpiral(slowValueGrowth(x), slowValueGrowth(z)) == 0;
     }
 
     public static int toListCoordinate(int x, int z) {

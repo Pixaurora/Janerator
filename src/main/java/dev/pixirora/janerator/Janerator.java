@@ -66,13 +66,19 @@ public class Janerator {
         return divisor * normalize(x, divisor) + normalize(z, divisor);
     }
 
-    private static double inverseSumOfSquares(double value) {
-        if (value == 0.0) {
-            return 0.0;
+    private static int sumOfSquares(int value) {
+        return value * (value + 1) * (2 * value + 1) / 6;
+    }
+
+    private static int inverseSumOfSquares(int value) {
+        assert (value < 0 || 31000000 < value);
+
+        int answer = 0;
+        while (sumOfSquares(answer) <= value) {
+            answer ++;
         }
 
-        double repeatedFactor = Math.pow(Math.sqrt(3.0) * Math.sqrt(3888.0 * Math.pow(value, 2.0) + 1.0) - 108.0 * value, 1.0 / 3.0);
-        return (1.0 / 2.0) * (repeatedFactor / (Math.pow(3.0, 2.0 / 3.0)) + (1.0 / (Math.pow(3.0, 1.0 / 3.0) * repeatedFactor)) + 1.0);
+        return answer - 1;
     }
 
     private static double slowValueGrowth(double value) {
@@ -81,12 +87,7 @@ public class Janerator {
             return value;
         }
 
-        return Math.floor((inverseSumOfSquares(absOfValue - 4.0) + 4.0) * Math.signum(value));
-    }
-
-    private static double mod(double value, double divisor) {
-        // I use my own implementation of the modulo function, because Java's acts weird with negative numbers
-        return value - divisor * Math.floor(value / divisor);
+        return (inverseSumOfSquares((int) absOfValue - 4) + 4) * Math.signum(value);
     }
 
     private static double makeRepeatingForInfiniteSquareSpiral(double value, double otherValue) {
@@ -97,7 +98,7 @@ public class Janerator {
             return value;
         }
 
-        double slope = (2.0 + mod(maxValue, 2.0)) / maxValue;
+        double slope = (2.0 + maxValue % 2.0) / maxValue;
 
         return slope * value;
     }

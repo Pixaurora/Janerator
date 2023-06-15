@@ -47,17 +47,6 @@ public class Janerator {
 
     private static RegistryCache cache;
 
-    private static int squareSpiralImage[][] = new int[][]{
-        new int[]{0,0,0,0,0,0,0,0},
-        new int[]{1,1,1,1,1,1,1,0},
-        new int[]{1,0,0,0,0,0,1,0},
-        new int[]{1,0,1,1,1,0,1,0},
-        new int[]{1,0,1,0,1,0,1,0},
-        new int[]{1,0,1,0,0,0,1,0},
-        new int[]{1,0,1,1,1,1,1,0},
-        new int[]{1,0,0,0,0,0,0,0}
-    };
-
     public static int normalize(int value, int divisor) {
         return value - divisor * Math.floorDiv(value, divisor);
     }
@@ -66,53 +55,8 @@ public class Janerator {
         return divisor * normalize(x, divisor) + normalize(z, divisor);
     }
 
-    private static int sumOfSquares(int value) {
-        return value * (value + 1) * (2 * value + 1) / 6;
-    }
-
-    private static int inverseSumOfSquares(int value) {
-        assert (value < 0 || 31000000 < value);
-
-        int answer = 0;
-        while (sumOfSquares(answer) <= value) {
-            answer ++;
-        }
-
-        return answer - 1;
-    }
-
-    private static double slowValueGrowth(double value) {
-        double absOfValue = Math.abs(value);
-        if (absOfValue <= 4.0) {
-            return value;
-        }
-
-        return (inverseSumOfSquares((int) absOfValue - 4) + 4) * Math.signum(value);
-    }
-
-    private static double makeRepeatingForInfiniteSquareSpiral(double value, double otherValue) {
-        double maxValue = Math.max(Math.abs(value), Math.abs(otherValue));
-        double oneIfMaxValueIsNegative = value + otherValue < 0.0 ? 1.0 : 0.0;
-
-        if (maxValue < 4.0 + oneIfMaxValueIsNegative) {
-            return value;
-        }
-
-        double slope = (2.0 + maxValue % 2.0) / maxValue;
-
-        return slope * value;
-    }
-
-    private static int positionInSquareSpiral(double x, double z) {
-        return Janerator.squareSpiralImage[(int) x + 4][(int) z + 4];
-    }
-
-    private static int positionInInfiniteSquareSpiral(double x, double z) {
-        return positionInSquareSpiral(makeRepeatingForInfiniteSquareSpiral(x, z), makeRepeatingForInfiniteSquareSpiral(z, x));
-    }
-
     public static boolean shouldOverride(double x, double z) {
-        return positionInInfiniteSquareSpiral(slowValueGrowth(x), slowValueGrowth(z)) == 0;
+        return x > z;
     }
 
     public static int toListCoordinate(int x, int z) {

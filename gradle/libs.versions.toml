@@ -3,11 +3,13 @@
 minecraft = "1.20.1"
 quilt_mappings = "1.20.1+build.1"
 quilt_loader = "0.19.0"
+mxparser = "5.2.1"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
 quilt_mappings = { module = "org.quiltmc:quilt-mappings", version.ref = "quilt_mappings" }
 quilt_loader = { module = "org.quiltmc:quilt-loader", version.ref = "quilt_loader" }
+mxparser = {module = "org.mariuszgromada.math:MathParser.org-mXparser", version.ref = "mxparser"}
 
 # If you have multiple similar dependencies, you can declare a dependency bundle and reference it on the build script with "libs.bundles.example".
 

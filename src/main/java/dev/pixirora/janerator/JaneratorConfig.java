@@ -15,6 +15,6 @@ public class JaneratorConfig extends WrappedConfig {
     }
 
     public static class OverrideSelection implements Section {
-        public final String override_function = "x>z";
+        public final String override_function = "f(x,z)=x>z";
     }
 }

@@ -46,6 +46,7 @@ public class Janerator {
     private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
 
     private static RegistryCache cache;
+    private static OverrideLogic overriding = new OverrideLogic();
 
     public static int normalize(int value, int divisor) {
         return value - divisor * Math.floorDiv(value, divisor);
@@ -56,7 +57,7 @@ public class Janerator {
     }
 
     public static boolean shouldOverride(double x, double z) {
-        return x > z;
+        return overriding.shouldOverride(x, z);
     }
 
     public static int toListCoordinate(int x, int z) {

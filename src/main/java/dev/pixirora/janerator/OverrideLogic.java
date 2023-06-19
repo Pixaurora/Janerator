@@ -1,28 +1,32 @@
 package dev.pixirora.janerator;
 
+import java.util.List;
+
 import org.mariuszgromada.math.mxparser.Function;
-import org.mariuszgromada.math.mxparser.License;
+
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Doubles;
 
 public class OverrideLogic {
+    private List<Function> leadUpFunctions;
     private Function overrideFunction;
 
     public OverrideLogic() {
-        this(JaneratorConfig.getOverrideFunction());
-    }
-
-    private OverrideLogic(String functionText) {
-        OverrideLogic.activateLicense();
-        this.overrideFunction = new Function(functionText);
-    }
-
-    private static synchronized void activateLicense() {
-        if (!License.checkIfUseTypeConfirmed()) {
-            boolean licenseStatus = License.iConfirmNonCommercialUse("RinaS");
-            Janerator.LOGGER.info("MXParser license status: " + licenseStatus);
-        }
+        this.leadUpFunctions = JaneratorConfig.getLeadUpFunctions()
+            .stream()
+            .map(functionText -> new Function(functionText))
+            .toList();
+        this.overrideFunction = new Function(JaneratorConfig.getOverrideFunction());
     }
 
     public boolean shouldOverride(double x, double z) {
-        return overrideFunction.calculate(x, z) == 1.0;
+        List<Double> functionArgs = Lists.newArrayList(x, z);
+        for (Function leadUpFunction : leadUpFunctions) {
+            functionArgs.add(
+                leadUpFunction.calculate(Doubles.toArray(functionArgs))
+            );
+        }
+
+        return overrideFunction.calculate(Doubles.toArray(functionArgs)) == 1.0;
     }
 }

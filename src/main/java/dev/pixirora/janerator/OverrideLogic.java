@@ -21,12 +21,12 @@ public class OverrideLogic {
 
     public boolean shouldOverride(double x, double z) {
         List<Double> functionArgs = Lists.newArrayList(x, z);
-        for (Function leadUpFunction : leadUpFunctions) {
+        for (Function leadUpFunction : this.leadUpFunctions) {
             functionArgs.add(
                 leadUpFunction.calculate(Doubles.toArray(functionArgs))
             );
         }
 
-        return overrideFunction.calculate(Doubles.toArray(functionArgs)) == 1.0;
+        return this.overrideFunction.calculate(Doubles.toArray(functionArgs)) == 1.0;
     }
 }

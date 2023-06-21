@@ -1,6 +1,5 @@
 package dev.pixirora.janerator;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.quiltmc.config.api.WrappedConfig;
@@ -22,10 +21,12 @@ public class JaneratorConfig extends WrappedConfig {
 
     public static class OverrideSelection implements Section {
         public final ValueList<String> variables_in_override_function = ValueList.create(
-                "Pointless string?",
-                "dist_squared(x,z)=x^2+z^2",
-                "angle(x,z,dist_squared)=log2(dist_squared)"
-            );
-        public final String override_function = "f(x,z,dist_squared,angle)=(z-x*tan(angle))*sgn(tan(angle)*csc(angle))>0";
+            "Pointless string?",
+            "phi() = (1 + sqrt(5)) / 2",
+            "log_phi(phi) = ln(phi)",
+            "dist_squared(x,z) = x^2 + z^2",
+            "angle(log_phi, dist_squared) = ln(dist_squared) / log_phi"
+        );
+        public final String override_function = "f(x, z, angle) = (z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0";
     }
 }

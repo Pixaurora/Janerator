@@ -1,22 +1,20 @@
-package dev.pixirora.janerator.overriding;
+package dev.pixirora.janerator.config;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import dev.pixirora.janerator.JaneratorConfig;
-
 public class OverrideLogic {
     private List<WrappedFunction> variableDefinitions;
     private WrappedFunction overrideFunction;
 
     public OverrideLogic() {
-        this.variableDefinitions = JaneratorConfig.getLeadUpFunctions()
+        this.variableDefinitions = JaneratorConfig.getOverrideVariableDefinitions()
             .stream()
-            .map(functionText -> new WrappedFunction(functionText))
+            .map(WrappedFunction::new)
             .toList();
-        this.overrideFunction = new WrappedFunction(JaneratorConfig.getOverrideFunction());
+        this.overrideFunction = new WrappedFunction("shouldOverride = " + JaneratorConfig.getOverrideReturnStatement());
     }
 
     public boolean shouldOverride(double x, double z) {

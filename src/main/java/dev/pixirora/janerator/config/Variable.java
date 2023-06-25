@@ -10,8 +10,6 @@ public class Variable {
     public String definition;
     public List<String> requiredVariables;
 
-    private double value;
-
     public Variable(String userDefinition) {
         List<String> parts = Arrays.asList(userDefinition.split("="));
         if (parts.size() != 2) {
@@ -22,12 +20,7 @@ public class Variable {
         this.definition = parts.get(1);
 
         Expression expression = new Expression(definition);
-        if (! expression.checkSyntax()) {
-            this.requiredVariables = Arrays.asList(expression.getMissingUserDefinedArguments());
-        } else {
-            this.requiredVariables = List.of();
-            this.value = expression.calculate();
-        }
+        this.requiredVariables = Arrays.asList(expression.getMissingUserDefinedArguments());
     }
 
     public List<String> getMissingVariablesToEvaluate(List<String> knownVariables) {
@@ -52,9 +45,5 @@ public class Variable {
 
     public boolean isCompletelyIndependent() {
         return this.requiredVariables.size() == 0;
-    }
-
-    public double calculatedValue() {
-        return this.value;
     }
 }

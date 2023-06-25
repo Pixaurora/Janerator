@@ -8,21 +8,19 @@ import org.mariuszgromada.math.mxparser.Function;
 import com.google.common.primitives.Doubles;
 
 public class WrappedFunction {
-    private Function function;
     private String name;
+    private Function function;
     private List<String> requiredVariables;
 
-
-    WrappedFunction(String name, List<String> requiredVariables, String behaviorDefinition) {
-        this.requiredVariables = requiredVariables;
+    WrappedFunction(String name, String definition, List<String> requiredVariables) {
         this.name = name;
+        this.requiredVariables = requiredVariables;
 
-        String functionDefinition = String.format("%s(%s) = %s", this.name, String.join(",", this.requiredVariables), behaviorDefinition);
-        this.function = new Function(functionDefinition);
+        this.function = new Function(name, definition, requiredVariables.toArray(new String[]{}));
     }
 
     WrappedFunction(Variable variable) {
-        this(variable.name, variable.requiredVariables, variable.definition);
+        this(variable.name, variable.definition, variable.requiredVariables);
     }
 
     public List<String> getRequiredVariables() {
@@ -30,10 +28,14 @@ public class WrappedFunction {
     }
 
     public String getName() {
-        return this.function.getFunctionName();
+        return this.name;
     }
 
     public double evaluate(Map<String, Double> variableMap) {
+        if (requiredVariables.size() == 0) {
+            return this.function.calculate();
+        }
+
         return this.function.calculate(
             Doubles.toArray(
                 this.requiredVariables

@@ -1,12 +1,11 @@
 package dev.pixirora.janerator.config;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.mariuszgromada.math.mxparser.mXparser;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class OverrideLogic {
     private Map<String, Double> independentVariables;
@@ -18,25 +17,19 @@ public class OverrideLogic {
     }
 
     public OverrideLogic() {
-        this.independentVariables = Maps.newHashMap();
-        this.variableDefinitions = Lists.newArrayList();
+        this.independentVariables = new HashMap<>();
+        this.variableDefinitions = new ArrayList<>();
 
         List<Variable> variables = JaneratorConfig.getOverrideVariableDefinitions()
-        .stream()
-        .map(Variable::new)
-        .toList();
+            .stream()
+            .map(Variable::new)
+            .toList();
 
-        List<String> allKnownVariableNames = Lists.newArrayList("x", "z");
-        List<String> independentVariableNames = Lists.newArrayList();
+        List<String> allKnownVariableNames = new ArrayList<>(List.of("x", "z"));
+        List<String> independentVariableNames = new ArrayList<>();
         for (Variable variable : variables) {
             variable.validateNeedsOnly(allKnownVariableNames);
             allKnownVariableNames.add(variable.name);
-
-            // 0 input functions can't be used with mXparser currently, so a special case is needed.
-            if (variable.isCompletelyIndependent()) {
-                independentVariables.put(variable.name, variable.calculatedValue());
-                continue;
-            }
 
             WrappedFunction variableDefinition = new WrappedFunction(variable);
 
@@ -56,7 +49,7 @@ public class OverrideLogic {
     }
 
     public boolean shouldOverride(double x, double z) {
-        Map<String, Double> variableMap = Maps.newHashMap(Map.of("x", x, "z", z));
+        Map<String, Double> variableMap = new HashMap<>(Map.of("x", x, "z", z));
         variableMap.putAll(this.independentVariables);
 
         for (WrappedFunction variable : this.variableDefinitions) {

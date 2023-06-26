@@ -5,18 +5,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import dev.pixirora.janerator.Janerator;
+import dev.pixirora.janerator.RegistryCache;
 import net.minecraft.server.MinecraftServer;
 
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
     @Inject(method = "loadLevel()V", at = @At("HEAD"))
     private void janerator$onLoadLevel(CallbackInfo callbackInfo) {
-        Janerator.makeRegistryCache((MinecraftServer)(Object)this);
+        RegistryCache.INSTANCE = new RegistryCache((MinecraftServer) (Object) this);
     }
 
     @Inject(method = "onServerExit", at = @At("HEAD"))
     private void janerator$onServerExit(CallbackInfo callbackInfo) {
-        Janerator.cleanup();
+        RegistryCache.INSTANCE = null;
     }
 }

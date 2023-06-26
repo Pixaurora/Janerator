@@ -1,22 +1,15 @@
 package dev.pixirora.janerator;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-
+import dev.pixirora.janerator.config.Generators;
 import dev.pixirora.janerator.config.OverrideLogic;
 import dev.pixirora.janerator.worldgen.GeneratorFinder;
 import dev.pixirora.janerator.worldgen.MultiGenerator;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderSet;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.features.CaveFeatures;
 import net.minecraft.data.worldgen.features.EndFeatures;
 import net.minecraft.data.worldgen.features.MiscOverworldFeatures;
@@ -24,29 +17,17 @@ import net.minecraft.data.worldgen.features.NetherFeatures;
 import net.minecraft.data.worldgen.features.TreeFeatures;
 import net.minecraft.data.worldgen.features.VegetationFeatures;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ImposterProtoChunk;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
-import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
-import net.minecraft.world.level.levelgen.placement.PlacedFeature;
-import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
 
-    private static Map<ResourceKey<Level>, ChunkGenerator> generators = Maps.newHashMapWithExpectedSize(3);
-
-    private static RegistryCache cache;
     private static OverrideLogic overriding = new OverrideLogic();
 
     public static int normalize(int value, int divisor) {
@@ -73,23 +54,6 @@ public class Janerator {
         return shouldOverride(pos.getX(), pos.getZ());
     }
 
-    public static void makeRegistryCache(MinecraftServer server) {
-        Janerator.cache = new RegistryCache(server);
-    }
-
-    public static RegistryCache getRegistryCache() {
-        return Janerator.cache;
-    }
-
-    public static synchronized ChunkGenerator getGenerator(ResourceKey<Level> dimension) {
-        if (Janerator.generators.isEmpty()) {
-            initializeGenerators();
-        }
-
-        ChunkGenerator generator = Janerator.generators.get(dimension);
-        return generator != null ? generator : Janerator.generators.get(Level.OVERWORLD);
-    }
-
     public static ChunkGenerator getGeneratorAt(
         ResourceKey<Level> dimension,
         ChunkGenerator defaultGenerator,
@@ -99,7 +63,7 @@ public class Janerator {
             return defaultGenerator;
         }
 
-        ChunkGenerator modifiedGenerator = Janerator.getGenerator(dimension);
+        ChunkGenerator modifiedGenerator = Generators.get(dimension);
 
         GeneratorFinder generators = new GeneratorFinder(defaultGenerator, modifiedGenerator, chunk);
 
@@ -108,61 +72,6 @@ public class Janerator {
         } else {
             return generators.getDefault();
         }
-    }
-
-    private static void initializeGenerators() {
-        Janerator.generators.put(Level.OVERWORLD, createOverworldGenerator());
-        Janerator.generators.put(Level.NETHER, createNetherGenerator());
-        Janerator.generators.put(Level.END, createEndGenerator());
-    }
-
-    public static void cleanup() {
-        Janerator.cache = null;
-    }
-
-    private static FlatLevelSource createOverworldGenerator() {
-        List<FlatLayerInfo> layers = new ArrayList<>();
-
-        layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
-        layers.add(new FlatLayerInfo(63, Blocks.DEEPSLATE));
-
-        layers.add(new FlatLayerInfo(60, Blocks.STONE));
-        layers.add(new FlatLayerInfo(2, Blocks.DIRT));
-        layers.add(new FlatLayerInfo(1, Blocks.GRASS_BLOCK));
-
-        return createGenerator(layers, Biomes.MUSHROOM_FIELDS);
-    }
-
-    private static FlatLevelSource createNetherGenerator() {
-        List<FlatLayerInfo> layers = new ArrayList<>();
-
-        layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
-
-        layers.add(new FlatLayerInfo(30, Blocks.NETHERRACK));
-        layers.add(new FlatLayerInfo(1, Blocks.WARPED_NYLIUM));
-
-        return createGenerator(layers, Biomes.DEEP_DARK);
-    }
-
-    private static FlatLevelSource createEndGenerator() {
-        List<FlatLayerInfo> layers = new ArrayList<>();
-
-        layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
-
-        layers.add(new FlatLayerInfo(59, Blocks.STONE));
-        layers.add(new FlatLayerInfo(2, Blocks.DIRT));
-        layers.add(new FlatLayerInfo(1, Blocks.GRASS_BLOCK));
-
-        return createGenerator(layers, Biomes.DEEP_DARK);
-    }
-
-    private static FlatLevelSource createGenerator(List<FlatLayerInfo> layers, ResourceKey<Biome> biome) {
-        List<Holder<PlacedFeature>> placedFeatures = List.of();
-        Optional<HolderSet<StructureSet>> optional = Optional.of(HolderSet.direct());
-
-        Holder<Biome> biomeHolder = cache.getRegistry(Registries.BIOME).getHolderOrThrow(biome);
-        return new FlatLevelSource(new FlatLevelGeneratorSettings(optional, biomeHolder, placedFeatures)
-                .withBiomeAndLayers(layers, optional, biomeHolder));
     }
 
     public static List<ResourceKey<ConfiguredFeature<?, ?>>> getFilteredFeatures() {

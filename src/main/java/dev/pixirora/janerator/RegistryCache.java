@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -12,6 +12,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 
 public class RegistryCache {
+    public static RegistryCache INSTANCE;
+
     private MinecraftServer server;
 
     private List<ConfiguredFeature<?, ?>> removedFeatures = null;
@@ -22,6 +24,10 @@ public class RegistryCache {
 
     public <T> Registry<T> getRegistry(ResourceKey<? extends Registry<? extends T>> registryKey) {
         return this.server.registryAccess().registryOrThrow(registryKey);
+    }
+
+    public <T> HolderGetter<T> getProvider(ResourceKey<? extends Registry<? extends T>> registryKey) {
+        return this.server.registryAccess().lookupOrThrow(registryKey);
     }
 
     private void makeRemovedFeatures() {

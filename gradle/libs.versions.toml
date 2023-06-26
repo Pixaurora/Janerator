@@ -15,3 +15,4 @@ mxparser = {module = "org.mariuszgromada.math:MathParser.org-mXparser", version.
 
 [plugins]
 quilt_loom = { id = "org.quiltmc.loom", version = "1.1.+" }
+shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }

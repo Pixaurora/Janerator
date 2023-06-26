@@ -31,4 +31,6 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: janerator-artifacts
-          path: build/libs
+          path: |
+            build/libs
+            !build/libs/*-all.jar

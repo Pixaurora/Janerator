@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import dev.pixirora.janerator.RegistryCache;
-import net.minecraft.client.gui.screens.PresetFlatWorldScreen;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -35,7 +34,7 @@ public class Generators {
             String preset = JaneratorConfig.getGeneratorPreset(dimension);
 
             FlatLevelGeneratorSettings presetSettings = FlatLevelGeneratorSettings.getDefault(biomeProvider, structureSetProvider, placedFeatureProvider);
-            presetSettings = PresetFlatWorldScreen.fromString(blockProvider, biomeProvider, structureSetProvider, placedFeatureProvider, preset, presetSettings);
+            presetSettings = FlatLevelFactory.createFromString(blockProvider, biomeProvider, structureSetProvider, placedFeatureProvider, preset, presetSettings);
 
             generators.put(dimension, new FlatLevelSource(presetSettings));
         }

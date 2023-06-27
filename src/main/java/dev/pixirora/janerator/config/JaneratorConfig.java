@@ -2,18 +2,25 @@ package dev.pixirora.janerator.config;
 
 import java.util.List;
 
+import org.quiltmc.config.api.Config;
 import org.quiltmc.config.api.WrappedConfig;
+import org.quiltmc.config.api.annotations.Processor;
 import org.quiltmc.config.api.values.ValueList;
 import org.quiltmc.loader.api.config.QuiltConfig;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
+@Processor("setSerializer")
 public class JaneratorConfig extends WrappedConfig {
     public static final JaneratorConfig INSTANCE = QuiltConfig.create("janerator", "preset", JaneratorConfig.class);
 
     public final OverrideSelectionFunction override_selection_function = new OverrideSelectionFunction();
     public final GeneratorPresets alternate_generator_presets = new GeneratorPresets();
+
+    public void setSerializer(Config.Builder builder) {
+		builder.format("json5");
+	}
 
     public static List<String> getOverrideVariableDefinitions() {
         return (List<String>) JaneratorConfig.INSTANCE.getValue(List.of("override_selection_function", "variables")).value();
@@ -38,7 +45,7 @@ public class JaneratorConfig extends WrappedConfig {
         );
         public final String return_statement = "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0";
     }
- 
+
     public static class GeneratorPresets implements Section {
         public final String overworld_flat_preset = "minecraft:bedrock,63*minecraft:deepslate,60*minecraft:stone,2*minecraft:dirt,minecraft:grass_block;minecraft:mushroom_fields";
         public final String nether_flat_preset = "1*minecraft:bedrock,30*minecraft:netherrack,1*minecraft:warped_nylium;minecraft:deep_dark";

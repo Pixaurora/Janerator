@@ -5,8 +5,6 @@ import java.util.Map;
 
 import org.mariuszgromada.math.mxparser.Function;
 
-import com.google.common.primitives.Doubles;
-
 public class WrappedFunction {
     private String name;
     private Function function;
@@ -32,17 +30,16 @@ public class WrappedFunction {
     }
 
     public double evaluate(Map<String, Double> variableMap) {
-        if (requiredVariables.size() == 0) {
+        if (this.requiredVariables.size() < 1) {
             return this.function.calculate();
         }
 
         return this.function.calculate(
-            Doubles.toArray(
-                this.requiredVariables
-                    .stream()
-                    .map(variableMap::get)
-                    .toList()
-            )
+            this.requiredVariables
+                .stream()
+                .map(variableMap::get)
+                .mapToDouble(Double::valueOf)
+                .toArray()
         );
     }
 }

@@ -1,11 +1,10 @@
 package dev.pixirora.janerator.worldgen;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
-
-import com.google.common.collect.Maps;
 
 import dev.pixirora.janerator.Janerator;
 import net.minecraft.world.level.ChunkPos;
@@ -14,7 +13,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 
 public class GeneratorFinder {
     private List<ChunkGenerator> generatorMap;
-    private List<ChunkGenerator> generatorMapForBiomes;
+    private List<ChunkGenerator> biomeGeneratorMap;
     private List<GeneratorHolder> generators;
     private ChunkGenerator fallbackGenerator;
 
@@ -24,7 +23,7 @@ public class GeneratorFinder {
         ChunkAccess chunk
     ) {
         this.generatorMap = new ArrayList<>();
-        this.generatorMapForBiomes = new ArrayList<>();
+        this.biomeGeneratorMap = new ArrayList<>();
 
         ChunkPos pos = chunk.getPos();
 
@@ -45,7 +44,7 @@ public class GeneratorFinder {
         // so that the biome placements line up with the blocks better
         for (int section_x = 0; section_x < 16; section_x += 4) {
             for (int section_z = 0; section_z < 16; section_z += 4) {
-                Map<ChunkGenerator, Integer> generatorSample = Maps.newHashMap();
+                Map<ChunkGenerator, Integer> generatorSample = new HashMap<>();
 
                 for (int x = section_x; x < section_x + 4; x++) {
                     for (int z = section_z; z < section_z + 4; z++) {
@@ -58,7 +57,7 @@ public class GeneratorFinder {
                     }
                 }
 
-                generatorMapForBiomes.add(
+                biomeGeneratorMap.add(
                     generatorSample.entrySet()
                         .stream()
                         .max((entry1, entry2) -> entry1.getValue() - entry2.getValue())
@@ -67,7 +66,8 @@ public class GeneratorFinder {
             }
         }
 
-        this.generators = this.generatorMap.stream()
+        this.generators = this.generatorMap
+            .stream()
             .distinct()
             .map(generator ->
                 new GeneratorHolder(generator, this.getIndices(generator))
@@ -93,14 +93,14 @@ public class GeneratorFinder {
     }
 
     public ChunkGenerator getAtForBiomes(int x, int z) {
-        return this.generatorMapForBiomes.get(Janerator.toListCoordinate(x, z, 4));
+        return this.biomeGeneratorMap.get(Janerator.toListCoordinate(x, z, 4));
     }
 
     public List<GeneratorHolder> getAll() {
-        return generators;
+        return this.generators;
     }
 
     public ChunkGenerator getDefault() {
-        return fallbackGenerator;
+        return this.fallbackGenerator;
     }
 }

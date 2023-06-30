@@ -14,6 +14,9 @@ public class OverrideLogic {
 
     static {
         mXparser.disableImpliedMultiplicationMode(); // Implied multiplication breaks searching for missing user-defined arguments
+        mXparser.disableAlmostIntRounding();
+        mXparser.disableCanonicalRounding();
+        mXparser.disableUlpRounding();
     }
 
     public OverrideLogic() {

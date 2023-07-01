@@ -21,6 +21,12 @@ public class WrappedFunction {
         this(variable.name, variable.definition, variable.requiredVariables);
     }
 
+    WrappedFunction(WrappedFunction other) {
+        this.name = other.name;
+        this.requiredVariables = other.requiredVariables;
+        this.function = other.function.cloneForThreadSafe();
+    }
+
     public List<String> getRequiredVariables() {
         return this.requiredVariables;
     }

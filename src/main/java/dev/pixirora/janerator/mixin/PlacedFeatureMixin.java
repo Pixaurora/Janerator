@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import dev.pixirora.janerator.Janerator;
 import dev.pixirora.janerator.RegistryCache;
+import dev.pixirora.janerator.config.OverrideLogic;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -29,7 +29,7 @@ public class PlacedFeatureMixin {
     )
     public void janerator$decideIfPlace(Stream<BlockPos> posStream, Consumer<BlockPos> function) {
         if (RegistryCache.INSTANCE.getRemovedFeatures().contains(this.feature.value())) {
-            posStream = posStream.filter(pos -> !Janerator.shouldOverride(pos));
+            posStream = posStream.filter(pos -> ! OverrideLogic.INSTANCE.shouldOverride(pos));
         }
 
         posStream.forEach(function);

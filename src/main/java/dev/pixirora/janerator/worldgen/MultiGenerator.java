@@ -25,11 +25,22 @@ import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
 public class MultiGenerator extends ChunkGenerator {
+    private boolean generatorsInitialized;
+    ChunkGenerator defaultGenerator;
+    ChunkGenerator modifiedGenerator;
+    ChunkAccess chunk;
+
     private GeneratorFinder generators;
 
-    public MultiGenerator(BiomeSource biomeSource, GeneratorFinder generators) {
+    public MultiGenerator(BiomeSource biomeSource, ChunkGenerator defaultGenerator,
+        ChunkGenerator modifiedGenerator,
+        ChunkAccess chunk) {
         super(biomeSource);
-        this.generators = generators;
+
+        this.generatorsInitialized = false;
+        this.defaultGenerator = defaultGenerator;
+        this.modifiedGenerator = modifiedGenerator;
+        this.chunk = chunk;
     }
 
 	@Override
@@ -37,9 +48,18 @@ public class MultiGenerator extends ChunkGenerator {
 		return CODEC;
 	}
 
+    private GeneratorFinder getGenerators() {
+        if (! generatorsInitialized) {
+            this.generators = new GeneratorFinder(this.defaultGenerator, this.modifiedGenerator, this.chunk);
+            this.generatorsInitialized = true;
+        }
+
+        return this.generators;
+    }
+
 	@Override
 	public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
-        for (GeneratorHolder holder : this.generators.getAll()) {
+        for (GeneratorHolder holder : this.getGenerators().getAll()) {
             holder.generator.buildSurface(
                 region,
                 structureManager,
@@ -53,7 +73,7 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public int getSpawnHeight(LevelHeightAccessor world) {
-		return this.generators.getDefault().getSpawnHeight(world);
+		return this.getGenerators().getDefault().getSpawnHeight(world);
 	}
 
 	@Override
@@ -63,7 +83,7 @@ public class MultiGenerator extends ChunkGenerator {
         CompletableFuture<ChunkAccess> placeholderFuture = new CompletableFuture<>();
         CompletableFuture<ChunkAccess> future = placeholderFuture;
 
-        for(GeneratorHolder holder : this.generators.getAll()) {
+        for(GeneratorHolder holder : this.getGenerators().getAll()) {
             future = future.thenCompose(
                 access -> holder.generator.fillFromNoise(
                     executor,
@@ -85,12 +105,12 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState) {
-		return this.generators.getAt(x, z).getBaseHeight(x, z, heightmap, world, randomState);
+		return this.getGenerators().getAt(x, z).getBaseHeight(x, z, heightmap, world, randomState);
 	}
 
 	@Override
 	public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
-		return this.generators.getAt(x, z).getBaseColumn(x, z, world, randomState);
+		return this.getGenerators().getAt(x, z).getBaseColumn(x, z, world, randomState);
 	}
 
 	@Override
@@ -104,7 +124,7 @@ public class MultiGenerator extends ChunkGenerator {
             () -> {
                 chunk.fillBiomesFromNoise(
                     new WrappedBiomeResolver(
-                        this.generators,
+                        this.getGenerators(),
                         blender,
                         chunk,
                         structureManager,
@@ -127,7 +147,7 @@ public class MultiGenerator extends ChunkGenerator {
 		ChunkAccess chunk,
 		GenerationStep.Carving generationStep
 	) {
-        for (GeneratorHolder holder : this.generators.getAll()) {
+        for (GeneratorHolder holder : this.getGenerators().getAll()) {
             holder.generator.applyCarvers(
                 chunkRegion,
                 seed,
@@ -144,12 +164,12 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public void spawnOriginalMobs(WorldGenRegion region) {
-        this.generators.getDefault().spawnOriginalMobs(region);
+        this.getGenerators().getDefault().spawnOriginalMobs(region);
 	}
 
     @Override
     public void applyBiomeDecoration(WorldGenLevel world, ChunkAccess chunk, StructureManager structureManager) {
-        for (GeneratorHolder holder : this.generators.getAll()) {
+        for (GeneratorHolder holder : this.getGenerators().getAll()) {
             holder.generator.applyBiomeDecoration(
                 world,
                 chunk,
@@ -168,7 +188,7 @@ public class MultiGenerator extends ChunkGenerator {
 		ChunkAccess chunk,
 		StructureTemplateManager templateManager
 	) {
-        for (GeneratorHolder holder : this.generators.getAll()) {
+        for (GeneratorHolder holder : this.getGenerators().getAll()) {
             holder.generator.createStructures(
                 registryManager,
                 chunkGeneratorStructureState,

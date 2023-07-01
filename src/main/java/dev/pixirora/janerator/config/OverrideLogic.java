@@ -7,7 +7,12 @@ import java.util.Map;
 
 import org.mariuszgromada.math.mxparser.mXparser;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+
 public class OverrideLogic {
+    public static OverrideLogic INSTANCE = new OverrideLogic();
+
     private Map<String, Double> independentVariables;
     private List<WrappedFunction> variableDefinitions;
     private WrappedFunction overrideFunction;
@@ -51,7 +56,17 @@ public class OverrideLogic {
         this.overrideFunction = new WrappedFunction(returnValue);
     }
 
-    public boolean shouldOverride(double x, double z) {
+    public OverrideLogic(OverrideLogic other) {
+        this.independentVariables = other.independentVariables;
+        this.variableDefinitions = other.variableDefinitions
+            .stream()
+            .map(variable -> new WrappedFunction(variable))
+            .toList();
+
+        this.overrideFunction = new WrappedFunction(other.overrideFunction);
+    }
+
+    public synchronized boolean shouldOverride(double x, double z) {
         Map<String, Double> variableMap = new HashMap<>(Map.of("x", x, "z", z));
         variableMap.putAll(this.independentVariables);
 
@@ -60,5 +75,13 @@ public class OverrideLogic {
         }
 
         return this.overrideFunction.evaluate(variableMap) == 1.0;
+    }
+
+    public boolean shouldOverride(ChunkPos chunkPos) {
+        return this.shouldOverride(chunkPos.x*16, chunkPos.z*16);
+    }
+
+    public boolean shouldOverride(BlockPos pos) {
+        return this.shouldOverride(pos.getX(), pos.getZ());
     }
 }

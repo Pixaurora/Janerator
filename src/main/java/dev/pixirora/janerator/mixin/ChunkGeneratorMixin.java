@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import dev.pixirora.janerator.Janerator;
+import dev.pixirora.janerator.config.OverrideLogic;
 import dev.pixirora.janerator.worldgen.JaneratorGenerator;
 import dev.pixirora.janerator.worldgen.MultiGenerator;
 import net.minecraft.core.RegistryAccess;
@@ -38,7 +38,7 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
             return;
         }
 
-        if (Janerator.shouldOverride(chunk.getPos())) {
+        if (OverrideLogic.INSTANCE.shouldOverride(chunk.getPos())) {
             callbackInfo.cancel();
         }
     }

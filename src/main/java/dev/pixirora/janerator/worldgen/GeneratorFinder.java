@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import dev.pixirora.janerator.Janerator;
+import dev.pixirora.janerator.config.OverrideLogic;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -27,11 +28,13 @@ public class GeneratorFinder {
 
         ChunkPos pos = chunk.getPos();
 
+        OverrideLogic overriding = new OverrideLogic(OverrideLogic.INSTANCE);
+
         int actual_x = pos.getMinBlockX();
         int actual_z = pos.getMinBlockZ();
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                ChunkGenerator generatorAtPos = Janerator.shouldOverride(
+                ChunkGenerator generatorAtPos = overriding.shouldOverride(
                     x + actual_x, z + actual_z
                 ) ? modifiedGenerator : defaultGenerator;
 

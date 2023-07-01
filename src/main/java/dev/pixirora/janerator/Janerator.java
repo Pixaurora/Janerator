@@ -6,10 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.pixirora.janerator.config.Generators;
-import dev.pixirora.janerator.config.OverrideLogic;
-import dev.pixirora.janerator.worldgen.GeneratorFinder;
 import dev.pixirora.janerator.worldgen.MultiGenerator;
-import net.minecraft.core.BlockPos;
 import net.minecraft.data.worldgen.features.CaveFeatures;
 import net.minecraft.data.worldgen.features.EndFeatures;
 import net.minecraft.data.worldgen.features.MiscOverworldFeatures;
@@ -17,7 +14,6 @@ import net.minecraft.data.worldgen.features.NetherFeatures;
 import net.minecraft.data.worldgen.features.TreeFeatures;
 import net.minecraft.data.worldgen.features.VegetationFeatures;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ImposterProtoChunk;
@@ -28,8 +24,6 @@ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
 
-    private static OverrideLogic overriding = new OverrideLogic();
-
     public static int normalize(int value, int divisor) {
         return value - divisor * Math.floorDiv(value, divisor);
     }
@@ -38,20 +32,8 @@ public class Janerator {
         return divisor * normalize(x, divisor) + normalize(z, divisor);
     }
 
-    public static boolean shouldOverride(double x, double z) {
-        return overriding.shouldOverride(x, z);
-    }
-
     public static int toListCoordinate(int x, int z) {
         return toListCoordinate(x, z, 16);
-    }
-
-    public static boolean shouldOverride(ChunkPos chunkPos) {
-        return shouldOverride(chunkPos.x*16, chunkPos.z*16);
-    }
-
-    public static boolean shouldOverride(BlockPos pos) {
-        return shouldOverride(pos.getX(), pos.getZ());
     }
 
     public static ChunkGenerator getGeneratorAt(
@@ -65,13 +47,7 @@ public class Janerator {
 
         ChunkGenerator modifiedGenerator = Generators.get(dimension);
 
-        GeneratorFinder generators = new GeneratorFinder(defaultGenerator, modifiedGenerator, chunk);
-
-        if (generators.size() > 1) {
-            return new MultiGenerator(modifiedGenerator.getBiomeSource(), generators);
-        } else {
-            return generators.getDefault();
-        }
+        return new MultiGenerator(modifiedGenerator.getBiomeSource(), defaultGenerator, modifiedGenerator, chunk);
     }
 
     public static List<ResourceKey<ConfiguredFeature<?, ?>>> getFilteredFeatures() {

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import dev.pixirora.janerator.Janerator;
@@ -28,18 +31,33 @@ public class GeneratorFinder {
 
         ChunkPos pos = chunk.getPos();
 
-        OverrideLogic overriding = new OverrideLogic(OverrideLogic.INSTANCE);
+        List<CompletableFuture<Boolean>> overridingFutures = new ArrayList<>();
 
-        int actual_x = pos.getMinBlockX();
-        int actual_z = pos.getMinBlockZ();
+        int start_x = pos.getMinBlockX();
+        int start_z = pos.getMinBlockZ();
+
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                ChunkGenerator generatorAtPos = overriding.shouldOverride(
-                    x + actual_x, z + actual_z
-                ) ? modifiedGenerator : defaultGenerator;
-
-                this.generatorMap.add(generatorAtPos);
+                overridingFutures.add(
+                    CompletableFuture.supplyAsync(
+                        new GeneratorFinder.Overrider(x + start_x, z + start_z)
+                    )
+                );
             }
+        }
+
+        for(CompletableFuture<Boolean> future : overridingFutures) {
+            ChunkGenerator generatorAtPos = defaultGenerator;
+
+            try {
+                generatorAtPos = future.get() ? modifiedGenerator : defaultGenerator;
+            } catch (InterruptedException exception) {
+                Janerator.LOGGER.error("Caught InterruptedException during override future.");
+            } catch (ExecutionException exception) {
+                Janerator.LOGGER.error("Caught ExecutionException during override future.");
+            }
+
+            this.generatorMap.add(generatorAtPos);
         }
 
         // Because biomes are placed per every 4 blocks, we sample 
@@ -54,9 +72,7 @@ public class GeneratorFinder {
                         ChunkGenerator generator = this.getAt(x, z);
 
                         int currentScore = generatorSample.getOrDefault(generator, 0);
-                        int scoreIncrease = generator == defaultGenerator ? 16 : 1;
-
-                        generatorSample.put(generator, currentScore + scoreIncrease);
+                        generatorSample.put(generator, currentScore + 1);
                     }
                 }
 
@@ -105,5 +121,23 @@ public class GeneratorFinder {
 
     public ChunkGenerator getDefault() {
         return this.fallbackGenerator;
+    }
+
+    public static class Overrider implements Supplier<Boolean> {
+        private int x;
+        private int z;
+
+        OverrideLogic overriding;
+
+        public Overrider(int x, int z) {
+            this.x = x;
+            this.z = z;
+
+            this.overriding = new OverrideLogic(OverrideLogic.INSTANCE);
+        }
+
+        public Boolean get() {
+            return overriding.shouldOverride(this.x, this.z);
+        }
     }
 }

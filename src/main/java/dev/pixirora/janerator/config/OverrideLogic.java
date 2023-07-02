@@ -11,7 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 
 public class OverrideLogic {
-    public static OverrideLogic INSTANCE = new OverrideLogic();
+    public static OverrideLogic INSTANCE;
 
     private Map<String, Double> independentVariables;
     private List<WrappedFunction> variableDefinitions;
@@ -22,6 +22,8 @@ public class OverrideLogic {
         mXparser.disableAlmostIntRounding();
         mXparser.disableCanonicalRounding();
         mXparser.disableUlpRounding();
+
+        OverrideLogic.INSTANCE = new OverrideLogic();
     }
 
     public OverrideLogic() {

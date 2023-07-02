@@ -22,6 +22,7 @@ public class JaneratorConfig extends WrappedConfig {
 		builder.format("json5");
 	}
 
+    @SuppressWarnings("unchecked")
     public static List<String> getOverrideVariableDefinitions() {
         return (List<String>) JaneratorConfig.INSTANCE.getValue(List.of("override_selection_function", "variables")).value();
     }

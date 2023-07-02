@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.mariuszgromada.math.mxparser.License;
 import org.mariuszgromada.math.mxparser.mXparser;
 
 import net.minecraft.core.BlockPos;
@@ -18,6 +19,8 @@ public class OverrideLogic {
     private WrappedFunction overrideFunction;
 
     static {
+        License.iConfirmNonCommercialUse("Rina Shaw <rina@pixirora.dev>");
+
         mXparser.disableImpliedMultiplicationMode(); // Implied multiplication breaks searching for missing user-defined arguments
         mXparser.disableAlmostIntRounding();
         mXparser.disableCanonicalRounding();

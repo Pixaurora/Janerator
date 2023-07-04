@@ -40,7 +40,8 @@ public class GeneratorFinder {
             for (int z = 0; z < 16; z++) {
                 overridingFutures.add(
                     CompletableFuture.supplyAsync(
-                        new GeneratorFinder.Overrider(x + start_x, z + start_z)
+                        new GeneratorFinder.Overrider(x + start_x, z + start_z),
+                        Janerator.overridingThreadPool
                     )
                 );
             }
@@ -127,17 +128,15 @@ public class GeneratorFinder {
         private int x;
         private int z;
 
-        OverrideLogic overriding;
+        private static ThreadLocal<OverrideLogic> overriding = ThreadLocal.withInitial(() -> new OverrideLogic());
 
         public Overrider(int x, int z) {
             this.x = x;
             this.z = z;
-
-            this.overriding = new OverrideLogic(OverrideLogic.INSTANCE);
         }
 
         public Boolean get() {
-            return overriding.shouldOverride(this.x, this.z);
+            return Overrider.overriding.get().shouldOverride(this.x, this.z);
         }
     }
 }

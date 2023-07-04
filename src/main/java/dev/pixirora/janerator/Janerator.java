@@ -1,6 +1,8 @@
 package dev.pixirora.janerator;
 
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,8 @@ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 
 public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
+
+    public static Executor overridingThreadPool = Executors.newFixedThreadPool(16);
 
     public static int normalize(int value, int divisor) {
         return value - divisor * Math.floorDiv(value, divisor);

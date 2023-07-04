@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.pixirora.janerator.config.Generators;
+import dev.pixirora.janerator.threading.JaneratorThreadFactory;
 import dev.pixirora.janerator.worldgen.MultiGenerator;
 import net.minecraft.data.worldgen.features.CaveFeatures;
 import net.minecraft.data.worldgen.features.EndFeatures;
@@ -26,7 +27,7 @@ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
 
-    public static Executor overridingThreadPool = Executors.newFixedThreadPool(16);
+    public static Executor overridingThreadPool = Executors.newFixedThreadPool(16, new JaneratorThreadFactory());
 
     public static int normalize(int value, int divisor) {
         return value - divisor * Math.floorDiv(value, divisor);

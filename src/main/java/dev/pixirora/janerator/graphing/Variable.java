@@ -1,9 +1,11 @@
-package dev.pixirora.janerator.config;
+package dev.pixirora.janerator.graphing;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.mariuszgromada.math.mxparser.Expression;
+
+import dev.pixirora.janerator.config.GraphingConfigException;
 
 public class Variable {
     public String name;
@@ -13,7 +15,7 @@ public class Variable {
     public Variable(String userDefinition) {
         List<String> parts = Arrays.asList(userDefinition.split("="));
         if (parts.size() != 2) {
-            throw new OverridingConfigException(String.format("Function definition `%s` must have 1 = sign.", userDefinition));
+            throw new GraphingConfigException(String.format("Function definition `%s` must have 1 = sign.", userDefinition));
         }
 
         this.name = parts.get(0).strip();
@@ -33,7 +35,7 @@ public class Variable {
     public void validateNeedsOnly(List<String> variableNames) {
         List<String> missingVariables = this.getMissingVariablesToEvaluate(variableNames);
         if (missingVariables.size() > 0) {
-            throw new OverridingConfigException(
+            throw new GraphingConfigException(
                 String.format(
                     "Variable definition for %s is using unknown variables %s",
                     this.name,

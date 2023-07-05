@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import dev.pixirora.janerator.Janerator;
-import dev.pixirora.janerator.config.OverrideLogic;
+import dev.pixirora.janerator.graphing.ConfiguredGraphLogic;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -128,7 +128,7 @@ public class GeneratorFinder {
         private int x;
         private int z;
 
-        private static ThreadLocal<OverrideLogic> overriding = ThreadLocal.withInitial(() -> new OverrideLogic());
+        private static ThreadLocal<ConfiguredGraphLogic> overriding = ThreadLocal.withInitial(() -> new ConfiguredGraphLogic());
 
         public Overrider(int x, int z) {
             this.x = x;

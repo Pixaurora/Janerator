@@ -1,4 +1,4 @@
-package dev.pixirora.janerator.config;
+package dev.pixirora.janerator.graphing;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,11 +8,12 @@ import java.util.Map;
 import org.mariuszgromada.math.mxparser.License;
 import org.mariuszgromada.math.mxparser.mXparser;
 
+import dev.pixirora.janerator.config.JaneratorConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 
-public class OverrideLogic {
-    public static OverrideLogic INSTANCE;
+public class ConfiguredGraphLogic {
+    public static ConfiguredGraphLogic INSTANCE;
 
     private Map<String, Double> independentVariables;
     private List<WrappedFunction> variableDefinitions;
@@ -26,10 +27,10 @@ public class OverrideLogic {
         mXparser.disableCanonicalRounding();
         mXparser.disableUlpRounding();
 
-        OverrideLogic.INSTANCE = new OverrideLogic();
+        ConfiguredGraphLogic.INSTANCE = new ConfiguredGraphLogic();
     }
 
-    public OverrideLogic() {
+    public ConfiguredGraphLogic() {
         this.independentVariables = new HashMap<>();
         this.variableDefinitions = new ArrayList<>();
 
@@ -61,7 +62,7 @@ public class OverrideLogic {
         this.overrideFunction = new WrappedFunction(returnValue);
     }
 
-    public OverrideLogic(OverrideLogic other) {
+    public ConfiguredGraphLogic(ConfiguredGraphLogic other) {
         this.independentVariables = other.independentVariables;
         this.variableDefinitions = other.variableDefinitions
             .stream()

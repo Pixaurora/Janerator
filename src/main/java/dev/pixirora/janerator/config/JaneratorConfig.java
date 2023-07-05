@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level;
 public class JaneratorConfig extends WrappedConfig {
     public static final JaneratorConfig INSTANCE = QuiltConfig.create("janerator", "preset", JaneratorConfig.class);
 
-    public final OverrideSelectionFunction override_selection_function = new OverrideSelectionFunction();
+    public final FunctionToGraph function_to_graph = new FunctionToGraph();
     public final GeneratorPresets alternate_generator_presets = new GeneratorPresets();
 
     public void setSerializer(Config.Builder builder) {
@@ -24,11 +24,11 @@ public class JaneratorConfig extends WrappedConfig {
 
     @SuppressWarnings("unchecked")
     public static List<String> getOverrideVariableDefinitions() {
-        return (List<String>) JaneratorConfig.INSTANCE.getValue(List.of("override_selection_function", "variables")).value();
+        return (List<String>) JaneratorConfig.INSTANCE.getValue(List.of("function_to_graph", "variables")).value();
     }
 
     public static String getOverrideReturnStatement() {
-        return (String) JaneratorConfig.INSTANCE.getValue(List.of("override_selection_function", "return_statement")).value();
+        return (String) JaneratorConfig.INSTANCE.getValue(List.of("function_to_graph", "return_statement")).value();
     }
 
     public static String getGeneratorPreset(ResourceKey<Level> dimension) {
@@ -36,7 +36,7 @@ public class JaneratorConfig extends WrappedConfig {
         return (String) JaneratorConfig.INSTANCE.getValue(List.of("alternate_generator_presets", field)).value();
     }
 
-    public static class OverrideSelectionFunction implements Section {
+    public static class FunctionToGraph implements Section {
         public final ValueList<String> variables = ValueList.create(
             "Pointless string?",
             "phi = (1 + sqrt(5)) / 2",

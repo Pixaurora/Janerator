@@ -1,4 +1,4 @@
-package dev.pixirora.janerator.config;
+package dev.pixirora.janerator.graphing;
 
 import java.util.List;
 import java.util.Map;

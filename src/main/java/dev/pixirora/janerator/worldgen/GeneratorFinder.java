@@ -5,12 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import dev.pixirora.janerator.Janerator;
-import dev.pixirora.janerator.graphing.ConfiguredGraphLogic;
+import dev.pixirora.janerator.graphing.Graphing;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -26,40 +24,29 @@ public class GeneratorFinder {
         ChunkGenerator modifiedGenerator,
         ChunkAccess chunk
     ) {
-        this.generatorMap = new ArrayList<>();
         this.biomeGeneratorMap = new ArrayList<>();
 
         ChunkPos pos = chunk.getPos();
 
-        List<CompletableFuture<Boolean>> overridingFutures = new ArrayList<>();
+        List<CompletableFuture<Boolean>> graphingFutures = new ArrayList<>();
 
-        int start_x = pos.getMinBlockX();
-        int start_z = pos.getMinBlockZ();
+        int startX = pos.getMinBlockX();
+        int startZ = pos.getMinBlockZ();
 
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                overridingFutures.add(
-                    CompletableFuture.supplyAsync(
-                        new GeneratorFinder.Overrider(x + start_x, z + start_z),
-                        Janerator.overridingThreadPool
-                    )
-                );
+        int endX = startX + 16;
+        int endZ = startZ + 16;
+
+        for (int x = startX; x < endX; x++) {
+            for (int z = startZ; z < endZ; z++) {
+                graphingFutures.add(Graphing.scheduleGraphing(x, z));
             }
         }
 
-        for(CompletableFuture<Boolean> future : overridingFutures) {
-            ChunkGenerator generatorAtPos = defaultGenerator;
-
-            try {
-                generatorAtPos = future.get() ? modifiedGenerator : defaultGenerator;
-            } catch (InterruptedException exception) {
-                Janerator.LOGGER.error("Caught InterruptedException during override future.");
-            } catch (ExecutionException exception) {
-                Janerator.LOGGER.error("Caught ExecutionException during override future.");
-            }
-
-            this.generatorMap.add(generatorAtPos);
-        }
+        this.generatorMap = graphingFutures
+            .stream()
+            .map(future -> Graphing.completeGraphing(future))
+            .map(shouldOverride -> shouldOverride ? modifiedGenerator : defaultGenerator)
+            .toList();
 
         // Because biomes are placed per every 4 blocks, we sample 
         // the most common generator in 4 block sections throughout the chunk
@@ -67,7 +54,7 @@ public class GeneratorFinder {
         for (int section_x = 0; section_x < 16; section_x += 4) {
             for (int section_z = 0; section_z < 16; section_z += 4) {
                 Map<ChunkGenerator, Integer> generatorSample = new HashMap<>();
-
+ 
                 for (int x = section_x; x < section_x + 4; x++) {
                     for (int z = section_z; z < section_z + 4; z++) {
                         ChunkGenerator generator = this.getAt(x, z);
@@ -122,21 +109,5 @@ public class GeneratorFinder {
 
     public ChunkGenerator getDefault() {
         return this.fallbackGenerator;
-    }
-
-    public static class Overrider implements Supplier<Boolean> {
-        private int x;
-        private int z;
-
-        private static ThreadLocal<ConfiguredGraphLogic> overriding = ThreadLocal.withInitial(() -> new ConfiguredGraphLogic());
-
-        public Overrider(int x, int z) {
-            this.x = x;
-            this.z = z;
-        }
-
-        public Boolean get() {
-            return Overrider.overriding.get().shouldOverride(this.x, this.z);
-        }
     }
 }

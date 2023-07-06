@@ -1,6 +1,9 @@
 package dev.pixirora.janerator.mixin;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -9,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import dev.pixirora.janerator.RegistryCache;
-import dev.pixirora.janerator.graphing.ConfiguredGraphLogic;
+import dev.pixirora.janerator.graphing.Graphing;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -29,7 +32,19 @@ public class PlacedFeatureMixin {
     )
     public void janerator$decideIfPlace(Stream<BlockPos> posStream, Consumer<BlockPos> function) {
         if (RegistryCache.INSTANCE.getRemovedFeatures().contains(this.feature.value())) {
-            posStream = posStream.filter(pos -> ! ConfiguredGraphLogic.INSTANCE.shouldOverride(pos));
+            List<BlockPos> positions = posStream.toList();
+
+            Map<BlockPos, Boolean> positionShading = positions
+                .stream()
+                .distinct()
+                .collect(Collectors.toMap(pos -> pos, pos -> Graphing.scheduleGraphing(pos)))
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(entry -> entry.getKey(), entry -> Graphing.completeGraphing(entry.getValue())));
+
+            posStream = positions
+                .stream()
+                .filter(pos -> ! positionShading.get(pos));
         }
 
         posStream.forEach(function);

@@ -5,9 +5,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import dev.pixirora.janerator.graphing.ConfiguredGraphLogic;
+import dev.pixirora.janerator.graphing.Graphing;
 import dev.pixirora.janerator.worldgen.JaneratorGenerator;
 import dev.pixirora.janerator.worldgen.MultiGenerator;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -38,7 +39,9 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
             return;
         }
 
-        if (ConfiguredGraphLogic.INSTANCE.shouldOverride(chunk.getPos())) {
+        BlockPos pos = chunk.getPos().getMiddleBlockPosition(0);
+
+        if (Graphing.isOverridden(pos)) {
             callbackInfo.cancel();
         }
     }

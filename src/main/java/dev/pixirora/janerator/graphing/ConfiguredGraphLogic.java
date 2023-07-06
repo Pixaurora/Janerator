@@ -9,8 +9,6 @@ import org.mariuszgromada.math.mxparser.License;
 import org.mariuszgromada.math.mxparser.mXparser;
 
 import dev.pixirora.janerator.config.JaneratorConfig;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.ChunkPos;
 
 public class ConfiguredGraphLogic {
     public static ConfiguredGraphLogic INSTANCE;
@@ -72,7 +70,7 @@ public class ConfiguredGraphLogic {
         this.overrideFunction = new WrappedFunction(other.overrideFunction);
     }
 
-    public synchronized boolean shouldOverride(double x, double z) {
+    public boolean isShaded(double x, double z) {
         Map<String, Double> variableMap = new HashMap<>(Map.of("x", x, "z", z));
         variableMap.putAll(this.independentVariables);
 
@@ -81,13 +79,5 @@ public class ConfiguredGraphLogic {
         }
 
         return this.overrideFunction.evaluate(variableMap) == 1.0;
-    }
-
-    public boolean shouldOverride(ChunkPos chunkPos) {
-        return this.shouldOverride(chunkPos.x*16, chunkPos.z*16);
-    }
-
-    public boolean shouldOverride(BlockPos pos) {
-        return this.shouldOverride(pos.getX(), pos.getZ());
     }
 }

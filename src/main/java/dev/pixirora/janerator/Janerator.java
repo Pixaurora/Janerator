@@ -1,14 +1,11 @@
 package dev.pixirora.janerator;
 
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.pixirora.janerator.config.Generators;
-import dev.pixirora.janerator.threading.JaneratorThreadFactory;
 import dev.pixirora.janerator.worldgen.MultiGenerator;
 import net.minecraft.data.worldgen.features.CaveFeatures;
 import net.minecraft.data.worldgen.features.EndFeatures;
@@ -19,15 +16,13 @@ import net.minecraft.data.worldgen.features.VegetationFeatures;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ImposterProtoChunk;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ImposterProtoChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 
 public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
-
-    public static Executor overridingThreadPool = Executors.newFixedThreadPool(16, new JaneratorThreadFactory());
 
     public static int normalize(int value, int divisor) {
         return value - divisor * Math.floorDiv(value, divisor);

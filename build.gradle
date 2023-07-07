@@ -8,9 +8,7 @@ plugins {
 // Rather than output file name
 def modVersion = project.version
 
-base {
-    archivesName = "janerator"
-}
+base.archivesName = archives_base_name
 version = "${project.version}+minecraft-${libs.versions.minecraft.get()}"
 group = project.maven_group
 

@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level;
 public class JaneratorConfig extends WrappedConfig {
     public static final JaneratorConfig INSTANCE = QuiltConfig.create("janerator", "preset", JaneratorConfig.class);
 
-    public final FunctionToGraph function_to_graph = new FunctionToGraph();
+    public final FunctionToGraph graphed_function = new FunctionToGraph();
     public final GeneratorPresets alternate_generator_presets = new GeneratorPresets();
 
     public void setSerializer(Config.Builder builder) {
@@ -24,11 +24,11 @@ public class JaneratorConfig extends WrappedConfig {
 
     @SuppressWarnings("unchecked")
     public static List<String> getOverrideVariableDefinitions() {
-        return (List<String>) JaneratorConfig.INSTANCE.getValue(List.of("function_to_graph", "variables")).value();
+        return (List<String>) JaneratorConfig.INSTANCE.getValue(List.of("graphed_function", "variables")).value();
     }
 
     public static String getOverrideReturnStatement() {
-        return (String) JaneratorConfig.INSTANCE.getValue(List.of("function_to_graph", "return_statement")).value();
+        return (String) JaneratorConfig.INSTANCE.getValue(List.of("graphed_function", "inequality")).value();
     }
 
     public static String getGeneratorPreset(ResourceKey<Level> dimension) {
@@ -44,7 +44,7 @@ public class JaneratorConfig extends WrappedConfig {
             "dist_squared = x^2 + z^2",
             "angle = ln(dist_squared) / log_phi"
         );
-        public final String return_statement = "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0";
+        public final String inequality = "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0";
     }
 
     public static class GeneratorPresets implements Section {

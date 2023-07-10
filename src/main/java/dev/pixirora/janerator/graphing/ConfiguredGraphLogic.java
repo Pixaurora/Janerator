@@ -1,9 +1,7 @@
 package dev.pixirora.janerator.graphing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.mariuszgromada.math.mxparser.License;
 import org.mariuszgromada.math.mxparser.mXparser;
@@ -11,9 +9,9 @@ import org.mariuszgromada.math.mxparser.mXparser;
 import dev.pixirora.janerator.config.JaneratorConfig;
 
 public class ConfiguredGraphLogic {
-    public static ConfiguredGraphLogic INSTANCE;
+    private List<Double> independentVariables;
+    private int variableCount;
 
-    private Map<String, Double> independentVariables;
     private List<WrappedFunction> variableDefinitions;
     private WrappedFunction overrideFunction;
 
@@ -24,12 +22,10 @@ public class ConfiguredGraphLogic {
         mXparser.disableAlmostIntRounding();
         mXparser.disableCanonicalRounding();
         mXparser.disableUlpRounding();
-
-        ConfiguredGraphLogic.INSTANCE = new ConfiguredGraphLogic();
     }
 
     public ConfiguredGraphLogic() {
-        this.independentVariables = new HashMap<>();
+        this.independentVariables = new ArrayList<>();
         this.variableDefinitions = new ArrayList<>();
 
         List<Variable> variables = JaneratorConfig.getOverrideVariableDefinitions()
@@ -43,41 +39,51 @@ public class ConfiguredGraphLogic {
             variable.validateNeedsOnly(allKnownVariableNames);
             allKnownVariableNames.add(variable.name);
 
-            WrappedFunction variableDefinition = new WrappedFunction(variable);
+            if (variable.isCompletelyIndependent()) {
+                this.independentVariables.add(variable.evaluate());
+                continue;
+            }
 
             List<String> missingDependentVariables = variable.getMissingVariablesToEvaluate(independentVariableNames);
             if (missingDependentVariables.size() == 0) {
-                this.independentVariables.put(variable.name, variableDefinition.evaluate(independentVariables));
+                WrappedFunction variableDefinition = new WrappedFunction(variable, independentVariableNames);
+
+                this.independentVariables.add(variableDefinition.evaluate(this.independentVariables));
                 independentVariableNames.add(variable.name);
             } else {
-                this.variableDefinitions.add(variableDefinition);
+                this.variableDefinitions.add(new WrappedFunction(variable, allKnownVariableNames));
             }
         }
 
         Variable returnValue = new Variable(String.format("shouldOverride = %s", JaneratorConfig.getOverrideReturnStatement()));
         returnValue.validateNeedsOnly(allKnownVariableNames);
 
-        this.overrideFunction = new WrappedFunction(returnValue);
+        this.overrideFunction = new WrappedFunction(returnValue, allKnownVariableNames);
+
+        this.variableCount = allKnownVariableNames.size();
     }
 
     public ConfiguredGraphLogic(ConfiguredGraphLogic other) {
         this.independentVariables = other.independentVariables;
+        this.variableCount = other.variableCount;
+
         this.variableDefinitions = other.variableDefinitions
             .stream()
             .map(variable -> new WrappedFunction(variable))
             .toList();
-
         this.overrideFunction = new WrappedFunction(other.overrideFunction);
     }
 
     public boolean isShaded(double x, double z) {
-        Map<String, Double> variableMap = new HashMap<>(Map.of("x", x, "z", z));
-        variableMap.putAll(this.independentVariables);
+        List<Double> variables = new ArrayList<>(this.variableCount);
+        variables.add(x);
+        variables.add(z);
+        variables.addAll(this.independentVariables);
 
         for (WrappedFunction variable : this.variableDefinitions) {
-            variableMap.put(variable.getName(), variable.evaluate(variableMap));
+            variables.add(variable.evaluate(variables));
         }
 
-        return this.overrideFunction.evaluate(variableMap) == 1.0;
+        return this.overrideFunction.evaluate(variables) == 1.0;
     }
 }

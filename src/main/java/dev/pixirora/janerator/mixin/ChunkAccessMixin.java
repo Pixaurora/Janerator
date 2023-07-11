@@ -5,17 +5,17 @@ import java.util.Arrays;
 import org.spongepowered.asm.mixin.Mixin;
 
 import dev.pixirora.janerator.worldgen.JaneratorChunk;
-import dev.pixirora.janerator.worldgen.PlacementSelector;
+import dev.pixirora.janerator.worldgen.PlacementSelection;
 import net.minecraft.world.level.chunk.ChunkAccess;
 
 @Mixin(ChunkAccess.class)
 public class ChunkAccessMixin implements JaneratorChunk {
-    private PlacementSelector janerator$selector;
+    private PlacementSelection janerator$selection;
     private boolean janerator$selecting;
 
     @Override
-    public void janerator$selectWith(PlacementSelector selector, boolean selectInSections) {
-        this.janerator$selector = selector;
+    public ChunkAccess janerator$withSelection(PlacementSelection selection, boolean selectInSections) {
+        this.janerator$selection = selection;
         this.janerator$selecting = true;
 
         // If the generation operation in question uses only high level APIs to
@@ -23,8 +23,10 @@ public class ChunkAccessMixin implements JaneratorChunk {
         // then we don't need to make the LevelChunkSections be selective
         if (selectInSections) {
             Arrays.stream(((ChunkAccess) (Object) this).getSections())
-                .forEach(section -> section.janerator$setSelector(selector));
+                .forEach(section -> section.janerator$setSelection(selection));
         }
+
+        return (ChunkAccess) (Object) this;
     }
 
     @Override
@@ -36,6 +38,6 @@ public class ChunkAccessMixin implements JaneratorChunk {
 
     @Override
     public boolean janerator$allowWrites(int x, int z) {
-        return !this.janerator$selecting || this.janerator$selector.isWanted(x, z);
+        return !this.janerator$selecting || this.janerator$selection.contains(x, z);
     }
 }

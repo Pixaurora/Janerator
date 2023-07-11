@@ -59,12 +59,12 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
-        for (GeneratorHolder holder : this.getGenerators().getAll()) {
-            holder.generator.buildSurface(
+        for (PlacementSelection selection : this.getGenerators().getAllSelections()) {
+            selection.getUsedGenerator().buildSurface(
                 region,
                 structureManager,
                 randomState,
-                holder.makeSelective(chunk, false)
+                chunk
             );
         }
 
@@ -83,14 +83,14 @@ public class MultiGenerator extends ChunkGenerator {
         CompletableFuture<ChunkAccess> placeholderFuture = new CompletableFuture<>();
         CompletableFuture<ChunkAccess> future = placeholderFuture;
 
-        for(GeneratorHolder holder : this.getGenerators().getAll()) {
+        for(PlacementSelection selection : this.getGenerators().getAllSelections()) {
             future = future.thenCompose(
-                access -> holder.generator.fillFromNoise(
+                access -> selection.getUsedGenerator().fillFromNoise(
                     executor,
                     blender,
                     randomState,
                     structureManager,
-                    holder.makeSelective(chunk, true)
+                    chunk.janerator$withSelection(selection, true)
                 )
             );
         }
@@ -115,7 +115,7 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public void addDebugScreenInfo(List<String> list, RandomState randomState, BlockPos pos) {}
-    
+
     @Override
 	public CompletableFuture<ChunkAccess> createBiomes(
 		Executor executor, RandomState randomState, Blender blender, StructureManager structureManager, ChunkAccess chunk
@@ -147,14 +147,14 @@ public class MultiGenerator extends ChunkGenerator {
 		ChunkAccess chunk,
 		GenerationStep.Carving generationStep
 	) {
-        for (GeneratorHolder holder : this.getGenerators().getAll()) {
-            holder.generator.applyCarvers(
+        for (PlacementSelection selection : this.getGenerators().getAllSelections()) {
+            selection.getUsedGenerator().applyCarvers(
                 chunkRegion,
                 seed,
                 randomState,
                 biomeAccess,
                 structureManager,
-                holder.makeSelective(chunk, true),
+                chunk.janerator$withSelection(selection, true),
                 generationStep
             );
         }
@@ -169,8 +169,8 @@ public class MultiGenerator extends ChunkGenerator {
 
     @Override
     public void applyBiomeDecoration(WorldGenLevel world, ChunkAccess chunk, StructureManager structureManager) {
-        for (GeneratorHolder holder : this.getGenerators().getAll()) {
-            holder.generator.applyBiomeDecoration(
+        for (PlacementSelection selection : this.getGenerators().getAllSelections()) {
+            selection.getUsedGenerator().applyBiomeDecoration(
                 world,
                 chunk,
                 structureManager
@@ -188,8 +188,8 @@ public class MultiGenerator extends ChunkGenerator {
 		ChunkAccess chunk,
 		StructureTemplateManager templateManager
 	) {
-        for (GeneratorHolder holder : this.getGenerators().getAll()) {
-            holder.generator.createStructures(
+        for (PlacementSelection selection : this.getGenerators().getAllSelections()) {
+            selection.getUsedGenerator().createStructures(
                 registryManager,
                 chunkGeneratorStructureState,
                 structureManager,

@@ -16,7 +16,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 public class GeneratorFinder {
     private List<ChunkGenerator> generatorMap;
     private List<ChunkGenerator> biomeGeneratorMap;
-    private List<GeneratorHolder> generators;
+    private List<PlacementSelection> selections;
     private ChunkGenerator fallbackGenerator;
 
     public GeneratorFinder(
@@ -73,16 +73,17 @@ public class GeneratorFinder {
             }
         }
 
-        this.generators = this.generatorMap
+        this.selections = this.generatorMap
             .stream()
             .distinct()
             .map(generator ->
-                new GeneratorHolder(generator, this.getIndices(generator))
+                new PlacementSelection(generator, this.getIndices(generator))
             ).toList();
 
-        this.fallbackGenerator = this.generators.stream()
-            .max((holder1, holder2) -> holder1.size()-holder2.size())
-            .get().generator;
+        this.fallbackGenerator = this.selections
+            .stream()
+            .max((selection1, selection2) -> selection1.size() - selection2.size())
+            .get().getUsedGenerator();
     }
 
     private List<Integer> getIndices(ChunkGenerator generator) {
@@ -103,8 +104,8 @@ public class GeneratorFinder {
         return this.biomeGeneratorMap.get(Janerator.toListCoordinate(x, z, 4));
     }
 
-    public List<GeneratorHolder> getAll() {
-        return this.generators;
+    public List<PlacementSelection> getAllSelections() {
+        return this.selections;
     }
 
     public ChunkGenerator getDefault() {

@@ -6,18 +6,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import dev.pixirora.janerator.worldgen.JaneratorSection;
-import dev.pixirora.janerator.worldgen.PlacementSelector;
+import dev.pixirora.janerator.worldgen.PlacementSelection;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
 @Mixin(LevelChunkSection.class)
 public class LevelChunkSectionMixin implements JaneratorSection {
-    private PlacementSelector janerator$selector;
+    private PlacementSelection janerator$selection;
     private boolean janerator$selecting = false;
 
     @Override
-    public void janerator$setSelector(PlacementSelector selector) {
-        this.janerator$selector = selector;
+    public void janerator$setSelection(PlacementSelection selection) {
+        this.janerator$selection = selection;
         this.janerator$selecting = true;
     }
 
@@ -28,7 +28,7 @@ public class LevelChunkSectionMixin implements JaneratorSection {
 
     @Override
     public boolean janerator$allowWrites(int x, int z) {
-        return !this.janerator$selecting || this.janerator$selector.isWanted(x, z);
+        return ! this.janerator$selecting || this.janerator$selection.contains(x, z);
     }
 
     @Inject(

@@ -36,8 +36,8 @@ public class WrappedBiomeResolver implements BiomeResolver {
         this.biomeResolvers = new HashMap<>();
         this.samplers = new HashMap<>();
 
-        for (GeneratorHolder holder : generators.getAll()) {
-            ChunkGenerator generator = holder.generator;
+        for (PlacementSelection selection : generators.getAllSelections()) {
+            ChunkGenerator generator = selection.getUsedGenerator();
 
             this.biomeResolvers.put(generator, getBiomeResolverForGenerator(generator, blender, chunk));
             if (generator instanceof NoiseBasedChunkGenerator) {

@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import dev.pixirora.janerator.config.Generators;
+import dev.pixirora.janerator.config.JaneratorConfig;
 import dev.pixirora.janerator.graphing.Graphing;
 import dev.pixirora.janerator.worldgen.JaneratorGenerator;
 import net.minecraft.resources.ResourceKey;
@@ -31,7 +31,7 @@ public class NoiseBasedChunkGeneratorMixin implements JaneratorGenerator {
     private void janerator$overrideBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState, CallbackInfoReturnable<Integer> cir) {
         if (Graphing.isOverridden(x, z)) {
             cir.setReturnValue(
-                Generators.get(this.janerator$dimension)
+                JaneratorConfig.getGenerators().get(this.janerator$dimension)
                     .getBaseHeight(x, z, heightmap, world, randomState)
             );
         }

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.pixirora.janerator.config.Generators;
+import dev.pixirora.janerator.config.JaneratorConfig;
 import dev.pixirora.janerator.worldgen.MultiGenerator;
 import net.minecraft.data.worldgen.features.CaveFeatures;
 import net.minecraft.data.worldgen.features.EndFeatures;
@@ -45,7 +46,9 @@ public class Janerator {
             return defaultGenerator;
         }
 
-        ChunkGenerator modifiedGenerator = Generators.get(dimension);
+        Generators generators = JaneratorConfig.getGenerators();
+
+        ChunkGenerator modifiedGenerator = generators.get(dimension);
 
         return new MultiGenerator(modifiedGenerator.getBiomeSource(), defaultGenerator, modifiedGenerator, chunk);
     }

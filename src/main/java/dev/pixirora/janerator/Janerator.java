@@ -25,18 +25,6 @@ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
 
-    public static int normalize(int value, int divisor) {
-        return value - divisor * Math.floorDiv(value, divisor);
-    }
-
-    public static int toListCoordinate(int x, int z, int divisor) {
-        return divisor * normalize(x, divisor) + normalize(z, divisor);
-    }
-
-    public static int toListCoordinate(int x, int z) {
-        return toListCoordinate(x, z, 16);
-    }
-
     public static ChunkGenerator getGeneratorAt(
         ResourceKey<Level> dimension,
         ChunkGenerator defaultGenerator,

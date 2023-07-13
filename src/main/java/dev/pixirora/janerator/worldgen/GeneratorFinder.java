@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
 
-import dev.pixirora.janerator.Janerator;
+import dev.pixirora.janerator.graphing.Coordinate;
 import dev.pixirora.janerator.graphing.Graphing;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -17,6 +17,7 @@ public class GeneratorFinder {
     private List<ChunkGenerator> generatorMap;
     private List<ChunkGenerator> biomeGeneratorMap;
     private List<PlacementSelection> selections;
+
     private ChunkGenerator fallbackGenerator;
 
     public GeneratorFinder(
@@ -57,7 +58,7 @@ public class GeneratorFinder {
  
                 for (int x = section_x; x < section_x + 4; x++) {
                     for (int z = section_z; z < section_z + 4; z++) {
-                        ChunkGenerator generator = this.getAt(x, z);
+                        ChunkGenerator generator = this.getAt(new Coordinate(x, z));
 
                         int currentScore = generatorSample.getOrDefault(generator, 0);
                         generatorSample.put(generator, currentScore + 1);
@@ -96,12 +97,12 @@ public class GeneratorFinder {
         return this.generatorMap.stream().distinct().toList().size();
     }
 
-    public ChunkGenerator getAt(int x, int z) {
-        return this.generatorMap.get(Janerator.toListCoordinate(x, z));
+    public ChunkGenerator getAt(Coordinate coordinate) {
+        return this.generatorMap.get(coordinate.toListCoordinate());
     }
 
-    public ChunkGenerator getAtForBiomes(int x, int z) {
-        return this.biomeGeneratorMap.get(Janerator.toListCoordinate(x, z, 4));
+    public ChunkGenerator getAtForBiomes(Coordinate coordinate) {
+        return this.biomeGeneratorMap.get(coordinate.toListCoordinate());
     }
 
     public List<PlacementSelection> getAllSelections() {

@@ -3,6 +3,7 @@ package dev.pixirora.janerator.worldgen;
 import java.util.HashMap;
 import java.util.Map;
 
+import dev.pixirora.janerator.graphing.Coordinate;
 import dev.pixirora.janerator.mixin.NoiseBasedChunkGeneratorAccessor;
 import dev.pixirora.janerator.mixin.NoiseChunkAccessor;
 import net.minecraft.core.Holder;
@@ -86,7 +87,7 @@ public class WrappedBiomeResolver implements BiomeResolver {
     }
 
     public Holder<Biome> getNoiseBiome(int x, int y, int z, Climate.Sampler sampler) {
-        ChunkGenerator generator = this.generators.getAtForBiomes(x, z);
+        ChunkGenerator generator = this.generators.getAtForBiomes(new Coordinate(x, z, 4));
 
         return biomeResolvers.get(
             generator

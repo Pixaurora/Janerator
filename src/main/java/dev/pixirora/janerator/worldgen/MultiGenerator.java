@@ -6,6 +6,7 @@ import java.util.concurrent.Executor;
 
 import com.mojang.serialization.Codec;
 
+import dev.pixirora.janerator.graphing.Coordinate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.level.WorldGenRegion;
@@ -32,9 +33,12 @@ public class MultiGenerator extends ChunkGenerator {
 
     private GeneratorFinder generators;
 
-    public MultiGenerator(BiomeSource biomeSource, ChunkGenerator defaultGenerator,
+    public MultiGenerator(
+        BiomeSource biomeSource,
+        ChunkGenerator defaultGenerator,
         ChunkGenerator modifiedGenerator,
-        ChunkAccess chunk) {
+        ChunkAccess chunk
+    ) {
         super(biomeSource);
 
         this.generatorsInitialized = false;
@@ -105,12 +109,12 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState) {
-		return this.getGenerators().getAt(x, z).getBaseHeight(x, z, heightmap, world, randomState);
+		return this.getGenerators().getAt(new Coordinate(x, z)).getBaseHeight(x, z, heightmap, world, randomState);
 	}
 
 	@Override
 	public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
-		return this.getGenerators().getAt(x, z).getBaseColumn(x, z, world, randomState);
+		return this.getGenerators().getAt(new Coordinate(x, z)).getBaseColumn(x, z, world, randomState);
 	}
 
 	@Override

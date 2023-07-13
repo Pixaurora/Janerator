@@ -2,7 +2,7 @@ package dev.pixirora.janerator.worldgen;
 
 import java.util.List;
 
-import dev.pixirora.janerator.Janerator;
+import dev.pixirora.janerator.graphing.Coordinate;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 
 public class PlacementSelection {
@@ -16,7 +16,7 @@ public class PlacementSelection {
 
     public boolean contains(int x, int z) {
         return this.placements.contains(
-            Janerator.toListCoordinate(x, z)
+            new Coordinate(x, z).toListCoordinate()
         );
     }
 

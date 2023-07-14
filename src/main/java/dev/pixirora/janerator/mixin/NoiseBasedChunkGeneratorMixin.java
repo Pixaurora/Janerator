@@ -31,7 +31,7 @@ public class NoiseBasedChunkGeneratorMixin implements JaneratorGenerator {
     private void janerator$overrideBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState, CallbackInfoReturnable<Integer> cir) {
         if (Graphing.isOverridden(x, z)) {
             cir.setReturnValue(
-                JaneratorConfig.getGenerators().get(this.janerator$dimension)
+                JaneratorConfig.getAlternateGenerators().get(this.janerator$dimension)
                     .getBaseHeight(x, z, heightmap, world, randomState)
             );
         }

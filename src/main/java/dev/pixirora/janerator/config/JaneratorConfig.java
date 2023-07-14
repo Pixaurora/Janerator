@@ -22,6 +22,13 @@ public class JaneratorConfig extends WrappedConfig {
             "end_flat_preset", "minecraft:bedrock,59*minecraft:stone,2*minecraft:dirt,minecraft:grass_block;minecraft:deep_dark"
         )
     );
+    public final Generators outline_generator_presets = new Generators(
+        Map.of(
+            "overworld_flat_preset", "127*minecraft:glowstone;minecraft:mushroom_fields",
+            "nether_flat_preset", "32*minecraft:glowstone;minecraft:deep_dark",
+            "end_flat_preset", "63*minecraft:glowstone;minecraft:deep_dark"
+        )
+    );
 
     public static class FunctionToGraph implements Section {
         public final ValueList<String> variables = ValueList.create(
@@ -47,7 +54,11 @@ public class JaneratorConfig extends WrappedConfig {
         return (String) JaneratorConfig.INSTANCE.getValue(List.of("graphed_function", "inequality")).value();
     }
 
-    public static Generators getGenerators() {
+    public static Generators getAlternateGenerators() {
         return (Generators) JaneratorConfig.INSTANCE.getValue(List.of("alternate_generator_presets")).value();
+    }
+
+    public static Generators getOutlineGenerators() {
+        return (Generators) JaneratorConfig.INSTANCE.getValue(List.of("outline_generator_presets")).value();
     }
 }

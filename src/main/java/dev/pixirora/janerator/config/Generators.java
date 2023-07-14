@@ -29,6 +29,10 @@ public class Generators implements ConfigSerializableObject<ValueMap<String>> {
     private Map<ResourceKey<Level>, ChunkGenerator> generators;
 
     public Generators(Map<String, String> presets) {
+        initialize(presets);
+    }
+
+    private void initialize(Map<String, String> presets) {
         this.presets = presets;
         this.generators = new HashMap<>(3);
 
@@ -74,7 +78,8 @@ public class Generators implements ConfigSerializableObject<ValueMap<String>> {
 
     @Override
     public Generators convertFrom(ValueMap<String> representation) {
-        return new Generators(representation);
+        initialize(representation);
+        return this;
     }
 
     @Override

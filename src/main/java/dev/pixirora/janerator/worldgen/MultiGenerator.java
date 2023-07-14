@@ -29,6 +29,7 @@ public class MultiGenerator extends ChunkGenerator {
     private boolean generatorsInitialized;
     ChunkGenerator defaultGenerator;
     ChunkGenerator modifiedGenerator;
+    ChunkGenerator outlineGenerator;
     ChunkAccess chunk;
 
     private GeneratorFinder generators;
@@ -37,6 +38,7 @@ public class MultiGenerator extends ChunkGenerator {
         BiomeSource biomeSource,
         ChunkGenerator defaultGenerator,
         ChunkGenerator modifiedGenerator,
+        ChunkGenerator outlineGenerator,
         ChunkAccess chunk
     ) {
         super(biomeSource);
@@ -44,6 +46,7 @@ public class MultiGenerator extends ChunkGenerator {
         this.generatorsInitialized = false;
         this.defaultGenerator = defaultGenerator;
         this.modifiedGenerator = modifiedGenerator;
+        this.outlineGenerator = outlineGenerator;
         this.chunk = chunk;
     }
 
@@ -54,7 +57,7 @@ public class MultiGenerator extends ChunkGenerator {
 
     private GeneratorFinder getGenerators() {
         if (! generatorsInitialized) {
-            this.generators = new GeneratorFinder(this.defaultGenerator, this.modifiedGenerator, this.chunk);
+            this.generators = new GeneratorFinder(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator, this.chunk);
             this.generatorsInitialized = true;
         }
 

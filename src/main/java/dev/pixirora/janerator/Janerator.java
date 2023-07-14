@@ -34,11 +34,10 @@ public class Janerator {
             return defaultGenerator;
         }
 
-        Generators generators = JaneratorConfig.getGenerators();
+        ChunkGenerator modifiedGenerator = JaneratorConfig.getAlternateGenerators().get(dimension);
+        ChunkGenerator outlineGenerator = JaneratorConfig.getOutlineGenerators().get(dimension);
 
-        ChunkGenerator modifiedGenerator = generators.get(dimension);
-
-        return new MultiGenerator(modifiedGenerator.getBiomeSource(), defaultGenerator, modifiedGenerator, chunk);
+        return new MultiGenerator(modifiedGenerator.getBiomeSource(), defaultGenerator, modifiedGenerator, outlineGenerator, chunk);
     }
 
     public static List<ResourceKey<ConfiguredFeature<?, ?>>> getFilteredFeatures() {

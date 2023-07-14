@@ -23,6 +23,7 @@ public class GeneratorFinder {
     public GeneratorFinder(
         ChunkGenerator defaultGenerator,
         ChunkGenerator modifiedGenerator,
+        ChunkGenerator outlineGenerator,
         ChunkAccess chunk
     ) {
         this.biomeGeneratorMap = new ArrayList<>();
@@ -48,6 +49,7 @@ public class GeneratorFinder {
             .map(future -> Graphing.completeGraphing(future))
             .map(shouldOverride -> shouldOverride ? modifiedGenerator : defaultGenerator)
             .toList();
+        this.generatorMap = new ArrayList<>(this.generatorMap);
 
         // Because biomes are placed per every 4 blocks, we sample 
         // the most common generator in 4 block sections throughout the chunk
@@ -71,6 +73,23 @@ public class GeneratorFinder {
                         .max((entry1, entry2) -> entry1.getValue() - entry2.getValue())
                         .get().getKey()
                 );
+            }
+        }
+
+        List<ChunkGenerator> uniqueGenerators = this.generatorMap
+            .stream()
+            .distinct()
+            .toList();
+        if (uniqueGenerators.size() > 1) {
+            List<Coordinate> coordinates = this.getIndices(modifiedGenerator)
+                .stream()
+                .map(Coordinate::fromListIndex)
+                .toList();
+
+            for (Coordinate coordinate : coordinates) {
+                if (coordinate.getNeighbors().anyMatch(coord -> this.getAt(coord) == defaultGenerator)) {
+                    this.generatorMap.set(coordinate.toListIndex(), outlineGenerator);
+                }
             }
         }
 
@@ -98,11 +117,11 @@ public class GeneratorFinder {
     }
 
     public ChunkGenerator getAt(Coordinate coordinate) {
-        return this.generatorMap.get(coordinate.toListCoordinate());
+        return this.generatorMap.get(coordinate.toListIndex());
     }
 
     public ChunkGenerator getAtForBiomes(Coordinate coordinate) {
-        return this.biomeGeneratorMap.get(coordinate.toListCoordinate());
+        return this.biomeGeneratorMap.get(coordinate.toListIndex());
     }
 
     public List<PlacementSelection> getAllSelections() {

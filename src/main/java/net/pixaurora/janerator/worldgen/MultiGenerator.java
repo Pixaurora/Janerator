@@ -35,6 +35,7 @@ public class MultiGenerator extends ChunkGenerator {
     CompletableFuture<GraphedChunk> scheduledGraph;
 
     private GeneratorFinder generators;
+    private GeneratorFinder biomeGenerators;
 
     public MultiGenerator(
         BiomeSource biomeSource,
@@ -57,17 +58,29 @@ public class MultiGenerator extends ChunkGenerator {
 		return CODEC;
 	}
 
-    private GeneratorFinder getGenerators() {
-        try {
-            if (! generatorsInitialized) {
-                this.generators = new GeneratorFinder(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator, this.scheduledGraph.get());
-                this.generatorsInitialized = true;
-            }
+    private void initializeGenerators() {
+        GraphedChunk graphedArea = Graph.completeChunkGraphing(this.scheduledGraph);
 
-            return this.generators;
-    } catch (Exception e) {
-            throw new RuntimeException(e);
+        this.generators = new GeneratorFinder(graphedArea.getGeneratorMap(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator));
+        this.biomeGenerators = new GeneratorFinder(graphedArea.sampleBiomeGeneratorMap(this.defaultGenerator, this.modifiedGenerator));
+
+        this.generatorsInitialized = true;
+    }
+
+    private GeneratorFinder getGenerators() {
+        if (!generatorsInitialized) {
+            this.initializeGenerators();
         }
+
+        return this.generators;
+    }
+
+    private GeneratorFinder getBiomeGenerators() {
+        if (!generatorsInitialized) {
+            this.initializeGenerators();
+        }
+
+        return this.biomeGenerators;
     }
 
 	@Override
@@ -137,7 +150,7 @@ public class MultiGenerator extends ChunkGenerator {
             () -> {
                 chunk.fillBiomesFromNoise(
                     new WrappedBiomeResolver(
-                        this.getGenerators(),
+                        this.getBiomeGenerators(),
                         blender,
                         chunk,
                         structureManager,

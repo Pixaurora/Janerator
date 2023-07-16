@@ -9,9 +9,12 @@ public class PlacementSelection {
     private ChunkGenerator generator;
     private List<Integer> placements;
 
-    public PlacementSelection(ChunkGenerator generator, List<Integer> placements) {
+    public PlacementSelection(ChunkGenerator generator, List<Coordinate> placements) {
         this.generator = generator;
-        this.placements = placements;
+        this.placements = placements
+            .stream()
+            .map(Coordinate::toListIndex)
+            .toList();
     }
 
     public boolean contains(int x, int z) {

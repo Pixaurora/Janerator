@@ -1,56 +1,39 @@
 package net.pixaurora.janerator.worldgen;
 
 import java.util.List;
-import java.util.stream.IntStream;
 
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.graph.Coordinate;
-import net.pixaurora.janerator.graph.GraphedChunk;
+import net.pixaurora.janerator.graph.Graph;
 
 public class GeneratorFinder {
     private List<ChunkGenerator> generatorMap;
-    private List<ChunkGenerator> biomeGeneratorMap;
 
-    private ChunkGenerator fallbackGenerator;
     private List<PlacementSelection> selections;
+    private ChunkGenerator fallbackGenerator;
 
     public GeneratorFinder(
-        ChunkGenerator defaultGenerator,
-        ChunkGenerator modifiedGenerator,
-        ChunkGenerator outlineGenerator,
-        GraphedChunk graphedArea
+        List<ChunkGenerator> generatorMap
     ) {
-        this.generatorMap = graphedArea.getGeneratorMap(defaultGenerator, modifiedGenerator, outlineGenerator);
-        this.biomeGeneratorMap = graphedArea.sampleBiomeGeneratorMap(defaultGenerator, modifiedGenerator);
+        this.generatorMap = generatorMap;
 
         this.selections = this.generatorMap
             .stream()
             .distinct()
-            .map(generator -> new PlacementSelection(generator, this.getIndices(generator)))
+            .map(generator -> new PlacementSelection(generator, Graph.getIndices(this.generatorMap, generator)))
             .toList();
-
         this.fallbackGenerator = this.selections
             .stream()
             .max((selection1, selection2) -> selection1.size() - selection2.size())
             .get().getUsedGenerator();
     }
 
-    private List<Integer> getIndices(ChunkGenerator generator) {
-        return IntStream.range(0, 256)
-            .filter(index -> this.generatorMap.get(index) == generator)
-            .boxed().toList();
-    }
-
     public int size() {
-        return this.generatorMap.stream().distinct().toList().size();
+        return this.selections.size();
     }
 
     public ChunkGenerator getAt(Coordinate coordinate) {
         return this.generatorMap.get(coordinate.toListIndex());
-    }
-
-    public ChunkGenerator getAtForBiomes(Coordinate coordinate) {
-        return this.biomeGeneratorMap.get(coordinate.toListIndex());
     }
 
     public List<PlacementSelection> getAllSelections() {

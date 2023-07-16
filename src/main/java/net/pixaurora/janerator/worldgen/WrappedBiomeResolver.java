@@ -87,7 +87,7 @@ public class WrappedBiomeResolver implements BiomeResolver {
     }
 
     public Holder<Biome> getNoiseBiome(int x, int y, int z, Climate.Sampler sampler) {
-        ChunkGenerator generator = this.generators.getAtForBiomes(new Coordinate(x, z, 4));
+        ChunkGenerator generator = this.generators.getAt(new Coordinate(x, z, 4));
 
         return biomeResolvers.get(
             generator

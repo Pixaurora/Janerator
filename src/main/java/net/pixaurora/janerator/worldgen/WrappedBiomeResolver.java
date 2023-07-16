@@ -17,7 +17,7 @@ import net.minecraft.world.level.levelgen.NoiseChunk;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
-import net.pixaurora.janerator.graphing.Coordinate;
+import net.pixaurora.janerator.graph.Coordinate;
 import net.pixaurora.janerator.mixin.NoiseBasedChunkGeneratorAccessor;
 import net.pixaurora.janerator.mixin.NoiseChunkAccessor;
 

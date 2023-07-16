@@ -23,14 +23,16 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.pixaurora.janerator.graphing.Coordinate;
+import net.pixaurora.janerator.graph.Coordinate;
+import net.pixaurora.janerator.graph.Graph;
+import net.pixaurora.janerator.graph.GraphedChunk;
 
 public class MultiGenerator extends ChunkGenerator {
     private boolean generatorsInitialized;
     ChunkGenerator defaultGenerator;
     ChunkGenerator modifiedGenerator;
     ChunkGenerator outlineGenerator;
-    ChunkAccess chunk;
+    CompletableFuture<GraphedChunk> scheduledGraph;
 
     private GeneratorFinder generators;
 
@@ -47,7 +49,7 @@ public class MultiGenerator extends ChunkGenerator {
         this.defaultGenerator = defaultGenerator;
         this.modifiedGenerator = modifiedGenerator;
         this.outlineGenerator = outlineGenerator;
-        this.chunk = chunk;
+        this.scheduledGraph = Graph.scheduleChunkGraphing(chunk.getPos());
     }
 
 	@Override
@@ -56,12 +58,16 @@ public class MultiGenerator extends ChunkGenerator {
 	}
 
     private GeneratorFinder getGenerators() {
-        if (! generatorsInitialized) {
-            this.generators = new GeneratorFinder(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator, this.chunk);
-            this.generatorsInitialized = true;
-        }
+        try {
+            if (! generatorsInitialized) {
+                this.generators = new GeneratorFinder(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator, this.scheduledGraph.get());
+                this.generatorsInitialized = true;
+            }
 
-        return this.generators;
+            return this.generators;
+    } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 	@Override

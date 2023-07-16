@@ -1,6 +1,6 @@
-package net.pixaurora.janerator.graphing;
+package net.pixaurora.janerator.graph;
 
-import java.util.stream.Stream;
+import java.util.List;
 
 public record Coordinate(int x, int z, int scale) {
     public Coordinate(int x, int z) {
@@ -23,12 +23,16 @@ public record Coordinate(int x, int z, int scale) {
         return fromListIndex(index, 16);
     }
 
-    public Stream<Coordinate> getNeighbors() {
-        return Stream.of(
+    public boolean isLegal() {
+        return 0 <= this.x && this.x < this.scale && 0 <= this.z && this.z < this.scale;
+    }
+
+    public List<Coordinate> getNeighbors() {
+        return List.of(
             new Coordinate(this.x + 1, this.z, this.scale),
             new Coordinate(this.x - 1, this. z, this.scale),
             new Coordinate(this.x, this.z + 1, this.scale),
             new Coordinate(this.x, this.z - 1, this.scale)
-        ).filter(coord -> 0 <= coord.x && coord.x < this.scale && 0 <= coord.z && coord.z < this.scale);
+        );
     }
 }

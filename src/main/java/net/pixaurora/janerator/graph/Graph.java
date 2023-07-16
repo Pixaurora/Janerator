@@ -1,9 +1,11 @@
 package net.pixaurora.janerator.graph;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
 import net.minecraft.world.level.ChunkPos;
 import net.pixaurora.janerator.graphing.Graphing;
@@ -30,5 +32,25 @@ public class Graph {
                 Graphing.graphingThreadPool
             );
         }
+    }
+
+    public static GraphedChunk completeChunkGraphing(CompletableFuture<GraphedChunk> scheduledGraphing) {
+        try {
+            return scheduledGraphing.get();
+        } catch (Exception futureException) {
+            throw new RuntimeException(futureException);
+        }
+    }
+
+    public static GraphedChunk doChunkGraphing(ChunkPos pos) {
+        return completeChunkGraphing(scheduleChunkGraphing(pos));
+    }
+
+    public static <T> List<Coordinate> getIndices(List<T>  items, T shade) {
+        return IntStream.range(0, items.size())
+            .filter(index -> items.get(index) == shade)
+            .boxed()
+            .map(Coordinate::fromListIndex)
+            .toList();
     }
 }

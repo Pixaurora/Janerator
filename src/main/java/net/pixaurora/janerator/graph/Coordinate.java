@@ -27,6 +27,10 @@ public record Coordinate(int x, int z, int scale) {
         return 0 <= this.x && this.x < this.scale && 0 <= this.z && this.z < this.scale;
     }
 
+    public Coordinate makeLegal() {
+        return new Coordinate(this.x % this.scale, this.z % this.scale, this.scale);
+    }
+
     public List<Coordinate> getNeighbors() {
         return List.of(
             new Coordinate(this.x + 1, this.z, this.scale),

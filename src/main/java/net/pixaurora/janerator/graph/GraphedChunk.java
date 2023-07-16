@@ -46,7 +46,7 @@ public class GraphedChunk {
                 .toList()
         );
 
-        this.getIndices(Graph.SHADED)
+        Graph.getIndices(this.shading, Graph.SHADED)
             .stream()
             .forEach(coord -> generatorMap.set(coord.toListIndex(), modifiedGenerator));
         this.findOutlinedPortion()
@@ -68,10 +68,9 @@ public class GraphedChunk {
 
                 for (int x = section_x; x < section_x + 4; x++) {
                     for (int z = section_z; z < section_z + 4; z++) {
-                        boolean generator = this.shading.get(new Coordinate(x, z).toListIndex());
-
-                        int currentScore = generatorSample.getOrDefault(generator, 0);
-                        generatorSample.put(generator, currentScore + 1);
+                        boolean shade = this.shading.get(new Coordinate(x, z).toListIndex());
+                        int currentScore = generatorSample.getOrDefault(shade, 0);
+                        generatorSample.put(shade, currentScore + 1);
                     }
                 }
 
@@ -92,17 +91,26 @@ public class GraphedChunk {
     private List<Coordinate> findOutlinedPortion() {
         List<Coordinate> outlinedPortion = new ArrayList<>();
 
-        for (Coordinate coordinate : this.getIndices(Graph.SHADED)) {
+        for (Coordinate coordinate : Graph.getIndices(this.shading, Graph.SHADED)) {
             boolean hasContrastingNeighbor = coordinate.getNeighbors()
                 .stream()
                 .anyMatch(
                     neighbor -> {
+                        boolean neighborShading;
+
                         if (neighbor.isLegal()) {
-                            return this.shading.get(neighbor.toListIndex()) != Graph.SHADED;
+                            neighborShading = this.shading.get(neighbor.toListIndex());
                         } else {
-                            // TODO: Handle coordinates outside the chunk
-                            return false;
+                            int deltaX = neighbor.x() < 0 ? -1 : neighbor.x() < 16 ? 0 : 1;
+                            int deltaZ = neighbor.z() < 0 ? -1 : neighbor.z() < 16 ? 0 : 1;
+                            ChunkPos pos = new ChunkPos(this.pos.x + deltaX, this.pos.z + deltaZ);
+
+                            GraphedChunk otherGraphedArea = Graph.doChunkGraphing(pos);
+
+                            neighborShading = otherGraphedArea.shading.get(neighbor.makeLegal().toListIndex());
                         }
+
+                        return neighborShading != Graph.SHADED;
                     }
                 );
 
@@ -112,13 +120,5 @@ public class GraphedChunk {
         }
 
         return outlinedPortion;
-    }
-
-    public List<Coordinate> getIndices(boolean shade) {
-        return IntStream.range(0, 256)
-            .filter(index -> this.shading.get(index) == shade)
-            .boxed()
-            .map(Coordinate::fromListIndex)
-            .toList();
     }
 }

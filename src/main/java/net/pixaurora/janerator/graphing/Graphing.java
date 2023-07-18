@@ -4,19 +4,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Supplier;
 
 import net.minecraft.core.BlockPos;
 import net.pixaurora.janerator.Janerator;
 import net.pixaurora.janerator.threading.JaneratorThreadFactory;
 
 public class Graphing {
-    private static final ConfiguredGraphLogic logic = new ConfiguredGraphLogic();
+    private static final ConfiguredGraphLogic baseGrapher = new ConfiguredGraphLogic();
+    private static ThreadLocal<ConfiguredGraphLogic> grapher = ThreadLocal.withInitial(() -> new ConfiguredGraphLogic(Graphing.baseGrapher));
 
-    public static Executor graphingThreadPool = Executors.newFixedThreadPool(16, new JaneratorThreadFactory());
+    public static Executor threadPool = Executors.newFixedThreadPool(16, new JaneratorThreadFactory());
 
     public static CompletableFuture<Boolean> scheduleGraphing(int x, int z) {
-        return CompletableFuture.supplyAsync(new Graphing.GraphingTask(x, z), Graphing.graphingThreadPool);
+        return CompletableFuture.supplyAsync(() -> Graphing.grapher.get().isShaded(x, z), Graphing.threadPool);
     }
 
     public static CompletableFuture<Boolean> scheduleGraphing(BlockPos pos) {
@@ -38,26 +38,10 @@ public class Graphing {
     }
 
     public synchronized static boolean isOverridden(int x, int z) {
-        return Graphing.logic.isShaded(x, z);
+        return Graphing.baseGrapher.isShaded(x, z);
     }
 
     public static boolean isOverridden(BlockPos pos) {
         return Graphing.isOverridden(pos.getX(), pos.getZ());
-    }
-
-    public static class GraphingTask implements Supplier<Boolean> {
-        private int x;
-        private int z;
-
-        private static ThreadLocal<ConfiguredGraphLogic> graphLogic = ThreadLocal.withInitial(() -> new ConfiguredGraphLogic(Graphing.logic));
-
-        public GraphingTask(int x, int z) {
-            this.x = x;
-            this.z = z;
-        }
-
-        public Boolean get() {
-            return GraphingTask.graphLogic.get().isShaded(this.x, this.z);
-        }
     }
 }

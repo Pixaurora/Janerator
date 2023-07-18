@@ -29,7 +29,7 @@ public class Graph {
 
                     return chunk;
                 },
-                Graphing.graphingThreadPool
+                Graphing.threadPool
             );
         }
     }

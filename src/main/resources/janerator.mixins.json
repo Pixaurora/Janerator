@@ -12,7 +12,6 @@
         "NoiseBasedChunkGeneratorAccessor",
         "NoiseBasedChunkGeneratorMixin",
         "NoiseChunkAccessor",
-        "PlacedFeatureMixin",
         "ProtoChunkMixin"
     ],
 	"injectors": {

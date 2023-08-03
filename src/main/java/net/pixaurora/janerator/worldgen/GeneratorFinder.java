@@ -4,7 +4,7 @@ import java.util.List;
 
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.graph.Coordinate;
-import net.pixaurora.janerator.graph.Graph;
+import net.pixaurora.janerator.graphing.Graphing;
 
 public class GeneratorFinder {
     private List<ChunkGenerator> generatorMap;
@@ -20,7 +20,7 @@ public class GeneratorFinder {
         this.selections = this.generatorMap
             .stream()
             .distinct()
-            .map(generator -> new PlacementSelection(generator, Graph.getIndices(this.generatorMap, generator)))
+            .map(generator -> new PlacementSelection(generator, Graphing.getIndices(this.generatorMap, generator)))
             .toList();
         this.fallbackGenerator = this.selections
             .stream()

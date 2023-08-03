@@ -1,26 +1,27 @@
 package net.pixaurora.janerator.graphing;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 import net.minecraft.core.BlockPos;
 import net.pixaurora.janerator.Janerator;
+import net.pixaurora.janerator.config.GraphProperties;
+import net.pixaurora.janerator.graph.Coordinate;
 import net.pixaurora.janerator.threading.JaneratorThreadFactory;
 
 public class Graphing {
-    private static final ConfiguredGraphLogic baseGrapher = new ConfiguredGraphLogic();
-    private static ThreadLocal<ConfiguredGraphLogic> grapher = ThreadLocal.withInitial(() -> new ConfiguredGraphLogic(Graphing.baseGrapher));
-
     public static Executor threadPool = Executors.newFixedThreadPool(16, new JaneratorThreadFactory());
 
-    public static CompletableFuture<Boolean> scheduleGraphing(int x, int z) {
-        return CompletableFuture.supplyAsync(() -> Graphing.grapher.get().isShaded(x, z), Graphing.threadPool);
+    public static CompletableFuture<Boolean> scheduleGraphing(GraphProperties graphProperties, int x, int z) {
+        return CompletableFuture.supplyAsync(() -> graphProperties.getLocalGrapher().isShaded(x, z), Graphing.threadPool);
     }
 
-    public static CompletableFuture<Boolean> scheduleGraphing(BlockPos pos) {
-        return Graphing.scheduleGraphing(pos.getX(), pos.getZ());
+    public static CompletableFuture<Boolean> scheduleGraphing(GraphProperties graphProperties, BlockPos pos) {
+        return Graphing.scheduleGraphing(graphProperties, pos.getX(), pos.getZ());
     }
 
     public static Boolean completeGraphing(CompletableFuture<Boolean> booleanFuture) {
@@ -31,17 +32,25 @@ public class Graphing {
         } catch (InterruptedException exception) {
             Janerator.LOGGER.error("Caught InterruptedException during override future.");
         } catch (ExecutionException exception) {
-            Janerator.LOGGER.error("Caught ExecutionException during override future.");
+            Janerator.LOGGER.error("Caught ExecutionException during override future.", exception);
         }
 
         return shaded;
     }
 
-    public synchronized static boolean isOverridden(int x, int z) {
-        return Graphing.baseGrapher.isShaded(x, z);
+    public static boolean isOverridden(GraphProperties graphProperties, int x, int z) {
+        return completeGraphing(scheduleGraphing(graphProperties, x, z));
     }
 
-    public static boolean isOverridden(BlockPos pos) {
-        return Graphing.isOverridden(pos.getX(), pos.getZ());
+    public static boolean isOverridden(GraphProperties graphProperties, BlockPos pos) {
+        return Graphing.isOverridden(graphProperties, pos.getX(), pos.getZ());
+    }
+
+    public static <T> List<Coordinate> getIndices(List<T>  items, T shade) {
+        return IntStream.range(0, items.size())
+            .filter(index -> items.get(index) == shade)
+            .boxed()
+            .map(Coordinate::fromListIndex)
+            .toList();
     }
 }

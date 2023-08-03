@@ -9,12 +9,12 @@ import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.BiomeManager;
-import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
@@ -23,8 +23,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import net.pixaurora.janerator.config.GraphProperties;
 import net.pixaurora.janerator.graph.Coordinate;
-import net.pixaurora.janerator.graph.Graph;
 import net.pixaurora.janerator.graph.GraphedChunk;
 
 public class MultiGenerator extends ChunkGenerator {
@@ -32,25 +32,29 @@ public class MultiGenerator extends ChunkGenerator {
     ChunkGenerator defaultGenerator;
     ChunkGenerator modifiedGenerator;
     ChunkGenerator outlineGenerator;
-    CompletableFuture<GraphedChunk> scheduledGraph;
+
+    ChunkPos pos;
+    GraphProperties dimensionPreset;
 
     private GeneratorFinder generators;
     private GeneratorFinder biomeGenerators;
 
     public MultiGenerator(
-        BiomeSource biomeSource,
         ChunkGenerator defaultGenerator,
         ChunkGenerator modifiedGenerator,
         ChunkGenerator outlineGenerator,
-        ChunkAccess chunk
+        ChunkAccess chunk,
+        GraphProperties dimensionPreset
     ) {
-        super(biomeSource);
+        super(defaultGenerator.getBiomeSource());
 
         this.generatorsInitialized = false;
         this.defaultGenerator = defaultGenerator;
         this.modifiedGenerator = modifiedGenerator;
         this.outlineGenerator = outlineGenerator;
-        this.scheduledGraph = Graph.scheduleChunkGraphing(chunk.getPos());
+
+        this.pos = chunk.getPos();
+        this.dimensionPreset = dimensionPreset;
     }
 
 	@Override
@@ -59,7 +63,7 @@ public class MultiGenerator extends ChunkGenerator {
 	}
 
     private void initializeGenerators() {
-        GraphedChunk graphedArea = Graph.completeChunkGraphing(this.scheduledGraph);
+        GraphedChunk graphedArea = new GraphedChunk(this.dimensionPreset, this.pos);
 
         this.generators = new GeneratorFinder(graphedArea.getGeneratorMap(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator));
         this.biomeGenerators = new GeneratorFinder(graphedArea.sampleBiomeGeneratorMap(this.defaultGenerator, this.modifiedGenerator));

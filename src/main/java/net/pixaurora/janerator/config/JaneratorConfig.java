@@ -1,64 +1,61 @@
 package net.pixaurora.janerator.config;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import org.quiltmc.config.api.Config;
-import org.quiltmc.config.api.WrappedConfig;
-import org.quiltmc.config.api.annotations.Processor;
-import org.quiltmc.config.api.values.ValueList;
-import org.quiltmc.loader.api.config.QuiltConfig;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-@Processor("setSerializer")
-public class JaneratorConfig extends WrappedConfig {
-    public static final JaneratorConfig INSTANCE = QuiltConfig.create("janerator", "preset", JaneratorConfig.class);
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 
-    public final FunctionToGraph graphed_function = new FunctionToGraph();
-
-    public final Generators alternate_generator_presets = new Generators(
-        Map.of(
-            "overworld_flat_preset", "minecraft:bedrock,63*minecraft:deepslate,60*minecraft:stone,2*minecraft:dirt,minecraft:grass_block;minecraft:mushroom_fields",
-            "nether_flat_preset", "1*minecraft:bedrock,30*minecraft:netherrack,1*minecraft:warped_nylium;minecraft:deep_dark",
-            "end_flat_preset", "minecraft:bedrock,59*minecraft:stone,2*minecraft:dirt,minecraft:grass_block;minecraft:deep_dark"
-        )
-    );
-    public final Generators outline_generator_presets = new Generators(
-        Map.of(
-            "overworld_flat_preset", "127*minecraft:glowstone;minecraft:mushroom_fields",
-            "nether_flat_preset", "32*minecraft:glowstone;minecraft:deep_dark",
-            "end_flat_preset", "63*minecraft:glowstone;minecraft:deep_dark"
-        )
-    );
-
-    public static class FunctionToGraph implements Section {
-        public final ValueList<String> variables = ValueList.create(
-            "Pointless string?",
-            "phi = (1 + sqrt(5)) / 2",
-            "log_phi = ln(phi)",
-            "dist_squared = x^2 + z^2",
-            "angle = ln(dist_squared) / log_phi"
+public class JaneratorConfig {
+    public static Codec<JaneratorConfig> CODEC =
+        RecordCodecBuilder.create(
+            instance -> instance.group(
+                GraphProperties.CODEC.listOf().fieldOf("presets").forGetter(JaneratorConfig::getAllPresets)
+                )
+                .apply(instance, JaneratorConfig::new)
         );
-        public final String inequality = "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0";
+
+    private static JaneratorConfig INSTANCE = null;
+
+    public synchronized static JaneratorConfig getInstance() {
+        if (Objects.isNull(JaneratorConfig.INSTANCE)) {
+            JaneratorConfig.INSTANCE = ConfigFileManager.createInstance();
+        }
+
+        return JaneratorConfig.INSTANCE;
     }
 
-    public void setSerializer(Config.Builder builder) {
-		builder.format("json5");
-	}
-
-    @SuppressWarnings("unchecked")
-    public static List<String> getOverrideVariableDefinitions() {
-        return (List<String>) JaneratorConfig.INSTANCE.getValue(List.of("graphed_function", "variables")).value();
+    public synchronized static void destroy() {
+        JaneratorConfig.INSTANCE = null;
     }
 
-    public static String getOverrideReturnStatement() {
-        return (String) JaneratorConfig.INSTANCE.getValue(List.of("graphed_function", "inequality")).value();
+    private Map<ResourceKey<Level>, GraphProperties> presets;
+
+    public JaneratorConfig(List<GraphProperties> presets) {
+        this.presets = new HashMap<>(presets.size());
+
+        for (GraphProperties preset : presets) {
+            this.presets.put(preset.getDimension(), preset);
+        }
     }
 
-    public static Generators getAlternateGenerators() {
-        return (Generators) JaneratorConfig.INSTANCE.getValue(List.of("alternate_generator_presets")).value();
+    public List<GraphProperties> getAllPresets() {
+        return this.presets
+            .values()
+            .stream()
+            .toList();
     }
 
-    public static Generators getOutlineGenerators() {
-        return (Generators) JaneratorConfig.INSTANCE.getValue(List.of("outline_generator_presets")).value();
+    public GraphProperties getPresetFor(ResourceKey<Level> dimension) {
+        return this.presets.get(dimension);
+    }
+
+    public boolean missingPresetFor(ResourceKey<Level> dimension) {
+        return ! this.presets.containsKey(dimension);
     }
 }

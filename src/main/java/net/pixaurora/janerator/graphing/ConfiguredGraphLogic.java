@@ -6,8 +6,6 @@ import java.util.List;
 import org.mariuszgromada.math.mxparser.License;
 import org.mariuszgromada.math.mxparser.mXparser;
 
-import net.pixaurora.janerator.config.JaneratorConfig;
-
 public class ConfiguredGraphLogic {
     private List<Double> independentVariables;
     private int variableCount;
@@ -24,11 +22,11 @@ public class ConfiguredGraphLogic {
         mXparser.disableUlpRounding();
     }
 
-    public ConfiguredGraphLogic() {
+    public ConfiguredGraphLogic(List<String> variableDefinitions, String returnStatement) {
         this.independentVariables = new ArrayList<>();
         this.variableDefinitions = new ArrayList<>();
 
-        List<Variable> variables = JaneratorConfig.getOverrideVariableDefinitions()
+        List<Variable> variables = variableDefinitions
             .stream()
             .map(Variable::new)
             .toList();
@@ -55,7 +53,7 @@ public class ConfiguredGraphLogic {
             }
         }
 
-        Variable returnValue = new Variable(String.format("shouldOverride = %s", JaneratorConfig.getOverrideReturnStatement()));
+        Variable returnValue = new Variable("shouldOverride = " + returnStatement);
         returnValue.validateNeedsOnly(allKnownVariableNames);
 
         this.overrideFunction = new WrappedFunction(returnValue, allKnownVariableNames);

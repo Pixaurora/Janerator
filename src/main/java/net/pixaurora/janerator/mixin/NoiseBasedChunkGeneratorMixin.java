@@ -11,6 +11,7 @@ import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.pixaurora.janerator.config.GraphProperties;
 import net.pixaurora.janerator.config.JaneratorConfig;
 import net.pixaurora.janerator.graphing.Graphing;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
@@ -29,9 +30,17 @@ public class NoiseBasedChunkGeneratorMixin implements JaneratorGenerator {
         cancellable = true
     )
     private void janerator$overrideBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState, CallbackInfoReturnable<Integer> cir) {
-        if (Graphing.isOverridden(x, z)) {
+        JaneratorConfig config = JaneratorConfig.getInstance();
+
+        if (config.missingPresetFor(janerator$dimension)) {
+            return;
+        }
+
+        GraphProperties dimensionPreset = config.getPresetFor(janerator$dimension);
+
+        if (Graphing.isOverridden(dimensionPreset, x, z)) {
             cir.setReturnValue(
-                JaneratorConfig.getAlternateGenerators().get(this.janerator$dimension)
+                dimensionPreset.getShadedGenerator()
                     .getBaseHeight(x, z, heightmap, world, randomState)
             );
         }

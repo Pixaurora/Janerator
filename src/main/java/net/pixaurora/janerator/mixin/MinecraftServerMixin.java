@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.server.MinecraftServer;
 import net.pixaurora.janerator.RegistryCache;
+import net.pixaurora.janerator.config.JaneratorConfig;
 
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
@@ -18,5 +19,6 @@ public class MinecraftServerMixin {
     @Inject(method = "onServerExit", at = @At("HEAD"))
     private void janerator$onServerExit(CallbackInfo callbackInfo) {
         RegistryCache.INSTANCE = null;
+        JaneratorConfig.destroy();
     }
 }

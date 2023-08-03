@@ -14,13 +14,19 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import net.pixaurora.janerator.config.GraphProperties;
+import net.pixaurora.janerator.config.JaneratorConfig;
 import net.pixaurora.janerator.graphing.Graphing;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
 import net.pixaurora.janerator.worldgen.MultiGenerator;
 
 @Mixin(ChunkGenerator.class)
 public class ChunkGeneratorMixin implements JaneratorGenerator {
-    public void janerator$setDimension(ResourceKey<Level> dimension) {}
+    private ResourceKey<Level> janerator$dimension;
+
+    public void janerator$setDimension(ResourceKey<Level> dimension) {
+        this.janerator$dimension = dimension;
+    }
 
     @Inject(
         method = "createStructures(Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/level/chunk/ChunkGeneratorStructureState;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager;)V",
@@ -39,9 +45,17 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
             return;
         }
 
+        JaneratorConfig config = JaneratorConfig.getInstance();
+
+        if (config.missingPresetFor(this.janerator$dimension)) {
+            return;
+        }
+
         BlockPos pos = chunk.getPos().getMiddleBlockPosition(0);
 
-        if (Graphing.isOverridden(pos)) {
+        GraphProperties dimensionPreset = config.getPresetFor(this.janerator$dimension);
+
+        if (Graphing.isOverridden(dimensionPreset, pos)) {
             callbackInfo.cancel();
         }
     }

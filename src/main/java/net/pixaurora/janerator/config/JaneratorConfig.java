@@ -22,15 +22,19 @@ public class JaneratorConfig {
 
     private static JaneratorConfig INSTANCE = null;
 
-    public synchronized static JaneratorConfig getInstance() {
+    public static JaneratorConfig getInstance() {
         if (Objects.isNull(JaneratorConfig.INSTANCE)) {
-            JaneratorConfig.INSTANCE = ConfigFileManager.createInstance();
+            throw new RuntimeException("Janerator's Config was accessed before creation.");
         }
 
         return JaneratorConfig.INSTANCE;
     }
 
-    public synchronized static void destroy() {
+    public static void create() {
+        JaneratorConfig.INSTANCE = new ConfigFileManager().createConfig();
+    }
+
+    public static void destroy() {
         JaneratorConfig.INSTANCE = null;
     }
 

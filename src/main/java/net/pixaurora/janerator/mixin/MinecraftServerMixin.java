@@ -14,6 +14,7 @@ public class MinecraftServerMixin {
     @Inject(method = "loadLevel()V", at = @At("HEAD"))
     private void janerator$onLoadLevel(CallbackInfo callbackInfo) {
         RegistryCache.INSTANCE = new RegistryCache((MinecraftServer) (Object) this);
+        JaneratorConfig.create();
     }
 
     @Inject(method = "onServerExit", at = @At("HEAD"))

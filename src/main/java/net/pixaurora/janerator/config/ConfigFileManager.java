@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.quiltmc.loader.api.QuiltLoader;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 
@@ -17,55 +19,42 @@ import net.pixaurora.janerator.Janerator;
 import net.pixaurora.janerator.RegistryCache;
 
 public class ConfigFileManager {
-    private static boolean configLocationWritable(Path savePath) {
-        Path saveDirectory = savePath.getParent();
-        try {
-            Files.createDirectories(saveDirectory);
+    private final Path savePath;
 
-            return true;
-        } catch (IOException exception) {
-            return false;
-        }
+    private final RegistryOps<JsonElement> registryOps;
+    private final Gson serializer;
+
+    public ConfigFileManager() {
+        this.savePath = QuiltLoader.getConfigDir().resolve(Path.of("janerator", "preset.json"));
+
+        this.registryOps = RegistryOps.create(JsonOps.INSTANCE, RegistryCache.INSTANCE.getRegistry());
+        this.serializer = new GsonBuilder()
+                .setPrettyPrinting()
+                .disableHtmlEscaping()
+                .create();
     }
 
-    private static RegistryOps<JsonElement> getRegistryOps() {
-        return RegistryOps.create(JsonOps.INSTANCE, RegistryCache.INSTANCE.getRegistry());
-    }
-
-    public static JaneratorConfig createInstance() {
-        Path savePath = QuiltLoader.getConfigDir().resolve(Path.of("janerator", "preset.json"));
-
+    public JaneratorConfig createConfig() {
         try {
-            return load(savePath);
+            return this.load();
         } catch (IOException exception) {
             JaneratorConfig config = createDefault();
 
-            if (configLocationWritable(savePath)) {
-                save(savePath, config);
-            } else {
-                Janerator.LOGGER.warn("Config could not be written!");
+            boolean configWritten = this.configLocationWritable() && this.save(config); 
+
+            if (! configWritten) {
+                Janerator.LOGGER.warn("Default config was not written!");
             }
 
             return config;
         }
     }
 
-    public static JaneratorConfig load(Path savePath) throws IOException {
-        JsonElement configData = GsonHelper.parse(Files.readString(savePath), false);
-
-        return JaneratorConfig.CODEC
-            .decode(getRegistryOps(), configData)
-            .getOrThrow(false, Janerator.LOGGER::error)
-            .getFirst();
-    }
-
-    public static boolean save(Path savePath, JaneratorConfig config) {
-        JsonElement result = JaneratorConfig.CODEC.encodeStart(getRegistryOps(), config).getOrThrow(false, Janerator.LOGGER::error);
+    private boolean configLocationWritable() {
+        Path saveDirectory = this.savePath.getParent();
 
         try {
-            Path saveDirectory = savePath.getParent();
             Files.createDirectories(saveDirectory);
-            Files.writeString(savePath, result.toString());
 
             return true;
         } catch (IOException exception) {
@@ -73,7 +62,28 @@ public class ConfigFileManager {
         }
     }
 
-    private static JaneratorConfig createDefault() {
+    public JaneratorConfig load() throws IOException {
+        JsonElement configData = GsonHelper.parse(Files.readString(savePath), false);
+
+        return JaneratorConfig.CODEC
+            .decode(this.registryOps, configData)
+            .getOrThrow(false, Janerator.LOGGER::error)
+            .getFirst();
+    }
+
+    public boolean save(JaneratorConfig config) {
+        JsonElement result = JaneratorConfig.CODEC.encodeStart(this.registryOps, config).getOrThrow(false, Janerator.LOGGER::error);
+
+        try {
+            Files.writeString(this.savePath, this.serializer.toJson(result));
+
+            return true;
+        } catch (IOException exception) {
+            return false;
+        }
+    }
+
+    private JaneratorConfig createDefault() {
         return new JaneratorConfig(
             List.of(
                 new GraphProperties(

@@ -18,7 +18,6 @@ import net.pixaurora.janerator.config.GraphProperties;
 import net.pixaurora.janerator.config.JaneratorConfig;
 import net.pixaurora.janerator.graphing.Graphing;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
-import net.pixaurora.janerator.worldgen.MultiGenerator;
 
 @Mixin(ChunkGenerator.class)
 public class ChunkGeneratorMixin implements JaneratorGenerator {
@@ -41,10 +40,6 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
         StructureTemplateManager templateManager,
         CallbackInfo callbackInfo
     ) {
-        if (((ChunkGenerator) (Object) this) instanceof MultiGenerator) {
-            return;
-        }
-
         JaneratorConfig config = JaneratorConfig.getInstance();
 
         if (config.missingPresetFor(this.janerator$dimension)) {

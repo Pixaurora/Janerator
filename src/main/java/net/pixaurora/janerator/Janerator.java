@@ -26,6 +26,7 @@ public class Janerator {
         boolean chunkAlreadyGenerated = chunk instanceof LevelChunk || chunk instanceof ImposterProtoChunk;
 
         if (chunkAlreadyGenerated || config.missingPresetFor(dimension)) {
+            defaultGenerator.janerator$setDimension(dimension);
             return defaultGenerator;
         }
 

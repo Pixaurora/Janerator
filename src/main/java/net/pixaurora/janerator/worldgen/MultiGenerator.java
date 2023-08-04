@@ -29,12 +29,12 @@ import net.pixaurora.janerator.graph.GraphedChunk;
 
 public class MultiGenerator extends ChunkGenerator {
     private boolean generatorsInitialized;
-    ChunkGenerator defaultGenerator;
-    ChunkGenerator modifiedGenerator;
-    ChunkGenerator outlineGenerator;
+    private ChunkGenerator defaultGenerator;
+    private ChunkGenerator modifiedGenerator;
+    private ChunkGenerator outlineGenerator;
 
-    ChunkPos pos;
-    GraphProperties dimensionPreset;
+    private GraphProperties dimensionPreset;
+    private ChunkPos pos;
 
     private GeneratorFinder generators;
     private GeneratorFinder biomeGenerators;
@@ -55,6 +55,10 @@ public class MultiGenerator extends ChunkGenerator {
 
         this.pos = chunk.getPos();
         this.dimensionPreset = dimensionPreset;
+
+        List.of(this, defaultGenerator, modifiedGenerator, outlineGenerator)
+            .stream()
+            .forEach(generator -> generator.janerator$setDimension(dimensionPreset.getDimension()));
     }
 
 	@Override

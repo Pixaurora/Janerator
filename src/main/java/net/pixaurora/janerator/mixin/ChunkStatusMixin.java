@@ -29,8 +29,6 @@ public class ChunkStatusMixin {
         ResourceKey<Level> dimension = ((ServerLevel) args.get(2)).dimension();
         ChunkGenerator normalGenerator = args.get(3);
 
-        normalGenerator.janerator$setDimension(dimension);
-
         args.set(3, Janerator.getGeneratorAt(dimension, normalGenerator, chunk));
     }
 }

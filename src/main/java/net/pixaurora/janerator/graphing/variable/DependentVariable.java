@@ -31,7 +31,7 @@ public class DependentVariable implements Variable {
     }
 
     public Function asFunction() {
-        return new Function(this.name, this.definitionStatement, this.getRequiredNames());
+        return new Function(this.getUniqueFunctionName(), this.definitionStatement, this.getRequiredNames());
     }
 
     @Override

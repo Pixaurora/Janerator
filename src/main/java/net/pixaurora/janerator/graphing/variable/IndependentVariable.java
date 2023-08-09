@@ -20,7 +20,7 @@ public class IndependentVariable implements Variable {
             .toList();
 
         Function function = new Function(
-            name,
+            this.getUniqueFunctionName(name),
             definitionStatement,
             this.getRequiredNames()
         );

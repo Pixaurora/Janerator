@@ -46,6 +46,21 @@ public interface Variable {
 
     public List<Variable> getRequiredVariables();
 
+    public default String getUniqueFunctionName() {
+        return this.getUniqueFunctionName(this.getName());
+    }
+
+    public default String getUniqueFunctionName(String name) {
+        if (
+            this.getRequiredVariables().stream()
+                .noneMatch(variable -> name.equals(variable.getName()))
+        ) {
+            return name;
+        } else {
+            return this.getUniqueFunctionName(name + 'a');
+        }
+    }
+
     public default String[] getRequiredNames() {
         return this.getRequiredVariables()
             .stream()

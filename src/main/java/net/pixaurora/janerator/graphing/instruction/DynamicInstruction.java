@@ -21,7 +21,7 @@ public class DynamicInstruction implements Instruction {
         double[] args = new double[this.accessIndexes.length];
 
         for (int i = 0; i < this.accessIndexes.length; i++) {
-            args[i] = variables.get(i);
+            args[i] = variables.get(this.accessIndexes[i]);
         }
 
         variables.set(this.setIndex, this.executedFunction.calculate(args));

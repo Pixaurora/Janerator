@@ -24,7 +24,7 @@ public class Grapher {
     }
 
     public static Grapher fromConfig(ConfiguredGrapherSettings config) {
-        AtomicInteger count = new AtomicInteger(-1);
+        AtomicInteger count = new AtomicInteger();
         Map<String, Integer> nameToIndex = new HashMap<>(
             Map.of(
                 "x", count.getAndIncrement(),
@@ -42,10 +42,12 @@ public class Grapher {
         }
 
         List<Instruction> instructions = new ArrayList<>();
-        List<Double> startingVariables = IntStream.range(0, count.get())
-            .mapToDouble(value -> 0.0)
-            .boxed()
-            .toList();
+        List<Double> startingVariables = new ArrayList<>(
+            IntStream.range(0, count.get())
+                .mapToDouble(value -> 0.0)
+                .boxed()
+                .toList()
+        );
 
         for (Variable variable : variableDefinitions) {
             int setIndex = nameToIndex.get(variable.getName());
@@ -59,7 +61,7 @@ public class Grapher {
 
             boolean definedOnce = allVariables.stream()
                 .filter(other -> variable.getName() == other.getName())
-                .count() < 1;
+                .count() == 1;
 
             if (
                 variable instanceof IndependentVariable && definedOnce
@@ -76,12 +78,12 @@ public class Grapher {
     public boolean isShaded(double x, double z) {
         List<Double> variables = new ArrayList<>(this.startingVariables);
         variables.set(0, x);
-        variables.set(0, z);
+        variables.set(1, z);
 
         for (Instruction instruction : this.intermediaryInstructions) {
             instruction.execute(variables);
         }
 
-        return variables.get(this.returnIndex) == 0.0;
+        return variables.get(this.returnIndex) == 1.0;
     }
 }

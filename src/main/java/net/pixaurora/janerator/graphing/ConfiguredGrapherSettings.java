@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.mariuszgromada.math.mxparser.License;
 import org.mariuszgromada.math.mxparser.mXparser;
@@ -14,12 +13,13 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.pixaurora.janerator.graphing.variable.InputVariable;
 import net.pixaurora.janerator.graphing.variable.Variable;
+import net.pixaurora.janerator.graphing.variable.VariableDefinition;
 
 public class ConfiguredGrapherSettings {
     public static final Codec<ConfiguredGrapherSettings> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
-            Codec.STRING.listOf().fieldOf("variable_definitions").forGetter(ConfiguredGrapherSettings::getVariableDefinitions),
-            Codec.STRING.fieldOf("return_statement").forGetter(ConfiguredGrapherSettings::getReturnStatement)
+            Codec.STRING.listOf().fieldOf("variable_definitions").forGetter(ConfiguredGrapherSettings::getRawDefinitions),
+            Codec.STRING.fieldOf("return_statement").forGetter(ConfiguredGrapherSettings::getRawReturnStatement)
         )
         .apply(instance, ConfiguredGrapherSettings::new)
     );
@@ -33,43 +33,43 @@ public class ConfiguredGrapherSettings {
         mXparser.disableUlpRounding();
     }
 
-    private List<String> variableDefinitions;
-    private String returnStatement;
+    private List<String> rawDefinitions;
+    private String rawReturnStatement;
 
-    private List<Variable> variables;
+    private List<VariableDefinition> definitions;
 
     public ConfiguredGrapherSettings(List<String> variableDefinitions, String returnStatement) {
-        this.variableDefinitions = variableDefinitions;
-        this.returnStatement = returnStatement;
+        this.rawDefinitions = variableDefinitions;
+        this.rawReturnStatement = returnStatement;
 
-        this.variables = new ArrayList<>(this.variableDefinitions.size() + 1);
-        this.variables.add(new InputVariable("x"));
-        this.variables.add(new InputVariable("z"));
+        this.definitions = new ArrayList<>(this.rawDefinitions.size() + 1);
 
         Map<String, Variable> variableTable = new HashMap<>(
-            this.variables.stream()
-                .collect(Collectors.toMap(Variable::getName, variable -> variable))
+            Map.of(
+                "x", new InputVariable("x"),
+                "z", new InputVariable("z")
+            )
         );
 
-        for (String definition : variableDefinitions) {
-            Variable nextVariable = Variable.fromStringDefinition(variableTable, definition);
+        for (String definitionText : variableDefinitions) {
+            VariableDefinition definition = VariableDefinition.fromString(variableTable, definitionText);
 
-            this.variables.add(nextVariable);
-            variableTable.put(nextVariable.getName(), nextVariable);
+            this.definitions.add(definition);
+            variableTable.put(definition.getName(), definition);
         }
 
-        this.variables.add(Variable.fromStringDefinition(variableTable, "returnValue = " + returnStatement));
+        this.definitions.add(VariableDefinition.fromString(variableTable, "returnValue = " + returnStatement));
     }
 
-    public List<String> getVariableDefinitions() {
-        return this.variableDefinitions;
+    public List<String> getRawDefinitions() {
+        return this.rawDefinitions;
     }
 
-    public String getReturnStatement() {
-        return this.returnStatement;
+    public String getRawReturnStatement() {
+        return this.rawReturnStatement;
     }
 
-    public List<Variable> getVariables() {
-        return this.variables;
+    public List<VariableDefinition> getDefinitions() {
+        return this.definitions;
     }
 }

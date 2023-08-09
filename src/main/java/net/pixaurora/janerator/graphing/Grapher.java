@@ -1,77 +1,69 @@
 package net.pixaurora.janerator.graphing;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 import net.pixaurora.janerator.graphing.instruction.Instruction;
 import net.pixaurora.janerator.graphing.variable.IndependentVariable;
-import net.pixaurora.janerator.graphing.variable.InputVariable;
 import net.pixaurora.janerator.graphing.variable.Variable;
+import net.pixaurora.janerator.graphing.variable.VariableDefinition;
 
 public class Grapher {
     private List<Double> startingVariables;
-    private List<Instruction> intermediaryInstructions;
+    private List<Instruction> appliedSteps;
     private int returnIndex;
 
-    public Grapher(List<Double> startingVariables, List<Instruction> instructionsToApply, int returnIndex) {
+    public Grapher(List<Double> startingVariables, List<Instruction> appliedSteps, int returnIndex) {
         this.startingVariables = startingVariables;
-        this.intermediaryInstructions = instructionsToApply;
+        this.appliedSteps = appliedSteps;
         this.returnIndex = returnIndex;
     }
 
     public static Grapher fromConfig(ConfiguredGrapherSettings config) {
         AtomicInteger count = new AtomicInteger();
-        Map<String, Integer> nameToIndex = new HashMap<>(
+        Map<String, Integer> indexTable = new HashMap<>(
             Map.of(
                 "x", count.getAndIncrement(),
                 "z", count.getAndIncrement()
             )
         );
 
-        List<Variable> variableDefinitions = config.getVariables().stream()
-            .filter(variable -> ! (variable instanceof InputVariable))
-            .toList();
+        List<VariableDefinition> definitions = config.getDefinitions();
 
-        for (Variable variable : variableDefinitions) {
-            nameToIndex.computeIfAbsent(variable.getName(), name -> count.getAndIncrement());
+        for (VariableDefinition definition : definitions) {
+            indexTable.computeIfAbsent(definition.getName(), name -> count.getAndIncrement());
         }
 
-        List<Instruction> instructions = new ArrayList<>();
-        List<Double> startingVariables = new ArrayList<>(
-            IntStream.range(0, count.get())
-                .mapToDouble(value -> 0.0)
-                .boxed()
-                .toList()
-        );
+        List<Instruction> runtimeInstructions = new ArrayList<>();
+        List<Double> startingVariables = new ArrayList<>(Collections.nCopies(count.get(), 0.0));
 
         List<String> definedNames = new ArrayList<>(List.of("x, y"));
 
-        for (Variable variable : variableDefinitions) {
-            int setIndex = nameToIndex.get(variable.getName());
-            int[] accessIndexes = variable.getRequiredVariables().stream()
+        for (VariableDefinition definition : definitions) {
+            int setIndex = indexTable.get(definition.getName());
+            int[] accessIndexes = definition.getRequiredVariables().stream()
                 .map(Variable::getName)
-                .map(nameToIndex::get)
+                .map(indexTable::get)
                 .mapToInt(Integer::valueOf)
                 .toArray();
 
-            Instruction instruction = variable.createInstruction(accessIndexes, setIndex);
+            Instruction instruction = definition.createInstruction(accessIndexes, setIndex);
+            boolean firstDefinition = ! definedNames.contains(definition.getName());
 
-            boolean firstDefinition = ! definedNames.contains(variable.getName());
-
-            if (variable instanceof IndependentVariable && firstDefinition) {
+            if (definition instanceof IndependentVariable && firstDefinition) {
                 instruction.execute(startingVariables);
             } else {
-                instructions.add(instruction);
+                runtimeInstructions.add(instruction);
             }
 
-            definedNames.add(variable.getName());
+            definedNames.add(definition.getName());
         }
 
-        return new Grapher(startingVariables, instructions, nameToIndex.get("returnValue"));
+        return new Grapher(startingVariables, runtimeInstructions, indexTable.get("returnValue"));
     }
 
     public boolean isShaded(double x, double z) {
@@ -79,8 +71,8 @@ public class Grapher {
         variables.set(0, x);
         variables.set(1, z);
 
-        for (Instruction instruction : this.intermediaryInstructions) {
-            instruction.execute(variables);
+        for (Instruction step : this.appliedSteps) {
+            step.execute(variables);
         }
 
         return variables.get(this.returnIndex) == 1.0;

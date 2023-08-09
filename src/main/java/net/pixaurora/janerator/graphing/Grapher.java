@@ -32,7 +32,6 @@ public class Grapher {
             )
         );
 
-        List<Variable> allVariables = config.getVariables();
         List<Variable> variableDefinitions = config.getVariables().stream()
             .filter(variable -> ! (variable instanceof InputVariable))
             .toList();
@@ -49,6 +48,8 @@ public class Grapher {
                 .toList()
         );
 
+        List<String> definedNames = new ArrayList<>(List.of("x, y"));
+
         for (Variable variable : variableDefinitions) {
             int setIndex = nameToIndex.get(variable.getName());
             int[] accessIndexes = variable.getRequiredVariables().stream()
@@ -59,17 +60,15 @@ public class Grapher {
 
             Instruction instruction = variable.createInstruction(accessIndexes, setIndex);
 
-            boolean definedOnce = allVariables.stream()
-                .filter(other -> variable.getName() == other.getName())
-                .count() == 1;
+            boolean firstDefinition = ! definedNames.contains(variable.getName());
 
-            if (
-                variable instanceof IndependentVariable && definedOnce
-            ) {
+            if (variable instanceof IndependentVariable && firstDefinition) {
                 instruction.execute(startingVariables);
             } else {
                 instructions.add(instruction);
             }
+
+            definedNames.add(variable.getName());
         }
 
         return new Grapher(startingVariables, instructions, nameToIndex.get("returnValue"));

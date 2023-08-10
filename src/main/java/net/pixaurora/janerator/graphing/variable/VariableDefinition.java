@@ -1,6 +1,7 @@
 package net.pixaurora.janerator.graphing.variable;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -10,6 +11,7 @@ import org.mariuszgromada.math.mxparser.Expression;
 import org.mariuszgromada.math.mxparser.Function;
 
 import net.pixaurora.janerator.config.GraphingConfigException;
+import net.pixaurora.janerator.config.ParserEvaluationException;
 import net.pixaurora.janerator.graphing.instruction.Instruction;
 
 public abstract class VariableDefinition extends Variable {
@@ -98,5 +100,26 @@ public abstract class VariableDefinition extends Variable {
 
     public Function asFunction() {
         return new Function(this.getUniqueFunctionName(), this.definitionStatement, this.getRequiredNames());
+    }
+
+    public void validate() {
+        String NO_ERROR_MESSAGE = "No errors detected";
+
+        Function function = this.asFunction();
+
+        int argumentCount = function.getArgumentsNumber();
+
+        if (argumentCount == 0) {
+            function.calculate();
+        } else {
+            double[] args = Collections.nCopies(argumentCount, 10.0).stream().mapToDouble(Double::valueOf).toArray();
+            function.calculate(args);
+        }
+
+        String errorMessage = function.getErrorMessage();
+
+        if (! errorMessage.contains(NO_ERROR_MESSAGE)) {
+            throw new ParserEvaluationException(this, errorMessage);
+        }
     }
 }

@@ -54,6 +54,8 @@ public class ConfiguredGrapherSettings {
         for (String definitionText : variableDefinitions) {
             VariableDefinition definition = VariableDefinition.fromString(variableTable, definitionText);
 
+            definition.validate();
+
             this.definitions.add(definition);
             variableTable.put(definition.getName(), definition);
         }

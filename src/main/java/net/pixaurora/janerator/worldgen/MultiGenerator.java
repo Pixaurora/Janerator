@@ -24,8 +24,8 @@ import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.pixaurora.janerator.config.GraphProperties;
-import net.pixaurora.janerator.graph.Coordinate;
-import net.pixaurora.janerator.graph.GraphedChunk;
+import net.pixaurora.janerator.graphing.Coordinate;
+import net.pixaurora.janerator.graphing.GraphedChunk;
 
 public class MultiGenerator extends ChunkGenerator {
     private boolean generatorsInitialized;
@@ -67,7 +67,7 @@ public class MultiGenerator extends ChunkGenerator {
 	}
 
     private void initializeGenerators() {
-        GraphedChunk graphedArea = new GraphedChunk(this.dimensionPreset, this.pos);
+        GraphedChunk graphedArea = dimensionPreset.getGrapher().getChunkGraph(pos);
 
         this.generators = new GeneratorFinder(graphedArea.getGeneratorMap(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator));
         this.biomeGenerators = new GeneratorFinder(graphedArea.sampleBiomeGeneratorMap(this.defaultGenerator, this.modifiedGenerator));

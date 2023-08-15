@@ -13,7 +13,6 @@ import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.pixaurora.janerator.config.GraphProperties;
 import net.pixaurora.janerator.config.JaneratorConfig;
-import net.pixaurora.janerator.graphing.Graphing;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
 
 @Mixin(NoiseBasedChunkGenerator.class)
@@ -38,7 +37,7 @@ public class NoiseBasedChunkGeneratorMixin implements JaneratorGenerator {
 
         GraphProperties dimensionPreset = config.getPresetFor(this.janerator$dimension);
 
-        if (Graphing.isOverridden(dimensionPreset, x, z)) {
+        if (dimensionPreset.getGrapher().isPointShaded(x, z)) {
             cir.setReturnValue(
                 dimensionPreset.getShadedGenerator()
                     .getBaseHeight(x, z, heightmap, world, randomState)

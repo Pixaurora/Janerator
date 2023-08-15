@@ -1,4 +1,4 @@
-package net.pixaurora.janerator.graph;
+package net.pixaurora.janerator.graphing;
 
 import java.util.List;
 

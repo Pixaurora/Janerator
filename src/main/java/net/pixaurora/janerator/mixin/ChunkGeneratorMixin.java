@@ -16,7 +16,6 @@ import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.pixaurora.janerator.config.GraphProperties;
 import net.pixaurora.janerator.config.JaneratorConfig;
-import net.pixaurora.janerator.graphing.Graphing;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
 
 @Mixin(ChunkGenerator.class)
@@ -50,7 +49,7 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
 
         GraphProperties dimensionPreset = config.getPresetFor(this.janerator$dimension);
 
-        if (Graphing.isOverridden(dimensionPreset, pos)) {
+        if (dimensionPreset.getGrapher().isPointShaded(pos)) {
             callbackInfo.cancel();
         }
     }

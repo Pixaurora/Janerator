@@ -3,8 +3,8 @@ package net.pixaurora.janerator.worldgen;
 import java.util.List;
 
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.pixaurora.janerator.graph.Coordinate;
-import net.pixaurora.janerator.graphing.Graphing;
+import net.pixaurora.janerator.graphing.Coordinate;
+import net.pixaurora.janerator.graphing.GraphingUtils;
 
 public class GeneratorFinder {
     private List<ChunkGenerator> generatorMap;
@@ -20,7 +20,7 @@ public class GeneratorFinder {
         this.selections = this.generatorMap
             .stream()
             .distinct()
-            .map(generator -> new PlacementSelection(generator, Graphing.getIndices(this.generatorMap, generator)))
+            .map(generator -> new PlacementSelection(generator, GraphingUtils.getIndices(this.generatorMap, generator)))
             .toList();
         this.fallbackGenerator = this.selections
             .stream()

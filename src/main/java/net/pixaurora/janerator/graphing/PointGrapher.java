@@ -12,18 +12,17 @@ import net.pixaurora.janerator.graphing.variable.IndependentVariable;
 import net.pixaurora.janerator.graphing.variable.Variable;
 import net.pixaurora.janerator.graphing.variable.VariableDefinition;
 
-public class Grapher {
+public class PointGrapher {
     private List<Double> startingVariables;
     private List<Instruction> appliedSteps;
     private int returnIndex;
 
-    public Grapher(List<Double> startingVariables, List<Instruction> appliedSteps, int returnIndex) {
+    public PointGrapher(List<Double> startingVariables, List<Instruction> appliedSteps, int returnIndex) {
         this.startingVariables = startingVariables;
         this.appliedSteps = appliedSteps;
         this.returnIndex = returnIndex;
     }
-
-    public static Grapher fromConfig(ConfiguredGrapherSettings config) {
+    public static PointGrapher fromConfig(ConfiguredGrapherSettings config) {
         AtomicInteger count = new AtomicInteger();
         Map<String, Integer> indexTable = new HashMap<>(
             Map.of(
@@ -63,7 +62,7 @@ public class Grapher {
             definedNames.add(definition.getName());
         }
 
-        return new Grapher(startingVariables, runtimeInstructions, indexTable.get("returnValue"));
+        return new PointGrapher(startingVariables, runtimeInstructions, indexTable.get("returnValue"));
     }
 
     public boolean isShaded(double x, double z) {

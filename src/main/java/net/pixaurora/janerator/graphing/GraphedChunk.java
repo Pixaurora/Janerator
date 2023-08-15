@@ -1,4 +1,4 @@
-package net.pixaurora.janerator.graph;
+package net.pixaurora.janerator.graphing;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,8 +10,6 @@ import java.util.stream.IntStream;
 
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.pixaurora.janerator.config.GraphProperties;
-import net.pixaurora.janerator.graphing.Graphing;
 
 public class GraphedChunk {
     public static boolean SHADED = true;
@@ -19,10 +17,11 @@ public class GraphedChunk {
 
     private List<Boolean> shading;
     private ChunkPos pos;
-    private GraphProperties dimensionPreset;
 
-    public GraphedChunk(GraphProperties dimensionPreset, ChunkPos pos) {
-        this.dimensionPreset = dimensionPreset;
+    private ChunkGrapher grapher;
+
+    public GraphedChunk(ChunkGrapher grapher, ChunkPos pos) {
+        this.grapher = grapher;
         this.pos = pos;
 
         List<CompletableFuture<Boolean>> graphingFutures = new ArrayList<>();
@@ -35,13 +34,13 @@ public class GraphedChunk {
 
         for (int x = startX; x < endX; x++) {
             for (int z = startZ; z < endZ; z++) {
-                graphingFutures.add(Graphing.scheduleGraphing(dimensionPreset, x, z));
+                graphingFutures.add(grapher.schedulePointGraphing(x, z));
             }
         }
 
         this.shading = graphingFutures
             .stream()
-            .map(future -> Graphing.completeGraphing(future))
+            .map(future -> GraphingUtils.completeFuture(future))
             .toList();
     }
 
@@ -53,7 +52,7 @@ public class GraphedChunk {
                 .toList()
         );
 
-        Graphing.getIndices(this.shading, GraphedChunk.SHADED)
+        GraphingUtils.getIndices(this.shading, GraphedChunk.SHADED)
             .stream()
             .forEach(coord -> generatorMap.set(coord.toListIndex(), modifiedGenerator));
         this.findOutlinedPortion()
@@ -100,7 +99,7 @@ public class GraphedChunk {
 
         Map<ChunkPos, GraphedChunk> neighboringChunks = new HashMap<>(4);
 
-        for (Coordinate coordinate : Graphing.getIndices(this.shading, GraphedChunk.SHADED)) {
+        for (Coordinate coordinate : GraphingUtils.getIndices(this.shading, GraphedChunk.SHADED)) {
             boolean hasContrastingNeighbor = coordinate.getNeighbors()
                 .stream()
                 .anyMatch(
@@ -117,7 +116,7 @@ public class GraphedChunk {
                             GraphedChunk neighboringGraphedArea = neighboringChunks.get(neighborPos);
 
                             if (Objects.isNull(neighboringGraphedArea)) {
-                                neighboringGraphedArea = new GraphedChunk(this.dimensionPreset, neighborPos);
+                                neighboringGraphedArea = this.grapher.getChunkGraph(neighborPos);
                                 neighboringChunks.put(neighborPos, neighboringGraphedArea);
                             }
 

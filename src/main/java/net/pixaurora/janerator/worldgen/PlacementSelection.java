@@ -3,7 +3,7 @@ package net.pixaurora.janerator.worldgen;
 import java.util.List;
 
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.pixaurora.janerator.graph.Coordinate;
+import net.pixaurora.janerator.graphing.Coordinate;
 
 public class PlacementSelection {
     private ChunkGenerator generator;

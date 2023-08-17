@@ -1,5 +1,7 @@
 package net.pixaurora.janerator.mixin;
 
+import java.util.Objects;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -7,23 +9,39 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.pixaurora.janerator.config.GraphProperties;
-import net.pixaurora.janerator.config.JaneratorConfig;
+import net.pixaurora.janerator.graphing.ChunkGrapher;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
+import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 
 @Mixin(ChunkGenerator.class)
 public class ChunkGeneratorMixin implements JaneratorGenerator {
-    private ResourceKey<Level> janerator$dimension;
+    private ChunkGrapher janerator$grapher;
+    private MultiGenerator janerator$parent;
 
-    public void janerator$setDimension(ResourceKey<Level> dimension) {
-        this.janerator$dimension = dimension;
+    @Override
+    public void janerator$setupMultiGenerating(ChunkGrapher dimension, MultiGenerator parent) {
+        this.janerator$grapher = dimension;
+        this.janerator$parent = parent;
+    }
+
+    @Override
+    public boolean janerator$notMultiGenerating() {
+        return Objects.isNull(this.janerator$parent);
+    }
+
+    @Override
+    public ChunkGrapher janerator$getGrapher() {
+        return this.janerator$grapher;
+    }
+
+    @Override
+    public MultiGenerator janerator$getParent() {
+        return this.janerator$parent;
     }
 
     @Inject(
@@ -39,17 +57,13 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
         StructureTemplateManager templateManager,
         CallbackInfo callbackInfo
     ) {
-        JaneratorConfig config = JaneratorConfig.getInstance();
-
-        if (config.missingPresetFor(this.janerator$dimension)) {
+        if (this.janerator$notMultiGenerating()) {
             return;
         }
 
         BlockPos pos = chunk.getPos().getMiddleBlockPosition(0);
 
-        GraphProperties dimensionPreset = config.getPresetFor(this.janerator$dimension);
-
-        if (dimensionPreset.getGrapher().isPointShaded(pos)) {
+        if (this.janerator$getGrapher().isPointShaded(pos)) {
             callbackInfo.cancel();
         }
     }

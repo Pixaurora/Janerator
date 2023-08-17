@@ -1,4 +1,4 @@
-package net.pixaurora.janerator.worldgen;
+package net.pixaurora.janerator.worldgen.generator;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,42 +23,48 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.pixaurora.janerator.config.GraphProperties;
-import net.pixaurora.janerator.graphing.Coordinate;
+import net.pixaurora.janerator.graphing.ChunkGrapher;
 import net.pixaurora.janerator.graphing.GraphedChunk;
+import net.pixaurora.janerator.worldgen.GeneratorFinder;
+import net.pixaurora.janerator.worldgen.PlacementSelection;
+import net.pixaurora.janerator.worldgen.WrappedBiomeResolver;
 
 public class MultiGenerator extends ChunkGenerator {
-    private boolean generatorsInitialized;
+    private boolean generatorsMapped;
     private ChunkGenerator defaultGenerator;
     private ChunkGenerator modifiedGenerator;
     private ChunkGenerator outlineGenerator;
 
-    private GraphProperties dimensionPreset;
     private ChunkPos pos;
 
     private GeneratorFinder generators;
     private GeneratorFinder biomeGenerators;
 
     public MultiGenerator(
+        ChunkGrapher grapher,
         ChunkGenerator defaultGenerator,
         ChunkGenerator modifiedGenerator,
         ChunkGenerator outlineGenerator,
-        ChunkAccess chunk,
-        GraphProperties dimensionPreset
+        ChunkAccess chunk
     ) {
         super(defaultGenerator.getBiomeSource());
 
-        this.generatorsInitialized = false;
+        this.generatorsMapped = false;
+
         this.defaultGenerator = defaultGenerator;
         this.modifiedGenerator = modifiedGenerator;
         this.outlineGenerator = outlineGenerator;
 
         this.pos = chunk.getPos();
-        this.dimensionPreset = dimensionPreset;
 
-        List.of(this, defaultGenerator, modifiedGenerator, outlineGenerator)
-            .stream()
-            .forEach(generator -> generator.janerator$setDimension(dimensionPreset.getDimension()));
+        for (ChunkGenerator generator : List.of(this, defaultGenerator, modifiedGenerator, outlineGenerator)) {
+            generator.janerator$setupMultiGenerating(grapher, this);
+        }
+    }
+
+    @Override
+    public MultiGenerator janerator$getParent() {
+        throw new RuntimeException("MultiGenerator cannot have a MultiGenerator parent.");
     }
 
 	@Override
@@ -66,26 +72,26 @@ public class MultiGenerator extends ChunkGenerator {
 		return CODEC;
 	}
 
-    private void initializeGenerators() {
-        GraphedChunk graphedArea = dimensionPreset.getGrapher().getChunkGraph(pos);
+    private void organizeGenerators() {
+        GraphedChunk graphedArea = this.janerator$getGrapher().getChunkGraph(pos);
 
         this.generators = new GeneratorFinder(graphedArea.getGeneratorMap(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator));
         this.biomeGenerators = new GeneratorFinder(graphedArea.sampleBiomeGeneratorMap(this.defaultGenerator, this.modifiedGenerator));
 
-        this.generatorsInitialized = true;
+        this.generatorsMapped = true;
     }
 
     private GeneratorFinder getGenerators() {
-        if (!generatorsInitialized) {
-            this.initializeGenerators();
+        if (!generatorsMapped) {
+            this.organizeGenerators();
         }
 
         return this.generators;
     }
 
     private GeneratorFinder getBiomeGenerators() {
-        if (!generatorsInitialized) {
-            this.initializeGenerators();
+        if (!generatorsMapped) {
+            this.organizeGenerators();
         }
 
         return this.biomeGenerators;
@@ -139,12 +145,12 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState) {
-		return this.getGenerators().getAt(new Coordinate(x, z)).getBaseHeight(x, z, heightmap, world, randomState);
+		return this.modifiedGenerator.getBaseHeight(x, z, heightmap, world, randomState);
 	}
 
 	@Override
 	public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
-		return this.getGenerators().getAt(new Coordinate(x, z)).getBaseColumn(x, z, world, randomState);
+		return this.modifiedGenerator.getBaseColumn(x, z, world, randomState);
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import net.minecraft.world.level.chunk.ImposterProtoChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.pixaurora.janerator.config.GraphProperties;
 import net.pixaurora.janerator.config.JaneratorConfig;
-import net.pixaurora.janerator.worldgen.MultiGenerator;
+import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 
 public class Janerator {
     public static final Logger LOGGER = LoggerFactory.getLogger("Janerator");
@@ -26,15 +26,17 @@ public class Janerator {
         boolean chunkAlreadyGenerated = chunk instanceof LevelChunk || chunk instanceof ImposterProtoChunk;
 
         if (chunkAlreadyGenerated || config.missingPresetFor(dimension)) {
-            defaultGenerator.janerator$setDimension(dimension);
             return defaultGenerator;
         }
 
         GraphProperties dimensionPreset = config.getPresetFor(dimension);
 
-        ChunkGenerator modifiedGenerator = dimensionPreset.getShadedGenerator();
-        ChunkGenerator outlineGenerator = dimensionPreset.getOutlineGenerator();
-
-        return new MultiGenerator(defaultGenerator, modifiedGenerator, outlineGenerator, chunk, dimensionPreset);
+        return new MultiGenerator(
+            dimensionPreset.getGrapher(),
+            defaultGenerator,
+            dimensionPreset.getShadedGenerator(),
+            dimensionPreset.getOutlineGenerator(),
+            chunk
+        );
     }
 }

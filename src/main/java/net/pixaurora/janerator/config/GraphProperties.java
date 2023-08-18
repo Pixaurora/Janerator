@@ -15,7 +15,7 @@ public class GraphProperties {
     private ResourceKey<Level> dimension;
 
     private ChunkGenerator shadedGenerator;
-    private ChunkGenerator outlineGenerator;
+    private ChunkGenerator outlinesGenerator;
 
     private ChunkGrapher grapher;
 
@@ -24,14 +24,14 @@ public class GraphProperties {
             ResourceKey.codec(Registries.DIMENSION).fieldOf("dimension").forGetter(GraphProperties::getDimension),
             ConfiguredGrapherSettings.CODEC.fieldOf("function_to_graph").forGetter(GraphProperties::getSettings),
             ChunkGenerator.CODEC.fieldOf("shaded_in_generator").forGetter(GraphProperties::getShadedGenerator),
-            ChunkGenerator.CODEC.fieldOf("outlines_generator").forGetter(GraphProperties::getOutlineGenerator)
+            ChunkGenerator.CODEC.fieldOf("outlines_generator").forGetter(GraphProperties::getOutlinesGenerator)
         ).apply(instance, GraphProperties::new)
     );
 
-    public GraphProperties(ResourceKey<Level> dimension, ConfiguredGrapherSettings grapherSettings, ChunkGenerator shadedGenerator, ChunkGenerator outlineGenerator) {
+    public GraphProperties(ResourceKey<Level> dimension, ConfiguredGrapherSettings grapherSettings, ChunkGenerator shadedGenerator, ChunkGenerator outlinesGenerator) {
         this.dimension = dimension;
 
-        this.outlineGenerator = outlineGenerator;
+        this.outlinesGenerator = outlinesGenerator;
         this.shadedGenerator = shadedGenerator;
 
         this.grapher = new ChunkGrapher(grapherSettings);
@@ -53,7 +53,7 @@ public class GraphProperties {
         return this.shadedGenerator;
     }
 
-    public ChunkGenerator getOutlineGenerator() {
-        return this.outlineGenerator;
+    public ChunkGenerator getOutlinesGenerator() {
+        return this.outlinesGenerator;
     }
 }

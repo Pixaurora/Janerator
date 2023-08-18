@@ -6,13 +6,13 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.graphing.GraphingUtils;
 
-public class GeneratorFinder {
+public class GeneratorLookup {
     private List<ChunkGenerator> generatorMap;
 
     private List<PlacementSelection> selections;
     private ChunkGenerator fallbackGenerator;
 
-    public GeneratorFinder(
+    public GeneratorLookup(
         List<ChunkGenerator> generatorMap
     ) {
         this.generatorMap = generatorMap;

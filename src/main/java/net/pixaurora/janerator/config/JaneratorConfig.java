@@ -10,6 +10,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 
 public class JaneratorConfig {
     public static Codec<JaneratorConfig> CODEC =
@@ -39,9 +41,11 @@ public class JaneratorConfig {
     }
 
     private Map<ResourceKey<Level>, GraphProperties> presets;
+    private Map<ResourceKey<Level>, MultiGenerator> generators;
 
     public JaneratorConfig(List<GraphProperties> presets) {
         this.presets = new HashMap<>(presets.size());
+        this.generators = new HashMap<>(presets.size());
 
         for (GraphProperties preset : presets) {
             this.presets.put(preset.getDimension(), preset);
@@ -49,9 +53,7 @@ public class JaneratorConfig {
     }
 
     public List<GraphProperties> getAllPresets() {
-        return this.presets
-            .values()
-            .stream()
+        return this.presets.values().stream()
             .toList();
     }
 
@@ -61,5 +63,31 @@ public class JaneratorConfig {
 
     public boolean missingPresetFor(ResourceKey<Level> dimension) {
         return ! this.presets.containsKey(dimension);
+    }
+
+    public synchronized ChunkGenerator createGenerator(ResourceKey<Level> dimension, ChunkGenerator defaultGenerator) {
+        GraphProperties preset = this.presets.get(dimension);
+
+        return this.generators.computeIfAbsent(
+            dimension,
+            (dim) -> new MultiGenerator(
+                preset.getGrapher(),
+                defaultGenerator,
+                preset.getShadedGenerator(),
+                preset.getOutlinesGenerator()
+            )
+        );
+    }
+
+    public ChunkGenerator getIntendedGenerator(ResourceKey<Level> dimension, ChunkGenerator defaultGenerator) {
+        if (this.missingPresetFor(dimension)) {
+            return defaultGenerator;
+        }
+
+        if (! this.generators.containsKey(dimension)) {
+            return this.createGenerator(dimension, defaultGenerator);
+        } else {
+            return this.generators.get(dimension);
+        }
     }
 }

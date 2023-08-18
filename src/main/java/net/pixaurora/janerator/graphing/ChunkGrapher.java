@@ -11,7 +11,7 @@ import com.google.common.cache.LoadingCache;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 
-public class ChunkGrapher extends CacheLoader<ChunkPos, GraphedChunk> {
+public class ChunkGrapher {
     private ConfiguredGrapherSettings settings;
     private ThreadLocal<PointGrapher> localPointGrapher;
 
@@ -24,7 +24,7 @@ public class ChunkGrapher extends CacheLoader<ChunkPos, GraphedChunk> {
         this.cache = CacheBuilder.newBuilder()
             .expireAfterWrite(60, TimeUnit.SECONDS)
             .maximumSize(1024)
-            .build(this);
+            .build(CacheLoader.from(this::graphChunk));
     }
 
     public ConfiguredGrapherSettings getSettings() {
@@ -43,9 +43,8 @@ public class ChunkGrapher extends CacheLoader<ChunkPos, GraphedChunk> {
         return CompletableFuture.supplyAsync(() -> this.isPointShaded(x, z), GraphingUtils.threadPool);
     }
 
-    @Override
-    public GraphedChunk load(ChunkPos pos) {
-        return new GraphedChunk(this, pos);
+    private GraphedChunk graphChunk(ChunkPos pos) {
+        return GraphedChunk.fromGraphing(this, pos);
     }
 
     public GraphedChunk getChunkGraph(ChunkPos pos) {

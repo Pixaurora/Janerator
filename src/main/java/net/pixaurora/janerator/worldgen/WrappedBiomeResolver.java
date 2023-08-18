@@ -22,12 +22,12 @@ import net.pixaurora.janerator.mixin.NoiseBasedChunkGeneratorAccessor;
 import net.pixaurora.janerator.mixin.NoiseChunkAccessor;
 
 public class WrappedBiomeResolver implements BiomeResolver {
-    GeneratorFinder generators;
+    GeneratorLookup generators;
     Map<ChunkGenerator, BiomeResolver> biomeResolvers;
     Map<ChunkGenerator, Sampler> samplers;
 
     public WrappedBiomeResolver(
-        GeneratorFinder generators,
+        GeneratorLookup generators,
         Blender blender,
         ChunkAccess chunk,
         StructureManager structureManager,

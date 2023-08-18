@@ -2,8 +2,13 @@ package net.pixaurora.janerator.worldgen.generator;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.mojang.serialization.Codec;
 
 import net.minecraft.core.BlockPos;
@@ -18,6 +23,8 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
+import net.minecraft.world.level.chunk.ImposterProtoChunk;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
@@ -25,41 +32,76 @@ import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.pixaurora.janerator.graphing.ChunkGrapher;
 import net.pixaurora.janerator.graphing.GraphedChunk;
-import net.pixaurora.janerator.worldgen.GeneratorFinder;
+import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
 import net.pixaurora.janerator.worldgen.PlacementSelection;
 import net.pixaurora.janerator.worldgen.WrappedBiomeResolver;
 
 public class MultiGenerator extends ChunkGenerator {
-    private boolean generatorsMapped;
+    private ChunkGrapher grapher;
+
     private ChunkGenerator defaultGenerator;
-    private ChunkGenerator modifiedGenerator;
-    private ChunkGenerator outlineGenerator;
+    private ChunkGenerator shadedGenerator;
+    private ChunkGenerator outlinesGenerator;
 
-    private ChunkPos pos;
-
-    private GeneratorFinder generators;
-    private GeneratorFinder biomeGenerators;
+    private LoadingCache<ChunkPos, FullGeneratorLookup> selectionCache;
 
     public MultiGenerator(
         ChunkGrapher grapher,
         ChunkGenerator defaultGenerator,
-        ChunkGenerator modifiedGenerator,
-        ChunkGenerator outlineGenerator,
-        ChunkAccess chunk
+        ChunkGenerator shadedGenerator,
+        ChunkGenerator outlinesGenerator
     ) {
         super(defaultGenerator.getBiomeSource());
 
-        this.generatorsMapped = false;
+        this.grapher = grapher;
 
         this.defaultGenerator = defaultGenerator;
-        this.modifiedGenerator = modifiedGenerator;
-        this.outlineGenerator = outlineGenerator;
+        this.shadedGenerator = shadedGenerator;
+        this.outlinesGenerator = outlinesGenerator;
 
-        this.pos = chunk.getPos();
+        this.selectionCache = CacheBuilder.newBuilder()
+            .maximumSize(1024)
+            .expireAfterAccess(60, TimeUnit.SECONDS)
+            .build(CacheLoader.from(pos -> this.grapher.getChunkGraph(pos).toLookup(this)));
 
-        for (ChunkGenerator generator : List.of(this, defaultGenerator, modifiedGenerator, outlineGenerator)) {
+        for (ChunkGenerator generator : List.of(this, defaultGenerator, shadedGenerator, outlinesGenerator)) {
             generator.janerator$setupMultiGenerating(grapher, this);
         }
+    }
+
+    public ChunkGrapher getGrapher() {
+        return this.grapher;
+    }
+
+    public ChunkGenerator getDefaultGenerator() {
+        return this.defaultGenerator;
+    }
+
+    public ChunkGenerator getShadedGenerator() {
+        return this.shadedGenerator;
+    }
+
+    public ChunkGenerator getOutlinesGenerator() {
+        return this.outlinesGenerator;
+    }
+
+    public FullGeneratorLookup getGenerators(ChunkPos pos) {
+        try {
+            return this.selectionCache.get(pos);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public FullGeneratorLookup getGenerators(ChunkAccess chunk) {
+        ChunkPos pos = chunk.getPos();
+
+        boolean chunkAlreadyGenerated = chunk instanceof LevelChunk || chunk instanceof ImposterProtoChunk;
+        if (chunkAlreadyGenerated) {
+            this.selectionCache.put(pos, GraphedChunk.allUnshaded(grapher, pos).toLookup(this));
+        }
+
+        return this.getGenerators(pos);
     }
 
     @Override
@@ -72,34 +114,9 @@ public class MultiGenerator extends ChunkGenerator {
 		return CODEC;
 	}
 
-    private void organizeGenerators() {
-        GraphedChunk graphedArea = this.janerator$getGrapher().getChunkGraph(pos);
-
-        this.generators = new GeneratorFinder(graphedArea.getGeneratorMap(this.defaultGenerator, this.modifiedGenerator, this.outlineGenerator));
-        this.biomeGenerators = new GeneratorFinder(graphedArea.sampleBiomeGeneratorMap(this.defaultGenerator, this.modifiedGenerator));
-
-        this.generatorsMapped = true;
-    }
-
-    private GeneratorFinder getGenerators() {
-        if (!generatorsMapped) {
-            this.organizeGenerators();
-        }
-
-        return this.generators;
-    }
-
-    private GeneratorFinder getBiomeGenerators() {
-        if (!generatorsMapped) {
-            this.organizeGenerators();
-        }
-
-        return this.biomeGenerators;
-    }
-
 	@Override
 	public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
-        for (PlacementSelection selection : this.getGenerators().getAllSelections()) {
+        for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
             selection.getUsedGenerator().buildSurface(
                 region,
                 structureManager,
@@ -113,7 +130,7 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public int getSpawnHeight(LevelHeightAccessor world) {
-		return this.getGenerators().getDefault().getSpawnHeight(world);
+		return this.defaultGenerator.getSpawnHeight(world);
 	}
 
 	@Override
@@ -123,7 +140,7 @@ public class MultiGenerator extends ChunkGenerator {
         CompletableFuture<ChunkAccess> placeholderFuture = new CompletableFuture<>();
         CompletableFuture<ChunkAccess> future = placeholderFuture;
 
-        for(PlacementSelection selection : this.getGenerators().getAllSelections()) {
+        for(PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
             future = future.thenCompose(
                 access -> selection.getUsedGenerator().fillFromNoise(
                     executor,
@@ -145,12 +162,12 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState) {
-		return this.modifiedGenerator.getBaseHeight(x, z, heightmap, world, randomState);
+		return this.shadedGenerator.getBaseHeight(x, z, heightmap, world, randomState);
 	}
 
 	@Override
 	public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
-		return this.modifiedGenerator.getBaseColumn(x, z, world, randomState);
+		return this.shadedGenerator.getBaseColumn(x, z, world, randomState);
 	}
 
 	@Override
@@ -164,7 +181,7 @@ public class MultiGenerator extends ChunkGenerator {
             () -> {
                 chunk.fillBiomesFromNoise(
                     new WrappedBiomeResolver(
-                        this.getBiomeGenerators(),
+                        this.getGenerators(chunk).atBiomeScale(),
                         blender,
                         chunk,
                         structureManager,
@@ -187,7 +204,7 @@ public class MultiGenerator extends ChunkGenerator {
 		ChunkAccess chunk,
 		GenerationStep.Carving generationStep
 	) {
-        for (PlacementSelection selection : this.getGenerators().getAllSelections()) {
+        for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
             selection.getUsedGenerator().applyCarvers(
                 chunkRegion,
                 seed,
@@ -204,12 +221,12 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public void spawnOriginalMobs(WorldGenRegion region) {
-        this.getGenerators().getDefault().spawnOriginalMobs(region);
+        this.getGenerators(region.getCenter()).getDefault().spawnOriginalMobs(region);
 	}
 
     @Override
     public void applyBiomeDecoration(WorldGenLevel world, ChunkAccess chunk, StructureManager structureManager) {
-        for (PlacementSelection selection : this.getGenerators().getAllSelections()) {
+        for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
             selection.getUsedGenerator().applyBiomeDecoration(
                 world,
                 chunk,
@@ -228,7 +245,7 @@ public class MultiGenerator extends ChunkGenerator {
 		ChunkAccess chunk,
 		StructureTemplateManager templateManager
 	) {
-        for (PlacementSelection selection : this.getGenerators().getAllSelections()) {
+        for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
             selection.getUsedGenerator().createStructures(
                 registryManager,
                 chunkGeneratorStructureState,
@@ -241,16 +258,16 @@ public class MultiGenerator extends ChunkGenerator {
 
 	@Override
 	public int getMinY() {
-		return 0;
+		return defaultGenerator.getMinY();
 	}
 
 	@Override
 	public int getGenDepth() {
-		return 384;
+		return defaultGenerator.getGenDepth();
 	}
 
 	@Override
 	public int getSeaLevel() {
-		return -63;
+		return defaultGenerator.getSeaLevel();
 	}
 }

@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.mariuszgromada.math.mxparser.Expression;
+import org.mariuszgromada.math.mxparser.Function;
 import org.mariuszgromada.math.mxparser.License;
 import org.mariuszgromada.math.mxparser.mXparser;
 
@@ -18,7 +20,8 @@ import net.pixaurora.janerator.graphing.variable.VariableDefinition;
 public class ConfiguredGrapherSettings {
     public static final Codec<ConfiguredGrapherSettings> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
-            Codec.STRING.listOf().fieldOf("variable_definitions").forGetter(ConfiguredGrapherSettings::getRawDefinitions),
+            Codec.STRING.listOf().fieldOf("function_definitions").forGetter(ConfiguredGrapherSettings::getRawFunctions),
+            Codec.STRING.listOf().fieldOf("variable_definitions").forGetter(ConfiguredGrapherSettings::getRawVariables),
             Codec.STRING.fieldOf("return_statement").forGetter(ConfiguredGrapherSettings::getRawReturnStatement)
         )
         .apply(instance, ConfiguredGrapherSettings::new)
@@ -33,16 +36,20 @@ public class ConfiguredGrapherSettings {
         mXparser.disableUlpRounding();
     }
 
-    private List<String> rawDefinitions;
+    private List<String> rawFunctions;
+    private List<String> rawVariables;
     private String rawReturnStatement;
 
-    private List<VariableDefinition> definitions;
+    private List<VariableDefinition> variables;
 
-    public ConfiguredGrapherSettings(List<String> variableDefinitions, String returnStatement) {
-        this.rawDefinitions = variableDefinitions;
+    public ConfiguredGrapherSettings(List<String> functionDefinitions, List<String> variableDefinitions, String returnStatement) {
+        this.rawFunctions = functionDefinitions;
+        this.rawVariables = variableDefinitions;
         this.rawReturnStatement = returnStatement;
 
-        this.definitions = new ArrayList<>(this.rawDefinitions.size() + 1);
+        this.variables = new ArrayList<>(this.rawVariables.size() + 1);
+
+        Map<String, Function> functionTable = new HashMap<>();
 
         Map<String, Variable> variableTable = new HashMap<>(
             Map.of(
@@ -51,27 +58,42 @@ public class ConfiguredGrapherSettings {
             )
         );
 
-        for (String definitionText : variableDefinitions) {
-            VariableDefinition definition = VariableDefinition.fromString(variableTable, definitionText);
+        for (String definitionText : this.rawFunctions) {
+            Function function = new Function(definitionText);
+            Expression asExpression = new Expression(function.getFunctionExpressionString());
 
-            definition.validate();
+            function.addFunctions(GraphingUtils.getRequiredFunctions(functionTable, asExpression, function.getFunctionName()).toArray(new Function[]{}));
 
-            this.definitions.add(definition);
+            GraphingUtils.validate(function);
+
+            functionTable.put(function.getFunctionName(), function);
+        }
+
+        for (String definitionText : this.rawVariables) {
+            VariableDefinition definition = VariableDefinition.fromString(functionTable, variableTable, definitionText);
+
+            GraphingUtils.validate(definition.asFunction());
+
+            this.variables.add(definition);
             variableTable.put(definition.getName(), definition);
         }
 
-        this.definitions.add(VariableDefinition.fromString(variableTable, "returnValue = " + returnStatement));
+        this.variables.add(VariableDefinition.fromString(functionTable, variableTable, "returnValue = " + returnStatement));
     }
 
-    public List<String> getRawDefinitions() {
-        return this.rawDefinitions;
+    public List<String> getRawVariables() {
+        return this.rawVariables;
+    }
+
+    public List<String> getRawFunctions() {
+        return rawFunctions;
     }
 
     public String getRawReturnStatement() {
         return this.rawReturnStatement;
     }
 
-    public List<VariableDefinition> getDefinitions() {
-        return this.definitions;
+    public List<VariableDefinition> getVariables() {
+        return this.variables;
     }
 }

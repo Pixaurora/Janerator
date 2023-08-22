@@ -90,6 +90,7 @@ public class ConfigFileManager {
                 new GraphProperties(
                     Level.OVERWORLD,
                     new ConfiguredGrapherSettings(
+                        List.of(),
                         List.of(
                             "phi = (1 + sqrt(5)) / 2",
                             "log_phi = ln(phi)",

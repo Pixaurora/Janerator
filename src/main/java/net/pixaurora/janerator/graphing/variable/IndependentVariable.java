@@ -10,8 +10,8 @@ import net.pixaurora.janerator.graphing.instruction.StaticInstruction;
 public class IndependentVariable extends VariableDefinition {
     private double value;
 
-    public IndependentVariable(String name, List<IndependentVariable> requiredVariables, String definitionStatement) {
-        super(name, definitionStatement, requiredVariables);
+    public IndependentVariable(String name, String definitionStatement, List<IndependentVariable> requiredVariables, List<Function> requiredFunctions) {
+        super(name, definitionStatement, requiredVariables, requiredFunctions);
 
         Function function = this.asFunction();
 

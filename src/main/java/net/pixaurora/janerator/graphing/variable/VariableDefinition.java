@@ -1,7 +1,5 @@
 package net.pixaurora.janerator.graphing.variable;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,25 +9,27 @@ import org.mariuszgromada.math.mxparser.Expression;
 import org.mariuszgromada.math.mxparser.Function;
 
 import net.pixaurora.janerator.config.GraphingConfigException;
-import net.pixaurora.janerator.config.ParserEvaluationException;
+import net.pixaurora.janerator.graphing.GraphingUtils;
 import net.pixaurora.janerator.graphing.instruction.Instruction;
 
 public abstract class VariableDefinition extends Variable {
     protected String definitionStatement;
     protected List<? extends Variable> requiredVariables;
+    protected List<Function> requiredFunctions;
 
-    protected VariableDefinition(String name, String definitionStatement, List<? extends Variable> requiredVariables) {
+    protected VariableDefinition(String name, String definitionStatement, List<? extends Variable> requiredVariables, List<Function> requiredFunctions) {
         super(name);
 
         this.definitionStatement = definitionStatement;
         this.requiredVariables = requiredVariables;
+        this.requiredFunctions = requiredFunctions;
     }
 
-    public static VariableDefinition fromString(Map<String, Variable> variableTable, String definitionText) {
-        List<String> parts = Arrays.asList(definitionText.split("="));
+    public static VariableDefinition fromString(Map<String, Function> functionTable, Map<String, Variable> variableTable, String definitionText) {
+        List<String> parts = List.of(definitionText.split("="));
 
         if (parts.size() != 2) {
-            throw new GraphingConfigException(String.format("Function definition `%s` must have exactly one equal sign (=)", definitionText));
+            throw new GraphingConfigException(String.format("Variable definition `%s` must have exactly one equal sign (=)", definitionText));
         }
 
         String name = parts.get(0).strip();
@@ -42,31 +42,26 @@ public abstract class VariableDefinition extends Variable {
             .map(variable -> Objects.nonNull(variable) ? variable : new MissingVariable(name))
             .toList();
 
-        List<String> missingNames = requiredVariables.stream()
+        List<String> missingVariables = requiredVariables.stream()
             .filter(variable -> variable instanceof MissingVariable)
             .map(Variable::getName)
             .toList();
-        if (missingNames.size() > 0) {
+        if (missingVariables.size() > 0) {
             throw new GraphingConfigException(
-                String.format(
-                    "Variable definition for `%s` is using unknown variables: `%s`",
-                    name,
-                    String.join(", ", missingNames)
-                )
+                String.format("Variable definition for `%s` is using unknown variables: `%s`",name, String.join(", ", missingVariables))
             );
         }
 
-        if (
-            requiredVariables.stream()
-                .allMatch(variable -> variable instanceof IndependentVariable)
-        ) {
+        List<Function> requiredFunctions = GraphingUtils.getRequiredFunctions(functionTable, expression, name);
+
+        if (requiredVariables.stream().allMatch(variable -> variable instanceof IndependentVariable)) {
             List<IndependentVariable> requiredIndependentVariables = requiredVariables.stream()
                 .map(variable -> (IndependentVariable) variable)
                 .toList();
 
-            return new IndependentVariable(name, requiredIndependentVariables, expressionText);
+            return new IndependentVariable(name, expressionText, requiredIndependentVariables, requiredFunctions);
         } else {
-            return new DependentVariable(name, requiredVariables, expressionText);
+            return new DependentVariable(name, expressionText, requiredVariables, requiredFunctions);
         }
     }
 
@@ -98,28 +93,17 @@ public abstract class VariableDefinition extends Variable {
             .toArray(new String[]{});
     }
 
-    public Function asFunction() {
-        return new Function(this.getUniqueFunctionName(), this.definitionStatement, this.getRequiredNames());
+    private Function[] cloneFunctions() {
+        return this.requiredFunctions.stream()
+            .map(Function::cloneForThreadSafe)
+            .toList()
+            .toArray(new Function[]{});
     }
 
-    public void validate() {
-        String NO_ERROR_MESSAGE = "No errors detected";
+    public Function asFunction() {
+        Function function = new Function(this.getUniqueFunctionName(), this.definitionStatement, this.getRequiredNames());
+        function.addFunctions(this.cloneFunctions());
 
-        Function function = this.asFunction();
-
-        int argumentCount = function.getArgumentsNumber();
-
-        if (argumentCount == 0) {
-            function.calculate();
-        } else {
-            double[] args = Collections.nCopies(argumentCount, 10.0).stream().mapToDouble(Double::valueOf).toArray();
-            function.calculate(args);
-        }
-
-        String errorMessage = function.getErrorMessage();
-
-        if (! errorMessage.contains(NO_ERROR_MESSAGE)) {
-            throw new ParserEvaluationException(this, errorMessage);
-        }
+        return function;
     }
 }

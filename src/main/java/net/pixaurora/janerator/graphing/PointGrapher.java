@@ -31,10 +31,10 @@ public class PointGrapher {
             )
         );
 
-        List<VariableDefinition> definitions = config.getDefinitions();
+        List<VariableDefinition> variables = config.getVariables();
 
-        for (VariableDefinition definition : definitions) {
-            indexTable.computeIfAbsent(definition.getName(), name -> count.getAndIncrement());
+        for (VariableDefinition variable : variables) {
+            indexTable.computeIfAbsent(variable.getName(), name -> count.getAndIncrement());
         }
 
         List<Instruction> runtimeInstructions = new ArrayList<>();
@@ -42,24 +42,24 @@ public class PointGrapher {
 
         List<String> definedNames = new ArrayList<>(List.of("x, y"));
 
-        for (VariableDefinition definition : definitions) {
-            int setIndex = indexTable.get(definition.getName());
-            int[] accessIndexes = definition.getRequiredVariables().stream()
+        for (VariableDefinition variable : variables) {
+            int setIndex = indexTable.get(variable.getName());
+            int[] accessIndexes = variable.getRequiredVariables().stream()
                 .map(Variable::getName)
                 .map(indexTable::get)
                 .mapToInt(Integer::valueOf)
                 .toArray();
 
-            Instruction instruction = definition.createInstruction(accessIndexes, setIndex);
-            boolean firstDefinition = ! definedNames.contains(definition.getName());
+            Instruction instruction = variable.createInstruction(accessIndexes, setIndex);
+            boolean firstDefinition = ! definedNames.contains(variable.getName());
 
-            if (definition instanceof IndependentVariable && firstDefinition) {
+            if (variable instanceof IndependentVariable && firstDefinition) {
                 instruction.execute(startingVariables);
             } else {
                 runtimeInstructions.add(instruction);
             }
 
-            definedNames.add(definition.getName());
+            definedNames.add(variable.getName());
         }
 
         return new PointGrapher(startingVariables, runtimeInstructions, indexTable.get("returnValue"));

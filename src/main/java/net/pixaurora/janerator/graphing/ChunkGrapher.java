@@ -10,16 +10,17 @@ import com.google.common.cache.LoadingCache;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
+import net.pixaurora.janerator.graphing.settings.GrapherSettings;
 
 public class ChunkGrapher {
-    private ConfiguredGrapherSettings settings;
+    private GrapherSettings settings;
     private ThreadLocal<PointGrapher> localPointGrapher;
 
     private LoadingCache<ChunkPos, GraphedChunk> cache;
 
-    public ChunkGrapher(ConfiguredGrapherSettings settings) {
+    public ChunkGrapher(GrapherSettings settings) {
         this.settings = settings;
-        this.localPointGrapher = ThreadLocal.withInitial(() -> PointGrapher.fromConfig(this.settings));
+        this.localPointGrapher = ThreadLocal.withInitial(() -> this.settings.createGrapher());
 
         this.cache = CacheBuilder.newBuilder()
             .expireAfterWrite(60, TimeUnit.SECONDS)
@@ -27,7 +28,7 @@ public class ChunkGrapher {
             .build(CacheLoader.from(this::graphChunk));
     }
 
-    public ConfiguredGrapherSettings getSettings() {
+    public GrapherSettings getSettings() {
         return this.settings;
     }
 

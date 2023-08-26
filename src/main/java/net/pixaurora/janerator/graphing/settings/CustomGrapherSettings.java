@@ -1,9 +1,11 @@
-package net.pixaurora.janerator.graphing;
+package net.pixaurora.janerator.graphing.settings;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mariuszgromada.math.mxparser.Expression;
 import org.mariuszgromada.math.mxparser.Function;
@@ -13,18 +15,22 @@ import org.mariuszgromada.math.mxparser.mXparser;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.pixaurora.janerator.graphing.GraphingUtils;
+import net.pixaurora.janerator.graphing.PointGrapher;
+import net.pixaurora.janerator.graphing.instruction.Instruction;
+import net.pixaurora.janerator.graphing.variable.IndependentVariable;
 import net.pixaurora.janerator.graphing.variable.InputVariable;
 import net.pixaurora.janerator.graphing.variable.Variable;
 import net.pixaurora.janerator.graphing.variable.VariableDefinition;
 
-public class ConfiguredGrapherSettings {
-    public static final Codec<ConfiguredGrapherSettings> CODEC = RecordCodecBuilder.create(
+public class CustomGrapherSettings implements GrapherSettings {
+    public static final Codec<CustomGrapherSettings> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
-            Codec.STRING.listOf().fieldOf("function_definitions").forGetter(ConfiguredGrapherSettings::getRawFunctions),
-            Codec.STRING.listOf().fieldOf("variable_definitions").forGetter(ConfiguredGrapherSettings::getRawVariables),
-            Codec.STRING.fieldOf("return_statement").forGetter(ConfiguredGrapherSettings::getRawReturnStatement)
+            Codec.STRING.listOf().fieldOf("function_definitions").forGetter(CustomGrapherSettings::getRawFunctions),
+            Codec.STRING.listOf().fieldOf("variable_definitions").forGetter(CustomGrapherSettings::getRawVariables),
+            Codec.STRING.fieldOf("return_statement").forGetter(CustomGrapherSettings::getRawReturnStatement)
         )
-        .apply(instance, ConfiguredGrapherSettings::new)
+        .apply(instance, CustomGrapherSettings::new)
     );
 
     static {
@@ -42,7 +48,7 @@ public class ConfiguredGrapherSettings {
 
     private List<VariableDefinition> variables;
 
-    public ConfiguredGrapherSettings(List<String> functionDefinitions, List<String> variableDefinitions, String returnStatement) {
+    public CustomGrapherSettings(List<String> functionDefinitions, List<String> variableDefinitions, String returnStatement) {
         this.rawFunctions = functionDefinitions;
         this.rawVariables = variableDefinitions;
         this.rawReturnStatement = returnStatement;
@@ -81,12 +87,59 @@ public class ConfiguredGrapherSettings {
         this.variables.add(VariableDefinition.fromString(functionTable, variableTable, "returnValue = " + returnStatement));
     }
 
+    @Override
+    public PointGrapher createGrapher() {
+        AtomicInteger count = new AtomicInteger();
+        Map<String, Integer> indexTable = new HashMap<>(
+            Map.of(
+                "x", count.getAndIncrement(),
+                "z", count.getAndIncrement()
+            )
+        );
+
+        for (VariableDefinition variable : this.variables) {
+            indexTable.computeIfAbsent(variable.getName(), name -> count.getAndIncrement());
+        }
+
+        List<Instruction> runtimeInstructions = new ArrayList<>();
+        List<Double> startingVariables = new ArrayList<>(Collections.nCopies(count.get(), 0.0));
+
+        List<String> definedNames = new ArrayList<>(List.of("x, y"));
+
+        for (VariableDefinition variable : this.variables) {
+            int setIndex = indexTable.get(variable.getName());
+            int[] accessIndexes = variable.getRequiredVariables().stream()
+                .map(Variable::getName)
+                .map(indexTable::get)
+                .mapToInt(Integer::valueOf)
+                .toArray();
+
+            Instruction instruction = variable.createInstruction(accessIndexes, setIndex);
+            boolean firstDefinition = ! definedNames.contains(variable.getName());
+
+            if (variable instanceof IndependentVariable && firstDefinition) {
+                instruction.execute(startingVariables);
+            } else {
+                runtimeInstructions.add(instruction);
+            }
+
+            definedNames.add(variable.getName());
+        }
+
+        return new PointGrapher(startingVariables, runtimeInstructions, indexTable.get("returnValue"));
+    }
+
+    @Override
+    public GrapherSettingsType type() {
+        return GrapherSettingsType.CUSTOM;
+    }
+
     public List<String> getRawVariables() {
         return this.rawVariables;
     }
 
     public List<String> getRawFunctions() {
-        return rawFunctions;
+        return this.rawFunctions;
     }
 
     public String getRawReturnStatement() {

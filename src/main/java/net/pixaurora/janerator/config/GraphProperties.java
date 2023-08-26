@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.graphing.ChunkGrapher;
-import net.pixaurora.janerator.graphing.ConfiguredGrapherSettings;
+import net.pixaurora.janerator.graphing.settings.GrapherSettings;
 
 
 public class GraphProperties {
@@ -22,13 +22,13 @@ public class GraphProperties {
     public static Codec<GraphProperties> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
             ResourceKey.codec(Registries.DIMENSION).fieldOf("dimension").forGetter(GraphProperties::getDimension),
-            ConfiguredGrapherSettings.CODEC.fieldOf("function_to_graph").forGetter(GraphProperties::getSettings),
+            GrapherSettings.CODEC.fieldOf("function_to_graph").forGetter(GraphProperties::getSettings),
             ChunkGenerator.CODEC.fieldOf("shaded_in_generator").forGetter(GraphProperties::getShadedGenerator),
             ChunkGenerator.CODEC.fieldOf("outlines_generator").forGetter(GraphProperties::getOutlinesGenerator)
         ).apply(instance, GraphProperties::new)
     );
 
-    public GraphProperties(ResourceKey<Level> dimension, ConfiguredGrapherSettings grapherSettings, ChunkGenerator shadedGenerator, ChunkGenerator outlinesGenerator) {
+    public GraphProperties(ResourceKey<Level> dimension, GrapherSettings grapherSettings, ChunkGenerator shadedGenerator, ChunkGenerator outlinesGenerator) {
         this.dimension = dimension;
 
         this.outlinesGenerator = outlinesGenerator;
@@ -41,7 +41,7 @@ public class GraphProperties {
         return this.dimension;
     }
 
-    public ConfiguredGrapherSettings getSettings() {
+    public GrapherSettings getSettings() {
         return this.grapher.getSettings();
     }
 

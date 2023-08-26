@@ -17,7 +17,7 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.level.Level;
 import net.pixaurora.janerator.Janerator;
 import net.pixaurora.janerator.RegistryCache;
-import net.pixaurora.janerator.graphing.ConfiguredGrapherSettings;
+import net.pixaurora.janerator.graphing.settings.CustomGrapherSettings;
 
 public class ConfigFileManager {
     private final Path savePath;
@@ -89,7 +89,7 @@ public class ConfigFileManager {
             List.of(
                 new GraphProperties(
                     Level.OVERWORLD,
-                    new ConfiguredGrapherSettings(
+                    new CustomGrapherSettings(
                         List.of(),
                         List.of(
                             "phi = (1 + sqrt(5)) / 2",

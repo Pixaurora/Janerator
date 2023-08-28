@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
 import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 

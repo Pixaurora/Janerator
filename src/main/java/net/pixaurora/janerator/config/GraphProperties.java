@@ -7,9 +7,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.pixaurora.janerator.graphing.ChunkGrapher;
-import net.pixaurora.janerator.graphing.settings.GrapherSettings;
-
+import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 
 public class GraphProperties {
     private ResourceKey<Level> dimension;
@@ -22,27 +20,23 @@ public class GraphProperties {
     public static Codec<GraphProperties> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
             ResourceKey.codec(Registries.DIMENSION).fieldOf("dimension").forGetter(GraphProperties::getDimension),
-            GrapherSettings.CODEC.fieldOf("function_to_graph").forGetter(GraphProperties::getSettings),
+            ChunkGrapher.CODEC.fieldOf("grapher").forGetter(GraphProperties::getGrapher),
             ChunkGenerator.CODEC.fieldOf("shaded_in_generator").forGetter(GraphProperties::getShadedGenerator),
             ChunkGenerator.CODEC.fieldOf("outlines_generator").forGetter(GraphProperties::getOutlinesGenerator)
         ).apply(instance, GraphProperties::new)
     );
 
-    public GraphProperties(ResourceKey<Level> dimension, GrapherSettings grapherSettings, ChunkGenerator shadedGenerator, ChunkGenerator outlinesGenerator) {
+    public GraphProperties(ResourceKey<Level> dimension, ChunkGrapher grapher, ChunkGenerator shadedGenerator, ChunkGenerator outlinesGenerator) {
         this.dimension = dimension;
 
         this.outlinesGenerator = outlinesGenerator;
         this.shadedGenerator = shadedGenerator;
 
-        this.grapher = new ChunkGrapher(grapherSettings);
+        this.grapher = grapher;
     }
 
     public ResourceKey<Level> getDimension() {
         return this.dimension;
-    }
-
-    public GrapherSettings getSettings() {
-        return this.grapher.getSettings();
     }
 
     public ChunkGrapher getGrapher() {

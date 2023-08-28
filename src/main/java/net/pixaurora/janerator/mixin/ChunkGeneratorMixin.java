@@ -14,7 +14,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.pixaurora.janerator.graphing.ChunkGrapher;
+import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
 import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 

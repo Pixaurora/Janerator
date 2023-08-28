@@ -1,6 +1,6 @@
 package net.pixaurora.janerator.worldgen;
 
-import net.pixaurora.janerator.graphing.ChunkGrapher;
+import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 
 public interface JaneratorGenerator {

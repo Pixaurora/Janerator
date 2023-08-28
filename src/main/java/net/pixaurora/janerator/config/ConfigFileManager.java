@@ -17,7 +17,8 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.level.Level;
 import net.pixaurora.janerator.Janerator;
 import net.pixaurora.janerator.RegistryCache;
-import net.pixaurora.janerator.graphing.settings.CustomGrapherSettings;
+import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
+import net.pixaurora.janerator.graphing.grapher.CustomGrapher;
 
 public class ConfigFileManager {
     private final Path savePath;
@@ -89,15 +90,18 @@ public class ConfigFileManager {
             List.of(
                 new GraphProperties(
                     Level.OVERWORLD,
-                    new CustomGrapherSettings(
-                        List.of(),
-                        List.of(
-                            "phi = (1 + sqrt(5)) / 2",
-                            "log_phi = ln(phi)",
-                            "dist_squared = x^2 + z^2",
-                            "angle = ln(dist_squared) / log_phi"
-                        ),
-                        "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0"
+                    new CustomGrapher(
+                        new GraphFunctionDefinition(
+                            List.of("x", "z"),
+                            List.of(),
+                            List.of(
+                                "phi = (1 + sqrt(5)) / 2",
+                                "log_phi = ln(phi)",
+                                "dist_squared = x^2 + z^2",
+                                "angle = ln(dist_squared) / log_phi"
+                            ),
+                            "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0"
+                        )
                     ),
                     DefaultFlatPresets.createShadedOverworldGenerator(),
                     DefaultFlatPresets.createOutlineOverworldGenerator()

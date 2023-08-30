@@ -191,7 +191,9 @@ public class MultiGenerator extends ChunkGenerator {
                 );
 
                 return chunk;
-            });
+            },
+            executor
+        );
 	}
 
 	@Override

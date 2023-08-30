@@ -7,24 +7,25 @@ import net.pixaurora.janerator.graphing.Coordinate;
 
 public class PlacementSelection {
     private ChunkGenerator generator;
-    private List<Integer> placements;
+    private List<Coordinate> placements;
 
     public PlacementSelection(ChunkGenerator generator, List<Coordinate> placements) {
         this.generator = generator;
-        this.placements = placements
-            .stream()
-            .map(Coordinate::toListIndex)
-            .toList();
+        this.placements = placements;
     }
 
-    public boolean contains(int x, int z) {
-        return this.placements.contains(
-            new Coordinate(x, z).toListIndex()
-        );
+    public List<Coordinate> getPlacements() {
+        return this.placements;
     }
 
     public ChunkGenerator getUsedGenerator() {
         return this.generator;
+    }
+
+    public boolean contains(int x, int z) {
+        return this.placements.contains(
+            new Coordinate(x, z)
+        );
     }
 
     public int size() {

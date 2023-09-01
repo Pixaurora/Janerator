@@ -13,23 +13,23 @@ import net.pixaurora.janerator.graphing.instruction.Instruction;
 public class CustomGrapher extends ChunkGrapher {
     public static final Codec<CustomGrapher> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
-            GraphFunctionDefinition.BIVARIATE_CODEC.fieldOf("graph(x, z)").forGetter(CustomGrapher::getSettings)
+            GraphFunctionDefinition.BIVARIATE_CODEC.fieldOf("graph(x, z)").forGetter(CustomGrapher::getGraphDefinition)
         ).apply(instance, CustomGrapher::new)
     );
 
-    private GraphFunctionDefinition settings;
-    private ThreadLocal<GraphFunction> function;
+    private GraphFunctionDefinition graphDefinition;
+    private ThreadLocal<GraphFunction> graphFunction;
 
-    public CustomGrapher(GraphFunctionDefinition settings) {
+    public CustomGrapher(GraphFunctionDefinition graphDefinition) {
         super();
 
-        this.settings = settings;
-        this.function = ThreadLocal.withInitial(() -> GraphFunction.fromDefinition(this.settings));
+        this.graphDefinition = graphDefinition;
+        this.graphFunction = ThreadLocal.withInitial(() -> GraphFunction.fromDefinition(this.graphDefinition));
     }
 
     @Override
     public boolean isPointShaded(int x, int z)  {
-        return this.function.get().evaluate(x, z) == 1.0;
+        return this.graphFunction.get().evaluate(x, z) == 1.0;
     }
 
     @Override
@@ -37,8 +37,8 @@ public class CustomGrapher extends ChunkGrapher {
         return GrapherType.CUSTOM;
     }
 
-    public GraphFunctionDefinition getSettings() {
-        return settings;
+    public GraphFunctionDefinition getGraphDefinition() {
+        return graphDefinition;
     }
 
     public static class LocalGrapher {

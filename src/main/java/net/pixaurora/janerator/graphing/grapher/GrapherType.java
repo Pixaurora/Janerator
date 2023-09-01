@@ -11,8 +11,11 @@ public class GrapherType {
     public static Codec<GrapherType> CODEC = Codec.STRING.xmap(GrapherType::fromName, GrapherType::getName);
 
     public static GrapherType CUSTOM = new GrapherType("custom", CustomGrapher.CODEC);
+    public static GrapherType GROWING_TILES = new GrapherType("growing_tiles", GrowingTileGrapher.CODEC);
+
     public static List<GrapherType> TYPES = List.of(
-        CUSTOM
+        CUSTOM,
+        GROWING_TILES
     );
 
     private final String name;

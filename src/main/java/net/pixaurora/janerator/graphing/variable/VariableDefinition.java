@@ -1,5 +1,6 @@
 package net.pixaurora.janerator.graphing.variable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,15 +27,15 @@ public abstract class VariableDefinition extends Variable {
     }
 
     public static VariableDefinition fromString(Map<String, Function> functionTable, Map<String, Variable> variableTable, String definitionText) {
-        List<String> parts = List.of(definitionText.split("="));
+        List<String> parts = new ArrayList<>(List.of(definitionText.split("=")));
 
-        if (parts.size() != 2) {
-            throw new GraphingConfigException(String.format("Variable definition `%s` must have exactly one equal sign (=)", definitionText));
+        if (parts.size() < 2) {
+            throw new GraphingConfigException(String.format("Variable definition `%s` must have at least one equal sign (=)!", definitionText));
         }
 
-        String name = parts.get(0).strip();
+        String name = parts.remove(0).strip();
 
-        String expressionText = parts.get(1);
+        String expressionText = String.join("=", parts);
         Expression expression = new Expression(expressionText);
 
         List<Variable> requiredVariables = Stream.of(expression.getMissingUserDefinedArguments())

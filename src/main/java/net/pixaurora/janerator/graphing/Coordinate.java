@@ -1,14 +1,28 @@
 package net.pixaurora.janerator.graphing;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public record Coordinate(int x, int z, int scale) {
-    public Coordinate(int x, int z) {
-        this(x, z, 16);
-    }
+import org.joml.Vector2i;
 
+public record Coordinate(int x, int z, int scale) {
     private static int mod(int value, int divisor) {
         return value - divisor * Math.floorDiv(value, divisor);
+    }
+
+    private static final Vector2i[] NEIGHBOR_OFFSETS = new Vector2i[]{
+        new Vector2i(1, 0),
+        new Vector2i(1, 1),
+        new Vector2i(0, 1),
+        new Vector2i(-1, 1),
+        new Vector2i(-1, 0),
+        new Vector2i(-1, -1),
+        new Vector2i(0, -1),
+        new Vector2i(1, -1)
+    };
+
+    public Coordinate(int x, int z) {
+        this(x, z, 16);
     }
 
     public int toListIndex() {
@@ -28,15 +42,20 @@ public record Coordinate(int x, int z, int scale) {
     }
 
     public Coordinate makeLegal() {
-        return new Coordinate(this.x % this.scale, this.z % this.scale, this.scale);
+        return new Coordinate(mod(this.x, this.scale), mod(this.z, this.scale), this.scale);
+    }
+
+    public Coordinate offsetBy(Vector2i delta) {
+        return new Coordinate(this.x + delta.x, this.z + delta.y, this.scale);
     }
 
     public List<Coordinate> getNeighbors() {
-        return List.of(
-            new Coordinate(this.x + 1, this.z, this.scale),
-            new Coordinate(this.x - 1, this. z, this.scale),
-            new Coordinate(this.x, this.z + 1, this.scale),
-            new Coordinate(this.x, this.z - 1, this.scale)
-        );
+        List<Coordinate> neighbors = new ArrayList<>(NEIGHBOR_OFFSETS.length);
+
+        for (Vector2i neighborOffset : NEIGHBOR_OFFSETS) {
+            neighbors.add(this.offsetBy(neighborOffset));
+        }
+
+        return neighbors;
     }
 }

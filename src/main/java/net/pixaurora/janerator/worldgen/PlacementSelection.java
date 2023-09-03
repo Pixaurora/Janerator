@@ -24,7 +24,7 @@ public class PlacementSelection {
 
     public boolean contains(int x, int z) {
         return this.placements.contains(
-            new Coordinate(x, z)
+            new Coordinate(x, z).makeLegal()
         );
     }
 

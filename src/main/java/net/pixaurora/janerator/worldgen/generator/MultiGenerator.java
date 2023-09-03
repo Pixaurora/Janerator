@@ -25,6 +25,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.chunk.ImposterProtoChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
@@ -229,7 +230,18 @@ public class MultiGenerator extends ChunkGenerator {
     @Override
     public void applyBiomeDecoration(WorldGenLevel world, ChunkAccess chunk, StructureManager structureManager) {
         for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
-            selection.getUsedGenerator().applyBiomeDecoration(
+            ChunkGenerator generator = selection.getUsedGenerator();
+
+            if (generator instanceof FlatLevelSource) {
+                // FlatLevelSource will place layers of non-opaque blocks during this step (ie. Light, Snow Layer).
+                // Because we want all layers to only place in the selected section, we select here.
+                chunk.janerator$withSelection(selection, false);
+            } else {
+                // Otherwise, to prevent trees etc. from being cut off, don't select for other generator types.
+                chunk.janerator$stopSelecting();
+            }
+
+            generator.applyBiomeDecoration(
                 world,
                 chunk,
                 structureManager

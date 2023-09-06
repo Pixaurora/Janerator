@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import net.minecraft.world.level.ChunkPos;
@@ -19,10 +20,10 @@ public class GraphedChunk {
     public static boolean SHADED = true;
     public static boolean UNSHADED = false;
 
-    private List<Boolean> shading;
-    private ChunkPos pos;
+    private final List<Boolean> shading;
+    private final ChunkPos pos;
 
-    private ChunkGrapher grapher;
+    private final ChunkGrapher grapher;
 
     private GraphedChunk(ChunkGrapher grapher, ChunkPos pos, List<Boolean> shading) {
         this.grapher = grapher;
@@ -30,8 +31,8 @@ public class GraphedChunk {
         this.shading = shading;
     }
 
-    public static GraphedChunk fromGraphing(ChunkGrapher grapher, ChunkPos pos) {
-        List<CompletableFuture<Boolean>> graphingFutures = new ArrayList<>();
+    public static <E> List<E> doGraphing(Function<Coordinate, E> graphEvaluator, ChunkPos pos) {
+        List<CompletableFuture<E>> graphingFutures = new ArrayList<>();
 
         int startX = pos.getMinBlockX();
         int startZ = pos.getMinBlockZ();
@@ -41,18 +42,19 @@ public class GraphedChunk {
 
         for (int x = startX; x < endX; x++) {
             for (int z = startZ; z < endZ; z++) {
-                graphingFutures.add(grapher.schedulePointGraphing(x, z));
+                Coordinate coord = new Coordinate(x, z);
+                graphingFutures.add(CompletableFuture.supplyAsync(() -> graphEvaluator.apply(coord), GraphingUtils.threadPool));
             }
         }
 
-        return new GraphedChunk(
-            grapher,
-            pos,
-            graphingFutures
-                .stream()
-                .map(future -> GraphingUtils.completeFuture(future))
-                .toList()
-        );
+        return graphingFutures
+            .stream()
+            .map(GraphingUtils::completeFuture)
+            .toList();
+    }
+
+    public GraphedChunk(ChunkGrapher grapher, ChunkPos pos) {
+        this(grapher, pos, doGraphing(grapher::isPointShaded, pos));
     }
 
     public static GraphedChunk allUnshaded(ChunkGrapher grapher, ChunkPos pos) {
@@ -113,10 +115,6 @@ public class GraphedChunk {
         return biomeGeneratorMap;
     }
 
-    public FullGeneratorLookup toLookup(MultiGenerator generator) {
-        return new FullGeneratorLookup(this.getBlockScaleMap(generator), this.getBiomeScaleMap(generator));
-    }
-
     private List<Coordinate> findOutlinedPortion() {
         List<Coordinate> outlinedPortion = new ArrayList<>();
 
@@ -139,7 +137,7 @@ public class GraphedChunk {
                             GraphedChunk neighboringGraphedArea = neighboringChunks.get(neighborPos);
 
                             if (Objects.isNull(neighboringGraphedArea)) {
-                                neighboringGraphedArea = this.grapher.getChunkGraph(neighborPos);
+                                neighboringGraphedArea = new GraphedChunk(this.grapher, neighborPos);
                                 neighboringChunks.put(neighborPos, neighboringGraphedArea);
                             }
 
@@ -156,5 +154,9 @@ public class GraphedChunk {
         }
 
         return outlinedPortion;
+    }
+
+    public FullGeneratorLookup toLookup(MultiGenerator generator) {
+        return new FullGeneratorLookup(this.getBlockScaleMap(generator), this.getBiomeScaleMap(generator));
     }
 }

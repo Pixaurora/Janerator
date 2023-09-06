@@ -11,6 +11,7 @@ import com.mojang.serialization.Codec;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
+import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.graphing.GraphedChunk;
 import net.pixaurora.janerator.graphing.GraphingUtils;
 
@@ -30,16 +31,16 @@ public abstract class ChunkGrapher {
 
     public abstract GrapherType type();
 
+    public boolean isPointShaded(Coordinate coord) {
+        return this.isPointShaded(coord.x(), coord.z());
+    }
+
     public boolean isPointShaded(BlockPos pos) {
         return this.isPointShaded(pos.getX(), pos.getZ());
     }
 
-    public CompletableFuture<Boolean> schedulePointGraphing(int x, int z) {
-        return CompletableFuture.supplyAsync(() -> this.isPointShaded(x, z), GraphingUtils.threadPool);
-    }
-
     private GraphedChunk graphChunk(ChunkPos pos) {
-        return GraphedChunk.fromGraphing(this, pos);
+        return new GraphedChunk(this, pos);
     }
 
     public GraphedChunk getChunkGraph(ChunkPos pos) {

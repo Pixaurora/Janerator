@@ -103,8 +103,8 @@ public class ConfigFileManager {
                             "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0"
                         )
                     ),
-                    DefaultFlatPresets.createShadedOverworldGenerator(),
-                    DefaultFlatPresets.createOutlineOverworldGenerator()
+                    DefaultGenerators.createShadedOverworldGenerator(),
+                    DefaultGenerators.createOutlineOverworldGenerator()
                 )
             )
         );

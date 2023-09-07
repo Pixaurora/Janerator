@@ -6,10 +6,6 @@ import java.util.List;
 import org.joml.Vector2i;
 
 public record Coordinate(int x, int z, int scale) {
-    private static int mod(int value, int divisor) {
-        return value - divisor * Math.floorDiv(value, divisor);
-    }
-
     private static final Vector2i[] NEIGHBOR_OFFSETS = new Vector2i[]{
         new Vector2i(1, 0),
         new Vector2i(1, 1),
@@ -26,11 +22,11 @@ public record Coordinate(int x, int z, int scale) {
     }
 
     public int toListIndex() {
-        return scale * mod(this.x, this.scale) + mod(this.z, this.scale);
+        return this.scale * GraphingUtils.mod(this.x, this.scale) + GraphingUtils.mod(this.z, this.scale);
     }
 
     public static Coordinate fromListIndex(int index, int scale) {
-        return new Coordinate(Math.floorDiv(index, scale), mod(index, scale), scale);
+        return new Coordinate(Math.floorDiv(index, scale), GraphingUtils.mod(index, scale), scale);
     }
 
     public static Coordinate fromListIndex(int index) {
@@ -42,7 +38,7 @@ public record Coordinate(int x, int z, int scale) {
     }
 
     public Coordinate makeLegal() {
-        return new Coordinate(mod(this.x, this.scale), mod(this.z, this.scale), this.scale);
+        return new Coordinate(GraphingUtils.mod(this.x, this.scale), GraphingUtils.mod(this.z, this.scale), this.scale);
     }
 
     public Coordinate offsetBy(Vector2i delta) {

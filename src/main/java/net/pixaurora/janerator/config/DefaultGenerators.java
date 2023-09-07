@@ -11,16 +11,22 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.biome.FixedBiomeSource;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.pixaurora.janerator.RegistryCache;
+import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
+import net.pixaurora.janerator.worldgen.generator.SlantedFlatGenerator;
+import net.pixaurora.janerator.worldgen.settings.SlantedFlatGeneratorSettings;
 
-public class DefaultFlatPresets {
-    public static FlatLevelSource createShadedOverworldGenerator() {
+public class DefaultGenerators {
+    public static ChunkGenerator createShadedOverworldGenerator() {
         return createGenerator(
             Biomes.MUSHROOM_FIELDS,
             new FlatLayerInfo(1, Blocks.GRASS_BLOCK),
@@ -32,14 +38,26 @@ public class DefaultFlatPresets {
         );
     }
 
-    public static FlatLevelSource createOutlineOverworldGenerator() {
-        return createGenerator(
-            Biomes.MUSHROOM_FIELDS,
-            new FlatLayerInfo(127, Blocks.GLOWSTONE)
-        );
+    public static ChunkGenerator createOutlineOverworldGenerator() {
+        return new SlantedFlatGenerator(
+            new FixedBiomeSource(getBiome(Biomes.MUSHROOM_FIELDS)),
+            new SlantedFlatGeneratorSettings(
+                List.of(
+                    Blocks.RED_CONCRETE,
+                    Blocks.ORANGE_CONCRETE,
+                    Blocks.YELLOW_CONCRETE,
+                    Blocks.LIME_CONCRETE,
+                    Blocks.LIGHT_BLUE_CONCRETE,
+                    Blocks.BLUE_CONCRETE,
+                    Blocks.PURPLE_CONCRETE,
+                    Blocks.MAGENTA_CONCRETE
+                ).stream().map(Block::defaultBlockState).toList(),
+                128,
+                new GraphFunctionDefinition(List.of("x", "z"), List.of(), List.of(), "x + z"))
+            );
     }
 
-    public static FlatLevelSource createShadedNetherGenerator() {
+    public static ChunkGenerator createShadedNetherGenerator() {
         return createGenerator(
             Biomes.DEEP_DARK,
             new FlatLayerInfo(1, Blocks.WARPED_NYLIUM),
@@ -49,7 +67,7 @@ public class DefaultFlatPresets {
         );
     }
 
-    public static FlatLevelSource createShadedEndGenerator() {
+    public static ChunkGenerator createShadedEndGenerator() {
         return createGenerator(
             Biomes.DEEP_DARK,
             new FlatLayerInfo(1, Blocks.GRASS_BLOCK),
@@ -60,17 +78,22 @@ public class DefaultFlatPresets {
         );
     }
 
-    private static FlatLevelSource createGenerator(ResourceKey<Biome> biome, FlatLayerInfo... layersBackward) {
+    private static Holder<Biome> getBiome(ResourceKey<Biome> biomeKey) {
+        return RegistryCache.INSTANCE.getRegistry(Registries.BIOME).getHolderOrThrow(biomeKey);
+    }
+
+    private static ChunkGenerator createGenerator(ResourceKey<Biome> biomeKey, FlatLayerInfo... layersBackward) {
         List<Holder<PlacedFeature>> placedFeatures = List.of();
         Optional<HolderSet<StructureSet>> optional = Optional.of(HolderSet.direct());
 
         List<FlatLayerInfo> layers = new ArrayList<>(List.of(layersBackward));
         Collections.reverse(layers);
 
-        Holder<Biome> biomeHolder = RegistryCache.INSTANCE.getRegistry(Registries.BIOME).getHolderOrThrow(biome);
+        Holder<Biome> biome = getBiome(biomeKey);
+
         return new FlatLevelSource(
-            new FlatLevelGeneratorSettings(optional, biomeHolder, placedFeatures)
-                .withBiomeAndLayers(layers, optional, biomeHolder)
+            new FlatLevelGeneratorSettings(optional, biome, placedFeatures)
+                .withBiomeAndLayers(layers, optional, biome)
         );
     }
 }

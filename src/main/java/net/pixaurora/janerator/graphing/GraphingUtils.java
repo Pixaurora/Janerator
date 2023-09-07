@@ -75,4 +75,8 @@ public class GraphingUtils {
             throw new ParserEvaluationException(function, errorMessage);
         }
     }
+
+    public static int mod(int value, int divisor) {
+        return value - divisor * Math.floorDiv(value, divisor);
+    }
 }

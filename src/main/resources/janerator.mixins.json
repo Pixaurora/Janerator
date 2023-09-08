@@ -8,6 +8,7 @@
         "ChunkGeneratorMixin",
         "ChunkGeneratorsMixin",
         "ChunkStatusMixin",
+        "FeatureMixin",
         "LevelChunkSectionMixin",
         "MinecraftServerMixin",
         "NoiseBasedChunkGeneratorAccessor",

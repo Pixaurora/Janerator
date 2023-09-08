@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.graphing.GraphingUtils;
@@ -38,6 +39,10 @@ public class GeneratorLookup {
 
     public ChunkGenerator getAt(Coordinate coordinate) {
         return this.generatorMap.get(coordinate.toListIndex());
+    }
+
+    public ChunkGenerator getAt(BlockPos pos) {
+        return this.getAt(new Coordinate(pos.getX(), pos.getZ()).makeLegal());
     }
 
     public Collection<PlacementSelection> getAllSelections() {

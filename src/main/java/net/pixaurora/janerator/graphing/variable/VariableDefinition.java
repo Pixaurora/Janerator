@@ -3,7 +3,6 @@ package net.pixaurora.janerator.graphing.variable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.mariuszgromada.math.mxparser.Expression;
@@ -39,8 +38,7 @@ public abstract class VariableDefinition extends Variable {
         Expression expression = new Expression(expressionText);
 
         List<Variable> requiredVariables = Stream.of(expression.getMissingUserDefinedArguments())
-            .map(requiredName -> variableTable.get(requiredName))
-            .map(variable -> Objects.nonNull(variable) ? variable : new MissingVariable(name))
+            .map(requiredName -> variableTable.getOrDefault(requiredName, new MissingVariable(requiredName)))
             .toList();
 
         List<String> missingVariables = requiredVariables.stream()

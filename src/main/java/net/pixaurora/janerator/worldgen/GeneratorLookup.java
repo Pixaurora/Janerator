@@ -13,14 +13,17 @@ import net.pixaurora.janerator.graphing.GraphingUtils;
 
 public class GeneratorLookup {
     private List<ChunkGenerator> generatorMap;
+    private int chunkLength;
 
     private Map<ChunkGenerator, PlacementSelection> selections;
     private ChunkGenerator fallbackGenerator;
 
     public GeneratorLookup(
-        List<ChunkGenerator> generatorMap
+        List<ChunkGenerator> generatorMap,
+        int chunkLength
     ) {
         this.generatorMap = generatorMap;
+        this.chunkLength = chunkLength;
 
         this.selections = this.generatorMap
             .stream()
@@ -38,11 +41,11 @@ public class GeneratorLookup {
     }
 
     public ChunkGenerator getAt(Coordinate coordinate) {
-        return this.generatorMap.get(coordinate.toListIndex());
+        return this.generatorMap.get(coordinate.makeLegal(this.chunkLength).toListIndex(this.chunkLength));
     }
 
     public ChunkGenerator getAt(BlockPos pos) {
-        return this.getAt(new Coordinate(pos.getX(), pos.getZ()).makeLegal());
+        return this.getAt(new Coordinate(pos.getX(), pos.getZ()));
     }
 
     public Collection<PlacementSelection> getAllSelections() {

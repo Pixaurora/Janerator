@@ -8,8 +8,8 @@ public class FullGeneratorLookup extends GeneratorLookup {
     private GeneratorLookup biomeScale;
 
     public FullGeneratorLookup(List<ChunkGenerator> blockLevelMapping, List<ChunkGenerator> biomeLevel) {
-        super(blockLevelMapping);
-        this.biomeScale = new GeneratorLookup(biomeLevel);
+        super(blockLevelMapping, 16);
+        this.biomeScale = new GeneratorLookup(biomeLevel, 4);
     }
 
     public GeneratorLookup atBiomeScale() {

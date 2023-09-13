@@ -18,7 +18,7 @@ public class CustomGrapher extends ChunkGrapher {
     );
 
     private GraphFunctionDefinition graphDefinition;
-    private ThreadLocal<GraphFunction> graphFunction;
+    protected ThreadLocal<GraphFunction> graphFunction;
 
     public CustomGrapher(GraphFunctionDefinition graphDefinition) {
         super();

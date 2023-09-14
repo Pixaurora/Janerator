@@ -22,9 +22,9 @@ public class GraphFunctionDefinition {
     private static final Codec<GraphFunctionDefinition> createCodec(String... inputs) {
         return RecordCodecBuilder.create(
             instance -> instance.group(
-                Codec.STRING.listOf().fieldOf("function_definitions").forGetter(GraphFunctionDefinition::getRawFunctions),
-                Codec.STRING.listOf().fieldOf("variable_definitions").forGetter(GraphFunctionDefinition::getRawVariables),
-                Codec.STRING.fieldOf("return_statement").forGetter(GraphFunctionDefinition::getRawReturnStatement)
+                Codec.STRING.listOf().fieldOf("functions").orElse(List.of()).forGetter(GraphFunctionDefinition::getRawFunctions),
+                Codec.STRING.listOf().fieldOf("variables").orElse(List.of()).forGetter(GraphFunctionDefinition::getRawVariables),
+                Codec.STRING.fieldOf("returns").forGetter(GraphFunctionDefinition::getRawReturnStatement)
             )
             .apply(
                 instance,

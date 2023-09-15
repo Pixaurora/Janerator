@@ -3,20 +3,9 @@ package net.pixaurora.janerator.graphing;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.joml.Vector2i;
+import net.minecraft.core.Direction8;
 
 public record Coordinate(int x, int z) {
-    private static final Vector2i[] NEIGHBOR_OFFSETS = new Vector2i[]{
-        new Vector2i(1, 0),
-        new Vector2i(1, 1),
-        new Vector2i(0, 1),
-        new Vector2i(-1, 1),
-        new Vector2i(-1, 0),
-        new Vector2i(-1, -1),
-        new Vector2i(0, -1),
-        new Vector2i(1, -1)
-    };
-
     public int toListIndex(int chunkLength) {
         return chunkLength * GraphingUtils.mod(this.x, chunkLength) + GraphingUtils.mod(this.z, chunkLength);
     }
@@ -49,15 +38,23 @@ public record Coordinate(int x, int z) {
         return this.makeLegal(16);
     }
 
-    public Coordinate offsetBy(Vector2i delta) {
-        return new Coordinate(this.x + delta.x, this.z + delta.y);
+    public Coordinate offset(int x, int z) {
+        return new Coordinate(this.x + x, this.z + z);
+    }
+
+    public Coordinate offset(Direction8 direction) {
+        return this.offset(direction.getStepX(), direction.getStepZ());
     }
 
     public List<Coordinate> getNeighbors() {
-        List<Coordinate> neighbors = new ArrayList<>(NEIGHBOR_OFFSETS.length);
+        return this.getNeighbors(Direction8.values());
+    }
 
-        for (Vector2i neighborOffset : NEIGHBOR_OFFSETS) {
-            neighbors.add(this.offsetBy(neighborOffset));
+    public List<Coordinate> getNeighbors(Direction8... neighborDirections) {
+        List<Coordinate> neighbors = new ArrayList<>(neighborDirections.length);
+
+        for (Direction8 direction : neighborDirections) {
+            neighbors.add(this.offset(direction));
         }
 
         return neighbors;

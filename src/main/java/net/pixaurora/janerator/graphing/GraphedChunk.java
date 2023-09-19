@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -32,7 +31,7 @@ public class GraphedChunk {
     }
 
     public static <E> List<E> doGraphing(Function<Coordinate, E> graphEvaluator, ChunkPos pos) {
-        List<CompletableFuture<E>> graphingFutures = new ArrayList<>();
+        List<E> graph = new ArrayList<>();
 
         int startX = pos.getMinBlockX();
         int startZ = pos.getMinBlockZ();
@@ -42,15 +41,11 @@ public class GraphedChunk {
 
         for (int x = startX; x < endX; x++) {
             for (int z = startZ; z < endZ; z++) {
-                Coordinate coord = new Coordinate(x, z);
-                graphingFutures.add(CompletableFuture.supplyAsync(() -> graphEvaluator.apply(coord), GraphingUtils.threadPool));
+                graph.add(graphEvaluator.apply(new Coordinate(x, z)));
             }
         }
 
-        return graphingFutures
-            .stream()
-            .map(GraphingUtils::completeFuture)
-            .toList();
+        return graph;
     }
 
     public GraphedChunk(ChunkGrapher grapher, ChunkPos pos) {

@@ -60,6 +60,10 @@ public class GraphedChunk {
         );
     }
 
+    public boolean isShaded(Coordinate pos) {
+        return this.shading.get(pos.toListIndex());
+    }
+
     private List<ChunkGenerator> getBlockScaleMap(MultiGenerator multiGenerator) {
         List<ChunkGenerator> generatorMap = new ArrayList<>(
             IntStream.range(0, 256)

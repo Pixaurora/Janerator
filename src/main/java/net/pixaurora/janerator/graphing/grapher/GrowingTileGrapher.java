@@ -6,25 +6,31 @@ import java.util.List;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.graphing.GraphFunction;
 import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
+import net.pixaurora.janerator.graphing.GraphedChunk;
 import net.pixaurora.janerator.graphing.grapher.tile.TileData;
 
-public class GrowingTileGrapher extends CustomGrapher {
+public class GrowingTileGrapher implements ChunkGrapher {
     public static final Codec<GrowingTileGrapher> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
             GraphFunctionDefinition.BIVARIATE_CODEC.fieldOf("graph(x, z)").forGetter(GrowingTileGrapher::getTileDefinition),
-            GraphFunctionDefinition.UNIVARIATE_CODEC.fieldOf("tileSize(v)").forGetter(GrowingTileGrapher::getGraphDefinition)
+            GraphFunctionDefinition.UNIVARIATE_CODEC.fieldOf("tile_size(v)").forGetter(GrowingTileGrapher::getGraphDefinition)
         ).apply(instance, GrowingTileGrapher::new)
     );
 
     public static final int MAX_VALUE = (int) Math.pow(2, 25);
 
+    private CustomGrapher stretchedGrapher;
+
     private GraphFunctionDefinition tileDefinition;
     private List<Integer> tileSums;
 
     public GrowingTileGrapher(GraphFunctionDefinition graphDefinition, GraphFunctionDefinition tileGrowthDefinition) {
-        super(graphDefinition);
+        this.stretchedGrapher = new CustomGrapher(graphDefinition);
         this.tileDefinition = tileGrowthDefinition;
 
         this.tileSums = new ArrayList<>();
@@ -43,6 +49,10 @@ public class GrowingTileGrapher extends CustomGrapher {
                 break;
             }
         }
+    }
+
+    public GraphFunctionDefinition getGraphDefinition() {
+        return this.stretchedGrapher.getGraphDefinition();
     }
 
     public GraphFunctionDefinition getTileDefinition() {
@@ -67,12 +77,25 @@ public class GrowingTileGrapher extends CustomGrapher {
         throw new RuntimeException(String.format("Value %d is above the limit of stored values %d!", realPosition, MAX_VALUE));
     }
 
-    @Override
-    public boolean isPointShaded(int x, int z) {
-        TileData tileX = this.convertToTile(x);
-        TileData tileZ = this.convertToTile(z);
+    private boolean isTileShaded(Coordinate tilePos) {
+        GraphedChunk graph = this.stretchedGrapher.getChunkGraph(new ChunkPos(new BlockPos(tilePos.x(), 0, tilePos.z())));
 
-        return this.graphFunction.get().evaluate(tileX.pos(), tileZ.pos()) == 1.0;
+        return graph.isShaded(tilePos.makeLegal());
+    }
+
+    @Override
+    public boolean isPointShaded(Coordinate pos) {
+        TileData tileX = this.convertToTile(pos.x());
+        TileData tileZ = this.convertToTile(pos.z());
+
+        Coordinate tilePos = new Coordinate(tileX.pos(), tileZ.pos());
+
+        return this.isTileShaded(tilePos);
+    }
+
+    @Override
+    public GraphedChunk getChunkGraph(ChunkPos chunk) {
+        return new GraphedChunk(this, chunk);
     }
 
     @Override

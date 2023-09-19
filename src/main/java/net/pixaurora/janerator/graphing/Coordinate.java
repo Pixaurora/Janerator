@@ -3,15 +3,29 @@ package net.pixaurora.janerator.graphing;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction8;
+import net.minecraft.world.level.ChunkPos;
 
 public record Coordinate(int x, int z) {
+    public Coordinate(BlockPos pos) {
+        this(pos.getX(), pos.getZ());
+    }
+
     public int toListIndex(int chunkLength) {
         return chunkLength * GraphingUtils.mod(this.x, chunkLength) + GraphingUtils.mod(this.z, chunkLength);
     }
 
     public int toListIndex() {
         return this.toListIndex(16);
+    }
+
+    public ChunkPos toChunkPos(int chunkLength) {
+        return new ChunkPos(Math.floorDiv(this.x, chunkLength), Math.floorDiv(this.z, chunkLength));
+    }
+
+    public ChunkPos toChunkPos() {
+        return this.toChunkPos(16);
     }
 
     public static Coordinate fromListIndex(int index, int chunkLength) {

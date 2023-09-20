@@ -101,19 +101,28 @@ public class GrowingTileGrapher implements ChunkGrapher {
         return graph.isShaded(tilePos.makeLegal());
     }
 
-    public static double positionIn(Tile tile, double realPos) {
+    public static double positionIn(Tile tile, double realPos, double minSize) {
         realPos = Math.abs(realPos);
+        double sizeDiff = tile.size() - minSize;
 
-        return (realPos - tile.start()) / tile.size();
+        return (realPos - tile.start() - sizeDiff) / minSize;
     }
 
     public boolean isCornerShaded(Coordinate realPos, Tile xTile, Tile zTile, Coordinate offset) {
-        GraphFunction cornerFunction = this.cornerFunction.get();
+        double minSize = Math.min(xTile.size(), zTile.size());
 
-        double innerX = offset.x() * positionIn(xTile, realPos.x());
-        double innerZ = offset.z() * positionIn(zTile, realPos.z());
+        double xPos = positionIn(xTile, realPos.x(), minSize);
+        double zPos = positionIn(zTile, realPos.z(), minSize);
 
-        return cornerFunction.evaluate(innerX, innerZ) == 1.0;
+        if (xPos < 0 || zPos < 0) {
+            // Corners are only drawn as squares, if the corner tile is rectangular then part of it will just be the default shade.
+            return true;
+        }
+
+        double cornerX = offset.x() * xPos;
+        double cornerZ = offset.z() * zPos;
+
+        return this.cornerFunction.get().evaluate(cornerX, cornerZ) == 1.0;
     }
 
     public static final Direction8[] CROSS = new Direction8[]{Direction8.WEST, Direction8.SOUTH, Direction8.NORTH, Direction8.EAST};

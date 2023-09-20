@@ -65,7 +65,7 @@ public class SlantedFlatGenerator extends ChunkGenerator {
         StructureManager structureManager,
         ChunkAccess chunk
     ) {
-        return CompletableFuture.supplyAsync(() -> doFill(chunk));
+        return CompletableFuture.supplyAsync(() -> doFill(chunk), executor);
     }
 
     private int getYOffset(Coordinate coord) {

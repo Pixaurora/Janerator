@@ -6,19 +6,19 @@ import java.util.List;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction8;
 import net.minecraft.world.level.ChunkPos;
 import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.graphing.GraphFunction;
 import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
 import net.pixaurora.janerator.graphing.GraphedChunk;
-import net.pixaurora.janerator.graphing.grapher.tile.TileData;
 
 public class GrowingTileGrapher implements ChunkGrapher {
     public static final Codec<GrowingTileGrapher> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
             GraphFunctionDefinition.BIVARIATE_CODEC.fieldOf("graph(x, z)").forGetter(GrowingTileGrapher::getTileDefinition),
-            GraphFunctionDefinition.UNIVARIATE_CODEC.fieldOf("tile_size(v)").forGetter(GrowingTileGrapher::getGraphDefinition)
+            GraphFunctionDefinition.UNIVARIATE_CODEC.fieldOf("tile_size(v)").forGetter(GrowingTileGrapher::getGraphDefinition),
+            GraphFunctionDefinition.BIVARIATE_CODEC.fieldOf("corner(x, z)").forGetter(GrowingTileGrapher::getCornerDefinition)
         ).apply(instance, GrowingTileGrapher::new)
     );
 
@@ -29,9 +29,16 @@ public class GrowingTileGrapher implements ChunkGrapher {
     private GraphFunctionDefinition tileDefinition;
     private List<Integer> tileSums;
 
-    public GrowingTileGrapher(GraphFunctionDefinition graphDefinition, GraphFunctionDefinition tileGrowthDefinition) {
+    private GraphFunctionDefinition cornerDefinition;
+    private ThreadLocal<GraphFunction> cornerFunction;
+
+
+    public GrowingTileGrapher(GraphFunctionDefinition graphDefinition, GraphFunctionDefinition tileGrowthDefinition, GraphFunctionDefinition cornerDefinition) {
         this.stretchedGrapher = new CustomGrapher(graphDefinition);
         this.tileDefinition = tileGrowthDefinition;
+
+        this.cornerDefinition = cornerDefinition;
+        this.cornerFunction = ThreadLocal.withInitial(() -> GraphFunction.fromDefinition(cornerDefinition));
 
         this.tileSums = new ArrayList<>();
 
@@ -59,38 +66,85 @@ public class GrowingTileGrapher implements ChunkGrapher {
         return this.tileDefinition;
     }
 
-    public TileData convertToTile(int realPosition) {
-        int sign = (int) Math.signum(realPosition);
-        realPosition = Math.abs(realPosition);
+    public GraphFunctionDefinition getCornerDefinition() {
+        return this.cornerDefinition;
+    }
 
-        int lastStepValue = 0;
+    public static record Tile(int pos, double start, double end) {
+        public double size() {
+            return this.end - this.start;
+        }
+    }
+
+    public Tile convertToTile(int realPos) {
+        int sign = (int) Math.signum(realPos);
+        realPos = Math.abs(realPos);
+
+        int tileStart = 0;
 
         for (int tilePos = 0; tilePos < this.tileSums.size(); tilePos++) {
-            int stepValue = this.tileSums.get(tilePos);
-            if (realPosition < stepValue) {
-                return new TileData(sign * tilePos, stepValue, lastStepValue);
+            int tileEnd = this.tileSums.get(tilePos);
+
+            if (realPos < tileEnd) {
+                return new Tile(sign * tilePos, tileStart, tileEnd);
             }
 
-            lastStepValue = stepValue;
+            tileStart = tileEnd;
         }
 
-        throw new RuntimeException(String.format("Value %d is above the limit of stored values %d!", realPosition, MAX_VALUE));
+        throw new RuntimeException(String.format("Value %d is above the limit of stored values %d!", realPos, MAX_VALUE));
     }
 
     private boolean isTileShaded(Coordinate tilePos) {
-        GraphedChunk graph = this.stretchedGrapher.getChunkGraph(new ChunkPos(new BlockPos(tilePos.x(), 0, tilePos.z())));
+        GraphedChunk graph = this.stretchedGrapher.getChunkGraph(tilePos.toChunkPos());
 
         return graph.isShaded(tilePos.makeLegal());
     }
 
+    public static double positionIn(Tile tile, double realPos) {
+        realPos = Math.abs(realPos);
+
+        return (realPos - tile.start()) / tile.size();
+    }
+
+    public boolean isCornerShaded(Coordinate realPos, Tile xTile, Tile zTile, Coordinate offset) {
+        GraphFunction cornerFunction = this.cornerFunction.get();
+
+        double innerX = offset.x() * positionIn(xTile, realPos.x());
+        double innerZ = offset.z() * positionIn(zTile, realPos.z());
+
+        return cornerFunction.evaluate(innerX, innerZ) == 1.0;
+    }
+
+    public static final Direction8[] CROSS = new Direction8[]{Direction8.WEST, Direction8.SOUTH, Direction8.NORTH, Direction8.EAST};
+
     @Override
     public boolean isPointShaded(Coordinate pos) {
-        TileData tileX = this.convertToTile(pos.x());
-        TileData tileZ = this.convertToTile(pos.z());
+        Tile xTile = this.convertToTile(pos.x());
+        Tile zTile = this.convertToTile(pos.z());
+        Coordinate tilePos = new Coordinate(xTile.pos(), zTile.pos());
 
-        Coordinate tilePos = new Coordinate(tileX.pos(), tileZ.pos());
+        boolean shade = isTileShaded(tilePos);
 
-        return this.isTileShaded(tilePos);
+        Coordinate noOffset = new Coordinate(0, 0);
+
+        Coordinate offset = noOffset;
+        int nudges = 0;
+        for (Direction8 direction : CROSS) {
+            Coordinate neighborPos = tilePos.offsetIn(direction);
+
+            if (shade != this.isTileShaded(neighborPos)) {
+                offset = offset.offsetIn(direction);
+                nudges += 1;
+            }
+        }
+
+        if (nudges == 2 && ! offset.equals(noOffset)) {
+            boolean cornerShade = this.isCornerShaded(pos, xTile, zTile, offset);
+            shade = shade ? cornerShade : ! cornerShade;
+        }
+
+        return shade;
     }
 
     @Override

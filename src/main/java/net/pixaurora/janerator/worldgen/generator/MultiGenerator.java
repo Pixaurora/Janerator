@@ -5,6 +5,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -34,6 +36,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.pixaurora.janerator.graphing.GraphedChunk;
 import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
+import net.pixaurora.janerator.worldgen.GeneratorLookup;
 import net.pixaurora.janerator.worldgen.PlacementSelection;
 import net.pixaurora.janerator.worldgen.WrappedBiomeResolver;
 
@@ -116,25 +119,6 @@ public class MultiGenerator extends ChunkGenerator {
 	}
 
 	@Override
-	public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
-        for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
-            selection.getUsedGenerator().buildSurface(
-                region,
-                structureManager,
-                randomState,
-                chunk
-            );
-        }
-
-        chunk.janerator$stopSelecting();
-	}
-
-	@Override
-	public int getSpawnHeight(LevelHeightAccessor world) {
-		return this.defaultGenerator.getSpawnHeight(world);
-	}
-
-	@Override
 	public CompletableFuture<ChunkAccess> fillFromNoise(
 		Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk
 	) {
@@ -161,19 +145,6 @@ public class MultiGenerator extends ChunkGenerator {
         });
 	}
 
-	@Override
-	public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState) {
-		return this.shadedGenerator.getBaseHeight(x, z, heightmap, world, randomState);
-	}
-
-	@Override
-	public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
-		return this.shadedGenerator.getBaseColumn(x, z, world, randomState);
-	}
-
-	@Override
-	public void addDebugScreenInfo(List<String> list, RandomState randomState, BlockPos pos) {}
-
     @Override
 	public CompletableFuture<ChunkAccess> createBiomes(
 		Executor executor, RandomState randomState, Blender blender, StructureManager structureManager, ChunkAccess chunk
@@ -197,6 +168,35 @@ public class MultiGenerator extends ChunkGenerator {
         );
 	}
 
+    protected void generate(ChunkAccess chunk, Consumer<ChunkGenerator> generationOp, Predicate<ChunkGenerator> filteringCondition, boolean selectInSections) {
+        GeneratorLookup generatorsForChunk = this.getGenerators(chunk);
+
+        for (PlacementSelection selection : generatorsForChunk.getAllSelections()) {
+            ChunkGenerator usedGenerator = selection.getUsedGenerator();
+
+            if (filteringCondition.test(usedGenerator)) {
+                chunk.janerator$withSelection(selection, selectInSections);
+            }
+
+            generationOp.accept(usedGenerator);
+
+            chunk.janerator$stopSelecting();
+        }
+    }
+
+    protected void generate(ChunkAccess chunk, Consumer<ChunkGenerator> generationOp, boolean selectInSections) {
+        this.generate(chunk, generationOp, filteringOn -> true, selectInSections);
+    }
+
+    @Override
+	public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
+        this.generate(
+            chunk,
+            generator -> generator.buildSurface(region, structureManager, randomState, chunk),
+            false
+        );
+	}
+
 	@Override
 	public void applyCarvers(
 		WorldGenRegion chunkRegion,
@@ -207,48 +207,21 @@ public class MultiGenerator extends ChunkGenerator {
 		ChunkAccess chunk,
 		GenerationStep.Carving generationStep
 	) {
-        for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
-            selection.getUsedGenerator().applyCarvers(
-                chunkRegion,
-                seed,
-                randomState,
-                biomeAccess,
-                structureManager,
-                chunk.janerator$withSelection(selection, true),
-                generationStep
-            );
-        }
-
-        chunk.janerator$stopSelecting();
-	}
-
-	@Override
-	public void spawnOriginalMobs(WorldGenRegion region) {
-        this.getGenerators(region.getCenter()).getDefault().spawnOriginalMobs(region);
+        this.generate(
+            chunk,
+            generator -> generator.applyCarvers(chunkRegion, seed, randomState, biomeAccess, structureManager, chunk, generationStep),
+            true
+        );
 	}
 
     @Override
     public void applyBiomeDecoration(WorldGenLevel world, ChunkAccess chunk, StructureManager structureManager) {
-        for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
-            ChunkGenerator generator = selection.getUsedGenerator();
-
-            if (generator instanceof FlatLevelSource) {
-                // FlatLevelSource will place layers of non-opaque blocks during this step (ie. Light, Snow Layer).
-                // Because we want all layers to only place in the selected section, we select here.
-                chunk.janerator$withSelection(selection, false);
-            } else {
-                // Otherwise, to prevent trees etc. from being cut off, don't select for other generator types.
-                chunk.janerator$stopSelecting();
-            }
-
-            generator.applyBiomeDecoration(
-                world,
-                chunk,
-                structureManager
-            );
-        }
-
-        chunk.janerator$stopSelecting();
+        this.generate(
+            chunk,
+            generator -> generator.applyBiomeDecoration(world, chunk, structureManager),
+            generator -> generator instanceof FlatLevelSource,
+            false
+        );
     }
 
     @Override
@@ -259,18 +232,35 @@ public class MultiGenerator extends ChunkGenerator {
 		ChunkAccess chunk,
 		StructureTemplateManager templateManager
 	) {
-        for (PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
-            selection.getUsedGenerator().createStructures(
-                registryManager,
-                chunkGeneratorStructureState,
-                structureManager,
-                chunk,
-                templateManager
-            );
-        }
+        this.generate(
+            chunk,
+            generator -> generator.createStructures(registryManager, chunkGeneratorStructureState, structureManager, chunk, templateManager),
+            filteringOn -> false,
+            false
+        );
     }
 
+    @Override
+	public void spawnOriginalMobs(WorldGenRegion region) {
+        this.getGenerators(region.getCenter()).getDefault().spawnOriginalMobs(region);
+	}
+
+    @Override
+	public int getSpawnHeight(LevelHeightAccessor world) {
+		return this.defaultGenerator.getSpawnHeight(world);
+	}
+
+    @Override
+    public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState) {
+		return this.shadedGenerator.getBaseHeight(x, z, heightmap, world, randomState);
+	}
+
 	@Override
+	public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
+		return this.shadedGenerator.getBaseColumn(x, z, world, randomState);
+	}
+
+    @Override
 	public int getMinY() {
 		return defaultGenerator.getMinY();
 	}
@@ -284,4 +274,7 @@ public class MultiGenerator extends ChunkGenerator {
 	public int getSeaLevel() {
 		return defaultGenerator.getSeaLevel();
 	}
+
+    @Override
+	public void addDebugScreenInfo(List<String> list, RandomState randomState, BlockPos pos) {}
 }

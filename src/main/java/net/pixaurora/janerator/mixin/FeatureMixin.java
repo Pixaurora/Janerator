@@ -10,6 +10,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 
@@ -28,7 +29,7 @@ public class FeatureMixin<FC extends FeatureConfiguration> {
         BlockPos originPos,
         CallbackInfoReturnable<Boolean> cir
     ) {
-		if (generator.janerator$notMultiGenerating()) {
+		if (generator instanceof FlatLevelSource || generator.janerator$notMultiGenerating()) {
             return;
         }
 

@@ -122,6 +122,12 @@ public class MultiGenerator extends ChunkGenerator {
 	public CompletableFuture<ChunkAccess> fillFromNoise(
 		Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk
 	) {
+        GeneratorLookup generatorsForChunk = this.getGenerators(chunk).atBiomeScale();
+
+        if (generatorsForChunk.size() == 1) {
+            return generatorsForChunk.getDefault().fillFromNoise(executor, blender, randomState, structureManager, chunk);
+        }
+
         CompletableFuture<ChunkAccess> placeholderFuture = new CompletableFuture<>();
         CompletableFuture<ChunkAccess> future = placeholderFuture;
 
@@ -149,11 +155,17 @@ public class MultiGenerator extends ChunkGenerator {
 	public CompletableFuture<ChunkAccess> createBiomes(
 		Executor executor, RandomState randomState, Blender blender, StructureManager structureManager, ChunkAccess chunk
 	) {
+        GeneratorLookup generatorsForChunk = this.getGenerators(chunk).atBiomeScale();
+
+        if (generatorsForChunk.size() == 1) {
+            return generatorsForChunk.getDefault().createBiomes(executor, randomState, blender, structureManager, chunk);
+        }
+
         return CompletableFuture.supplyAsync(
             () -> {
                 chunk.fillBiomesFromNoise(
                     new WrappedBiomeResolver(
-                        this.getGenerators(chunk).atBiomeScale(),
+                        generatorsForChunk,
                         blender,
                         chunk,
                         structureManager,
@@ -170,6 +182,10 @@ public class MultiGenerator extends ChunkGenerator {
 
     protected void generate(ChunkAccess chunk, Consumer<ChunkGenerator> generationOp, Predicate<ChunkGenerator> filteringCondition, boolean selectInSections) {
         GeneratorLookup generatorsForChunk = this.getGenerators(chunk);
+
+        if (generatorsForChunk.size() == 1) {
+            generationOp.accept(generatorsForChunk.getDefault());
+        }
 
         for (PlacementSelection selection : generatorsForChunk.getAllSelections()) {
             ChunkGenerator usedGenerator = selection.getUsedGenerator();

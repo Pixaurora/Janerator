@@ -8,12 +8,12 @@
         "ChunkGeneratorMixin",
         "ChunkGeneratorsMixin",
         "ChunkStatusMixin",
-        "FeatureMixin",
         "LevelChunkSectionMixin",
         "MinecraftServerMixin",
         "NoiseBasedChunkGeneratorAccessor",
         "NoiseBasedChunkGeneratorMixin",
         "NoiseChunkAccessor",
+        "PlacedFeatureMixin",
         "ProtoChunkMixin"
     ],
 	"injectors": {

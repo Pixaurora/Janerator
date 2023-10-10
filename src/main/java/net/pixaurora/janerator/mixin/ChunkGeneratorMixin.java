@@ -1,7 +1,5 @@
 package net.pixaurora.janerator.mixin;
 
-import java.util.Objects;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,29 +12,21 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
 import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 
 @Mixin(ChunkGenerator.class)
 public class ChunkGeneratorMixin implements JaneratorGenerator {
-    private ChunkGrapher janerator$grapher;
     private MultiGenerator janerator$parent;
 
     @Override
-    public void janerator$setupMultiGenerating(ChunkGrapher dimension, MultiGenerator parent) {
-        this.janerator$grapher = dimension;
+    public void janerator$setupMultigen(MultiGenerator parent) {
         this.janerator$parent = parent;
     }
 
     @Override
-    public boolean janerator$notMultiGenerating() {
-        return Objects.isNull(this.janerator$parent);
-    }
-
-    @Override
-    public ChunkGrapher janerator$getGrapher() {
-        return this.janerator$grapher;
+    public boolean janerator$isDoingMultigen() {
+        return this.janerator$parent != null;
     }
 
     @Override
@@ -57,13 +47,13 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
         StructureTemplateManager templateManager,
         CallbackInfo callbackInfo
     ) {
-        if (this.janerator$notMultiGenerating()) {
+        if (! this.janerator$isDoingMultigen()) {
             return;
         }
 
         BlockPos pos = chunk.getPos().getMiddleBlockPosition(0);
 
-        if (this.janerator$getGrapher().isPointShaded(pos)) {
+        if (this.janerator$getParent().getGrapher().isPointShaded(pos)) {
             callbackInfo.cancel();
         }
     }

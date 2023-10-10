@@ -19,13 +19,13 @@ public class NoiseBasedChunkGeneratorMixin implements JaneratorGenerator {
         cancellable = true
     )
     private void janerator$overrideBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState, CallbackInfoReturnable<Integer> cir) {
-        NoiseBasedChunkGenerator asGenerator = (NoiseBasedChunkGenerator) (Object) this;
+        NoiseBasedChunkGenerator asGenerator = (NoiseBasedChunkGenerator)(Object) this;
 
-        if (asGenerator.janerator$notMultiGenerating()) {
+        if (! asGenerator.janerator$isDoingMultigen()) {
             return;
         }
 
-        if (asGenerator.janerator$getGrapher().isPointShaded(x, z)) {
+        if (asGenerator.janerator$getParent().getGrapher().isPointShaded(x, z)) {
             cir.setReturnValue(
                 asGenerator.janerator$getParent()
                     .getBaseHeight(x, z, heightmap, world, randomState)

@@ -15,6 +15,7 @@ import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacementContext;
+import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 
 @Mixin(PlacedFeature.class)
 public class PlacedFeatureMixin {
@@ -23,21 +24,22 @@ public class PlacedFeatureMixin {
 
     @ModifyVariable(
         method = "placeWithContext(Lnet/minecraft/world/level/levelgen/placement/PlacementContext;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z",
-        at = @At(
-            value = "LOAD",
-            ordinal = 1
-        )
+        at = @At(value = "LOAD", ordinal = 1)
     )
     public Stream<BlockPos> janerator$filterFeatureStarts(Stream<BlockPos> featureStarts, PlacementContext context) {
         ChunkGenerator generator = context.generator();
 
-        if (generator instanceof FlatLevelSource || generator.janerator$notMultiGenerating()) {
-            // FlatLevelSource does filtering at this step, so no need to filter start positions.
-            return featureStarts;
+        if (generator.janerator$isDoingMultigen()) {
+            MultiGenerator parent = generator.janerator$getParent();
+
+            // Skip filtering for FlatLevelSource as they filter features at the block level instead
+            if (! (generator instanceof FlatLevelSource)) {
+                featureStarts = featureStarts.filter(
+                    originPos -> parent.getGenerators(new ChunkPos(originPos)).getAt(originPos) == generator
+                );
+            }
         }
 
-        return featureStarts.filter(
-            originPos -> generator.janerator$getParent().getGenerators(new ChunkPos(originPos)).getAt(originPos) == generator
-        );
+        return featureStarts;
     }
 }

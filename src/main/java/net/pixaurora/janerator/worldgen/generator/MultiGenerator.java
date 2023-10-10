@@ -69,7 +69,7 @@ public class MultiGenerator extends ChunkGenerator {
             .build(CacheLoader.from(pos -> this.grapher.getChunkGraph(pos).toLookup(this)));
 
         for (ChunkGenerator generator : List.of(this, defaultGenerator, shadedGenerator, outlinesGenerator)) {
-            generator.janerator$setupMultiGenerating(grapher, this);
+            generator.janerator$setupMultigen(this);
         }
     }
 

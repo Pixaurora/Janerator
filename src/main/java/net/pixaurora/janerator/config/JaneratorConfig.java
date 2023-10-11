@@ -11,13 +11,15 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.pixaurora.janerator.worldgen.FeatureFilter;
 import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 
 public class JaneratorConfig {
     public static Codec<JaneratorConfig> CODEC =
         RecordCodecBuilder.create(
             instance -> instance.group(
-                GraphProperties.CODEC.listOf().fieldOf("presets").forGetter(JaneratorConfig::getAllPresets)
+                GraphProperties.CODEC.listOf().fieldOf("presets").forGetter(JaneratorConfig::getAllPresets),
+                FeatureFilter.CODEC.fieldOf("selected_features").forGetter(JaneratorConfig::getSelectedFeatures)
                 )
                 .apply(instance, JaneratorConfig::new)
         );
@@ -41,10 +43,14 @@ public class JaneratorConfig {
     }
 
     private Map<ResourceKey<Level>, GraphProperties> presets;
+    private FeatureFilter selectedFeatures;
+
     private Map<ResourceKey<Level>, MultiGenerator> generators;
 
-    public JaneratorConfig(List<GraphProperties> presets) {
+    public JaneratorConfig(List<GraphProperties> presets, FeatureFilter selectedFeatures) {
         this.presets = new HashMap<>(presets.size());
+        this.selectedFeatures = selectedFeatures;
+
         this.generators = new HashMap<>(presets.size());
 
         for (GraphProperties preset : presets) {
@@ -55,6 +61,10 @@ public class JaneratorConfig {
     public List<GraphProperties> getAllPresets() {
         return this.presets.values().stream()
             .toList();
+    }
+
+    public FeatureFilter getSelectedFeatures() {
+        return this.selectedFeatures;
     }
 
     public GraphProperties getPresetFor(ResourceKey<Level> dimension) {
@@ -72,6 +82,7 @@ public class JaneratorConfig {
             dimension,
             (dim) -> new MultiGenerator(
                 preset.getGrapher(),
+                this.selectedFeatures,
                 defaultGenerator,
                 preset.getShadedGenerator(),
                 preset.getOutlinesGenerator()

@@ -33,7 +33,9 @@ public class PlacedFeatureMixin {
             MultiGenerator parent = generator.janerator$getParent();
 
             // Skip filtering for FlatLevelSource as they filter features at the block level instead
-            if (! (generator instanceof FlatLevelSource)) {
+            boolean alwaysSkip = generator instanceof FlatLevelSource;
+
+            if (!alwaysSkip && parent.getSelectedFeatures().filtersOut(this.feature)) {
                 featureStarts = featureStarts.filter(
                     originPos -> parent.getGenerators(new ChunkPos(originPos)).getAt(originPos) == generator
                 );

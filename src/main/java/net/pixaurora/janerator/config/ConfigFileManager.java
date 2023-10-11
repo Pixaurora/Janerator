@@ -19,6 +19,7 @@ import net.pixaurora.janerator.Janerator;
 import net.pixaurora.janerator.RegistryCache;
 import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
 import net.pixaurora.janerator.graphing.grapher.CustomGrapher;
+import net.pixaurora.janerator.worldgen.FeatureFilter;
 
 public class ConfigFileManager {
     private final Path savePath;
@@ -42,7 +43,7 @@ public class ConfigFileManager {
         } catch (IOException exception) {
             JaneratorConfig config = createDefault();
 
-            boolean configWritten = this.configLocationWritable() && this.save(config); 
+            boolean configWritten = this.configLocationWritable() && this.save(config);
 
             if (! configWritten) {
                 Janerator.LOGGER.warn("Default config was not written!");
@@ -106,7 +107,8 @@ public class ConfigFileManager {
                     DefaultGenerators.createShadedOverworldGenerator(),
                     DefaultGenerators.createOutlineOverworldGenerator()
                 )
-            )
+            ),
+            FeatureFilter.defaultInstance()
         );
     }
 }

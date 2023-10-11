@@ -6,7 +6,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.google.common.cache.CacheBuilder;
@@ -36,6 +35,7 @@ import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.pixaurora.janerator.graphing.GraphedChunk;
 import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
+import net.pixaurora.janerator.worldgen.FeatureFilter;
 import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
 import net.pixaurora.janerator.worldgen.GeneratorLookup;
 import net.pixaurora.janerator.worldgen.PlacementSelection;
@@ -43,6 +43,7 @@ import net.pixaurora.janerator.worldgen.WrappedBiomeResolver;
 
 public class MultiGenerator extends ChunkGenerator {
     private ChunkGrapher grapher;
+    private FeatureFilter selectedFeatures;
 
     private ChunkGenerator defaultGenerator;
     private ChunkGenerator shadedGenerator;
@@ -52,6 +53,7 @@ public class MultiGenerator extends ChunkGenerator {
 
     public MultiGenerator(
         ChunkGrapher grapher,
+        FeatureFilter selectedFeatures,
         ChunkGenerator defaultGenerator,
         ChunkGenerator shadedGenerator,
         ChunkGenerator outlinesGenerator
@@ -59,6 +61,7 @@ public class MultiGenerator extends ChunkGenerator {
         super(defaultGenerator.getBiomeSource());
 
         this.grapher = grapher;
+        this.selectedFeatures = selectedFeatures;
 
         this.defaultGenerator = defaultGenerator;
         this.shadedGenerator = shadedGenerator;
@@ -76,6 +79,10 @@ public class MultiGenerator extends ChunkGenerator {
 
     public ChunkGrapher getGrapher() {
         return this.grapher;
+    }
+
+    public FeatureFilter getSelectedFeatures() {
+        return this.selectedFeatures;
     }
 
     public ChunkGenerator getDefaultGenerator() {

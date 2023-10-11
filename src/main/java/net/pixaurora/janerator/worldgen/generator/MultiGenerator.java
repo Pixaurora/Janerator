@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.google.common.cache.CacheBuilder;
@@ -122,7 +123,7 @@ public class MultiGenerator extends ChunkGenerator {
 	public CompletableFuture<ChunkAccess> fillFromNoise(
 		Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk
 	) {
-        GeneratorLookup generatorsForChunk = this.getGenerators(chunk).atBiomeScale();
+        GeneratorLookup generatorsForChunk = this.getGenerators(chunk);
 
         if (generatorsForChunk.size() == 1) {
             return generatorsForChunk.getDefault().fillFromNoise(executor, blender, randomState, structureManager, chunk);
@@ -131,7 +132,7 @@ public class MultiGenerator extends ChunkGenerator {
         CompletableFuture<ChunkAccess> placeholderFuture = new CompletableFuture<>();
         CompletableFuture<ChunkAccess> future = placeholderFuture;
 
-        for(PlacementSelection selection : this.getGenerators(chunk).getAllSelections()) {
+        for(PlacementSelection selection : generatorsForChunk.getAllSelections()) {
             future = future.thenCompose(
                 access -> selection.getUsedGenerator().fillFromNoise(
                     executor,

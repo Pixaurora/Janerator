@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -20,21 +19,22 @@ public class GraphedChunk {
     public static boolean UNSHADED = false;
 
     private final List<Boolean> shading;
-    private final ChunkPos pos;
+    private final ChunkPos chunk;
 
     private final ChunkGrapher grapher;
 
-    private GraphedChunk(ChunkGrapher grapher, ChunkPos pos, List<Boolean> shading) {
-        this.grapher = grapher;
-        this.pos = pos;
+    private GraphedChunk(ChunkGrapher grapher, ChunkPos chunk, List<Boolean> shading) {
+        this.chunk = chunk;
         this.shading = shading;
+
+        this.grapher = grapher;
     }
 
-    public static <E> List<E> doGraphing(Function<Coordinate, E> graphEvaluator, ChunkPos pos) {
+    public static <E> List<E> doGraphing(Function<Coordinate, E> graphEvaluator, ChunkPos chunk) {
         List<E> graph = new ArrayList<>();
 
-        int startX = pos.getMinBlockX();
-        int startZ = pos.getMinBlockZ();
+        int startX = chunk.getMinBlockX();
+        int startZ = chunk.getMinBlockZ();
 
         int endX = startX + 16;
         int endZ = startZ + 16;
@@ -48,8 +48,8 @@ public class GraphedChunk {
         return graph;
     }
 
-    public GraphedChunk(ChunkGrapher grapher, ChunkPos pos) {
-        this(grapher, pos, doGraphing(grapher::isPointShaded, pos));
+    public GraphedChunk(ChunkGrapher grapher, ChunkPos chunk) {
+        this(grapher, chunk, doGraphing(grapher::isPointShaded, chunk));
     }
 
     public static GraphedChunk allUnshaded(ChunkGrapher grapher, ChunkPos pos) {
@@ -100,8 +100,7 @@ public class GraphedChunk {
                     }
                 }
 
-                boolean sampledShade = generatorSample.entrySet()
-                    .stream()
+                boolean sampledShade = generatorSample.entrySet().stream()
                     .max((entry1, entry2) -> entry1.getValue() - entry2.getValue())
                     .get().getKey();
 
@@ -117,7 +116,7 @@ public class GraphedChunk {
     private List<Coordinate> findOutlinedPortion() {
         List<Coordinate> outlinedPortion = new ArrayList<>();
 
-        Map<ChunkPos, GraphedChunk> neighboringChunks = new HashMap<>(4);
+        Map<ChunkPos, GraphedChunk> neighboringChunks = new HashMap<>(8);
 
         for (Coordinate coordinate : GraphingUtils.getIndices(this.shading, GraphedChunk.SHADED)) {
             boolean hasContrastingNeighbor = coordinate.getNeighbors()
@@ -127,20 +126,14 @@ public class GraphedChunk {
                         boolean neighborShading;
 
                         if (neighbor.isLegal()) {
-                            neighborShading = this.shading.get(neighbor.toListIndex());
+                            neighborShading = this.isShaded(neighbor);
                         } else {
                             int deltaX = neighbor.x() < 0 ? -1 : neighbor.x() < 16 ? 0 : 1;
                             int deltaZ = neighbor.z() < 0 ? -1 : neighbor.z() < 16 ? 0 : 1;
-                            ChunkPos neighborPos = new ChunkPos(this.pos.x + deltaX, this.pos.z + deltaZ);
+                            ChunkPos neighborChunk = new ChunkPos(this.chunk.x + deltaX, this.chunk.z + deltaZ);
 
-                            GraphedChunk neighboringGraphedArea = neighboringChunks.get(neighborPos);
-
-                            if (Objects.isNull(neighboringGraphedArea)) {
-                                neighboringGraphedArea = new GraphedChunk(this.grapher, neighborPos);
-                                neighboringChunks.put(neighborPos, neighboringGraphedArea);
-                            }
-
-                            neighborShading = neighboringGraphedArea.shading.get(neighbor.makeLegal().toListIndex());
+                            GraphedChunk neighborChunkGraph = neighboringChunks.computeIfAbsent(neighborChunk, pos -> this.grapher.getChunkGraph(pos));
+                            neighborShading = neighborChunkGraph.isShaded(neighbor.makeLegal());
                         }
 
                         return neighborShading != GraphedChunk.SHADED;

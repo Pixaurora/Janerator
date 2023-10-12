@@ -70,12 +70,12 @@ public class ConfigFileManager {
 
         return JaneratorConfig.CODEC
             .decode(this.registryOps, configData)
-            .getOrThrow(false, Janerator.LOGGER::error)
+            .getOrThrow(false, RuntimeException::new)
             .getFirst();
     }
 
     public boolean save(JaneratorConfig config) {
-        JsonElement result = JaneratorConfig.CODEC.encodeStart(this.registryOps, config).getOrThrow(false, Janerator.LOGGER::error);
+        JsonElement result = JaneratorConfig.CODEC.encodeStart(this.registryOps, config).getOrThrow(false, RuntimeException::new);
 
         try {
             Files.writeString(this.savePath, this.serializer.toJson(result));

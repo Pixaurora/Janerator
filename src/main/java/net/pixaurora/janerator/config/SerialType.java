@@ -26,12 +26,12 @@ public record SerialType<A extends SpecifiesType<A>>(String name, Codec<? extend
             try {
                 return DataResult.success(foundType.get());
             } catch (NoSuchElementException typeNotFound) {
-                return DataResult.error(() -> String.format("%s lookup did not find corresponding type for `%s`", lookupType, lookupObject.toString()));
+                return DataResult.error(() -> String.format("%s lookup did not find a type with %s = `%s`", this.typeName, lookupType, lookupObject.toString()));
             }
         }
 
         public DataResult<SerialType<A>> lookupName(String name) {
-            return this.lookupBy("Name", type -> type.name(), name);
+            return this.lookupBy("name", type -> type.name(), name);
         }
     }
 }

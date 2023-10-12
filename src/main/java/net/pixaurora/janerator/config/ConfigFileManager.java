@@ -18,7 +18,7 @@ import net.minecraft.world.level.Level;
 import net.pixaurora.janerator.Janerator;
 import net.pixaurora.janerator.RegistryCache;
 import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
-import net.pixaurora.janerator.graphing.grapher.CustomGrapher;
+import net.pixaurora.janerator.graphing.grapher.FunctionGrapher;
 import net.pixaurora.janerator.worldgen.FeatureFilter;
 
 public class ConfigFileManager {
@@ -91,7 +91,7 @@ public class ConfigFileManager {
             List.of(
                 new GraphProperties(
                     Level.OVERWORLD,
-                    new CustomGrapher(
+                    new FunctionGrapher(
                         new GraphFunctionDefinition(
                             List.of("x", "z"),
                             List.of(),

@@ -8,6 +8,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.Direction8;
 import net.minecraft.world.level.ChunkPos;
+import net.pixaurora.janerator.config.SerialType;
 import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.graphing.GraphFunction;
 import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
@@ -21,10 +22,11 @@ public class GrowingTileGrapher implements ChunkGrapher {
             GraphFunctionDefinition.BIVARIATE_CODEC.fieldOf("corner(x, z)").forGetter(GrowingTileGrapher::getCornerDefinition)
         ).apply(instance, GrowingTileGrapher::new)
     );
+    public static final SerialType<ChunkGrapher> TYPE = new SerialType<>("growing_tiles", CODEC);
 
-    public static final int MAX_VALUE = (int) Math.pow(2, 25);
+    public static final int MAX_VALUE = 33_554_432; // 2^25, should be substantially larger than the max world size in Minecraft
 
-    private CustomGrapher stretchedGrapher;
+    private FunctionGrapher stretchedGrapher;
 
     private GraphFunctionDefinition tileDefinition;
     private List<Integer> tileSums;
@@ -32,9 +34,8 @@ public class GrowingTileGrapher implements ChunkGrapher {
     private GraphFunctionDefinition cornerDefinition;
     private ThreadLocal<GraphFunction> cornerFunction;
 
-
     public GrowingTileGrapher(GraphFunctionDefinition graphDefinition, GraphFunctionDefinition tileGrowthDefinition, GraphFunctionDefinition cornerDefinition) {
-        this.stretchedGrapher = new CustomGrapher(graphDefinition);
+        this.stretchedGrapher = new FunctionGrapher(graphDefinition);
         this.tileDefinition = tileGrowthDefinition;
 
         this.cornerDefinition = cornerDefinition;
@@ -56,6 +57,10 @@ public class GrowingTileGrapher implements ChunkGrapher {
                 break;
             }
         }
+    }
+
+    public SerialType<ChunkGrapher> type() {
+        return TYPE;
     }
 
     public GraphFunctionDefinition getGraphDefinition() {
@@ -148,7 +153,7 @@ public class GrowingTileGrapher implements ChunkGrapher {
             }
         }
 
-        if (nudges == 2 && ! offset.equals(noOffset)) {
+        if (nudges == 2 && !offset.equals(noOffset)) {
             boolean cornerShade = this.isCornerShaded(pos, xTile, zTile, offset);
             shade = shade ? cornerShade : ! cornerShade;
         }
@@ -159,10 +164,5 @@ public class GrowingTileGrapher implements ChunkGrapher {
     @Override
     public GraphedChunk getChunkGraph(ChunkPos chunk) {
         return new GraphedChunk(this, chunk);
-    }
-
-    @Override
-    public GrapherType type() {
-        return GrapherType.GROWING_TILES;
     }
 }

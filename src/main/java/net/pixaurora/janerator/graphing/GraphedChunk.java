@@ -57,7 +57,7 @@ public class GraphedChunk {
         return this.shading.get(pos.toListIndex());
     }
 
-    public List<Coordinate> getShadedCoordinates() {
+    public List<Coordinate> getShaded() {
         List<Coordinate> shadedCoordinates = new ArrayList<>(256);
 
         for (int i = 0; i < 256; i++) {
@@ -69,12 +69,12 @@ public class GraphedChunk {
         return shadedCoordinates;
     }
 
-    public List<Coordinate> findOutlinedPortion() {
+    public List<Coordinate> getOutlines() {
         List<Coordinate> outlinedPortion = new ArrayList<>();
 
         Map<ChunkPos, GraphedChunk> neighboringChunks = new HashMap<>(8);
 
-        for (Coordinate coordinate : GraphingUtils.getCoordinates(this.shading, true)) {
+        for (Coordinate coordinate : this.getShaded()) {
             boolean hasContrastingNeighbor = coordinate.getNeighbors()
                 .stream()
                 .anyMatch(
@@ -88,7 +88,7 @@ public class GraphedChunk {
                             int deltaZ = neighbor.z() < 0 ? -1 : neighbor.z() < 16 ? 0 : 1;
                             ChunkPos neighborChunk = new ChunkPos(this.chunk.x + deltaX, this.chunk.z + deltaZ);
 
-                            GraphedChunk neighborChunkGraph = neighboringChunks.computeIfAbsent(neighborChunk, pos -> this.grapher.getChunkGraph(pos));
+                            GraphedChunk neighborChunkGraph = neighboringChunks.computeIfAbsent(neighborChunk, this.grapher::getChunkGraph);
                             neighborShading = neighborChunkGraph.isShaded(neighbor.makeLegal());
                         }
 

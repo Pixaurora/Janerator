@@ -8,13 +8,13 @@ import com.mojang.serialization.Codec;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.config.SerialType;
 import net.pixaurora.janerator.config.SpecifiesType;
-import net.pixaurora.janerator.graphing.GraphedChunk;
+import net.pixaurora.janerator.graphing.Coordinate;
 
 public interface ShadingMethod extends SpecifiesType<ShadingMethod> {
     public static final List<SerialType<ShadingMethod>> TYPES = new ArrayList<>(List.of(NormalShading.TYPE));
     public static final Codec<ShadingMethod> CODEC = new SerialType.Group<>("Shading method", TYPES).dispatchCodec();
 
-    public List<ShadeData> shadeIn(GraphedChunk chunk);
+    public List<ShadeData> shadeIn(List<Coordinate> points);
 
     public List<ChunkGenerator> involvedGenerators();
 

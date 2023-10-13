@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import org.quiltmc.loader.api.QuiltLoader;
 
@@ -110,8 +111,9 @@ public class ConfigFileManager {
                                         "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0"
                                     )
                                 ),
-                                new NormalShading(DefaultGenerators.createShadedOverworldGenerator())
-                                )
+                                new NormalShading(DefaultGenerators.createShadedOverworldGenerator()),
+                                Optional.of(new NormalShading(DefaultGenerators.createOutlineOverworldGenerator()))
+                            )
                         ),
                         DefaultGenerators.createUnshadedOverworldGenerator()
                     )

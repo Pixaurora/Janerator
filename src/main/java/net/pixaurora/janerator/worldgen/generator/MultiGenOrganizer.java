@@ -17,7 +17,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.pixaurora.janerator.Janerator;
 import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.shade.JaneratorLayer;
 import net.pixaurora.janerator.shade.method.ShadeData;

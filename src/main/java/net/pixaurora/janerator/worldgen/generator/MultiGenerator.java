@@ -2,21 +2,15 @@ package net.pixaurora.janerator.worldgen.generator;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.mojang.serialization.Codec;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.StructureManager;
@@ -25,100 +19,38 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
-import net.minecraft.world.level.chunk.ImposterProtoChunk;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.pixaurora.janerator.graphing.GraphedChunk;
-import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 import net.pixaurora.janerator.worldgen.FeatureFilter;
-import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
 import net.pixaurora.janerator.worldgen.GeneratorLookup;
 import net.pixaurora.janerator.worldgen.PlacementSelection;
 import net.pixaurora.janerator.worldgen.WrappedBiomeResolver;
 
 public class MultiGenerator extends ChunkGenerator {
-    private ChunkGrapher grapher;
+    private MultiGenOrganizer organizer;
+
     private FeatureFilter selectedFeatures;
 
-    private ChunkGenerator defaultGenerator;
-    private ChunkGenerator shadedGenerator;
-    private ChunkGenerator outlinesGenerator;
-
-    private LoadingCache<ChunkPos, FullGeneratorLookup> selectionCache;
-
     public MultiGenerator(
-        ChunkGrapher grapher,
-        FeatureFilter selectedFeatures,
-        ChunkGenerator defaultGenerator,
-        ChunkGenerator shadedGenerator,
-        ChunkGenerator outlinesGenerator
+        MultiGenOrganizer organizer,
+        FeatureFilter selectedFeatures
     ) {
-        super(defaultGenerator.getBiomeSource());
+        super(organizer.getDefaultGenerator().getBiomeSource());
 
-        this.grapher = grapher;
+        this.organizer = organizer;
         this.selectedFeatures = selectedFeatures;
-
-        this.defaultGenerator = defaultGenerator;
-        this.shadedGenerator = shadedGenerator;
-        this.outlinesGenerator = outlinesGenerator;
-
-        this.selectionCache = CacheBuilder.newBuilder()
-            .maximumSize(1024)
-            .expireAfterAccess(60, TimeUnit.SECONDS)
-            .build(CacheLoader.from(pos -> this.grapher.getChunkGraph(pos).toLookup(this)));
-
-        for (ChunkGenerator generator : List.of(this, defaultGenerator, shadedGenerator, outlinesGenerator)) {
-            generator.janerator$setupMultigen(this);
-        }
     }
 
-    public ChunkGrapher getGrapher() {
-        return this.grapher;
+    public MultiGenOrganizer getOrganizer() {
+        return this.organizer;
     }
 
     public FeatureFilter getSelectedFeatures() {
         return this.selectedFeatures;
-    }
-
-    public ChunkGenerator getDefaultGenerator() {
-        return this.defaultGenerator;
-    }
-
-    public ChunkGenerator getShadedGenerator() {
-        return this.shadedGenerator;
-    }
-
-    public ChunkGenerator getOutlinesGenerator() {
-        return this.outlinesGenerator;
-    }
-
-    public FullGeneratorLookup getGenerators(ChunkPos pos) {
-        try {
-            return this.selectionCache.get(pos);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public FullGeneratorLookup getGenerators(ChunkAccess chunk) {
-        ChunkPos pos = chunk.getPos();
-
-        boolean chunkAlreadyGenerated = chunk instanceof LevelChunk || chunk instanceof ImposterProtoChunk;
-        if (chunkAlreadyGenerated) {
-            this.selectionCache.put(pos, GraphedChunk.allUnshaded(grapher, pos).toLookup(this));
-        }
-
-        return this.getGenerators(pos);
-    }
-
-    @Override
-    public MultiGenerator janerator$getParent() {
-        throw new RuntimeException("MultiGenerator cannot have a MultiGenerator parent.");
     }
 
 	@Override
@@ -130,7 +62,7 @@ public class MultiGenerator extends ChunkGenerator {
 	public CompletableFuture<ChunkAccess> fillFromNoise(
 		Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk
 	) {
-        GeneratorLookup generatorsForChunk = this.getGenerators(chunk);
+        GeneratorLookup generatorsForChunk = this.organizer.getGenerators(chunk);
 
         if (generatorsForChunk.size() == 1) {
             return generatorsForChunk.getDefault().fillFromNoise(executor, blender, randomState, structureManager, chunk);
@@ -163,7 +95,7 @@ public class MultiGenerator extends ChunkGenerator {
 	public CompletableFuture<ChunkAccess> createBiomes(
 		Executor executor, RandomState randomState, Blender blender, StructureManager structureManager, ChunkAccess chunk
 	) {
-        GeneratorLookup generatorsForChunk = this.getGenerators(chunk).atBiomeScale();
+        GeneratorLookup generatorsForChunk = this.organizer.getGenerators(chunk).atBiomeScale();
 
         if (generatorsForChunk.size() == 1) {
             return generatorsForChunk.getDefault().createBiomes(executor, randomState, blender, structureManager, chunk);
@@ -189,7 +121,7 @@ public class MultiGenerator extends ChunkGenerator {
 	}
 
     protected void generate(ChunkAccess chunk, Consumer<ChunkGenerator> generationOp, Predicate<ChunkGenerator> filteringCondition, boolean selectInSections) {
-        GeneratorLookup generatorsForChunk = this.getGenerators(chunk);
+        GeneratorLookup generatorsForChunk = this.organizer.getGenerators(chunk);
 
         if (generatorsForChunk.size() == 1) {
             generationOp.accept(generatorsForChunk.getDefault());
@@ -266,37 +198,37 @@ public class MultiGenerator extends ChunkGenerator {
 
     @Override
 	public void spawnOriginalMobs(WorldGenRegion region) {
-        this.getGenerators(region.getCenter()).getDefault().spawnOriginalMobs(region);
+        this.organizer.getGenerators(region.getCenter()).getDefault().spawnOriginalMobs(region);
 	}
 
     @Override
 	public int getSpawnHeight(LevelHeightAccessor world) {
-		return this.defaultGenerator.getSpawnHeight(world);
+		return this.organizer.getDefaultGenerator().getSpawnHeight(world);
 	}
 
     @Override
     public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState randomState) {
-		return this.shadedGenerator.getBaseHeight(x, z, heightmap, world, randomState);
+		return this.organizer.getDefaultGenerator().getBaseHeight(x, z, heightmap, world, randomState);
 	}
 
 	@Override
 	public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState randomState) {
-		return this.shadedGenerator.getBaseColumn(x, z, world, randomState);
+		return this.organizer.getDefaultGenerator().getBaseColumn(x, z, world, randomState);
 	}
 
     @Override
 	public int getMinY() {
-		return defaultGenerator.getMinY();
+		return this.organizer.getDefaultGenerator().getMinY();
 	}
 
 	@Override
 	public int getGenDepth() {
-		return defaultGenerator.getGenDepth();
+		return this.organizer.getDefaultGenerator().getGenDepth();
 	}
 
 	@Override
 	public int getSeaLevel() {
-		return defaultGenerator.getSeaLevel();
+		return this.organizer.getDefaultGenerator().getSeaLevel();
 	}
 
     @Override

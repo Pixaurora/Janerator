@@ -6,18 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
-import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
-import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
 
 public class GraphedChunk {
-    public static boolean SHADED = true;
-    public static boolean UNSHADED = false;
-
     private final List<Boolean> shading;
     private final ChunkPos chunk;
 
@@ -56,7 +49,7 @@ public class GraphedChunk {
         return new GraphedChunk(
             grapher,
             pos,
-            Collections.nCopies(256, GraphedChunk.UNSHADED)
+            Collections.nCopies(256, false)
         );
     }
 
@@ -64,61 +57,24 @@ public class GraphedChunk {
         return this.shading.get(pos.toListIndex());
     }
 
-    private List<ChunkGenerator> getBlockScaleMap(MultiGenerator multiGenerator) {
-        List<ChunkGenerator> generatorMap = new ArrayList<>(
-            IntStream.range(0, 256)
-                .boxed()
-                .map(value -> multiGenerator.getDefaultGenerator())
-                .toList()
-        );
+    public List<Coordinate> getShadedCoordinates() {
+        List<Coordinate> shadedCoordinates = new ArrayList<>(256);
 
-        GraphingUtils.getIndices(this.shading, GraphedChunk.SHADED)
-            .stream()
-            .forEach(coord -> generatorMap.set(coord.toListIndex(), multiGenerator.getShadedGenerator()));
-        this.findOutlinedPortion()
-            .stream()
-            .forEach(coord -> generatorMap.set(coord.toListIndex(), multiGenerator.getOutlinesGenerator()));
-
-        return generatorMap;
-    }
-
-    private List<ChunkGenerator> getBiomeScaleMap(MultiGenerator multiGenerator) {
-        List<ChunkGenerator> biomeGeneratorMap = new ArrayList<>();
-
-        // Because biomes are placed per every 4 blocks, we sample
-        // the most common generator in 4 block sections throughout the chunk
-        // so that the biome placements line up with the blocks better
-        for (int section_x = 0; section_x < 16; section_x += 4) {
-            for (int section_z = 0; section_z < 16; section_z += 4) {
-                Map<Boolean, Integer> generatorSample = new HashMap<>(2);
-
-                for (int x = section_x; x < section_x + 4; x++) {
-                    for (int z = section_z; z < section_z + 4; z++) {
-                        boolean shade = this.shading.get(new Coordinate(x, z).toListIndex());
-                        int currentScore = generatorSample.getOrDefault(shade, 0);
-                        generatorSample.put(shade, currentScore + 1);
-                    }
-                }
-
-                boolean sampledShade = generatorSample.entrySet().stream()
-                    .max((entry1, entry2) -> entry1.getValue() - entry2.getValue())
-                    .get().getKey();
-
-                biomeGeneratorMap.add(
-                    sampledShade ? multiGenerator.getShadedGenerator() : multiGenerator.getDefaultGenerator()
-                );
+        for (int i = 0; i < 256; i++) {
+            if (this.shading.get(i)) {
+                shadedCoordinates.add(Coordinate.fromListIndex(i));
             }
         }
 
-        return biomeGeneratorMap;
+        return shadedCoordinates;
     }
 
-    private List<Coordinate> findOutlinedPortion() {
+    public List<Coordinate> findOutlinedPortion() {
         List<Coordinate> outlinedPortion = new ArrayList<>();
 
         Map<ChunkPos, GraphedChunk> neighboringChunks = new HashMap<>(8);
 
-        for (Coordinate coordinate : GraphingUtils.getIndices(this.shading, GraphedChunk.SHADED)) {
+        for (Coordinate coordinate : GraphingUtils.getCoordinates(this.shading, true)) {
             boolean hasContrastingNeighbor = coordinate.getNeighbors()
                 .stream()
                 .anyMatch(
@@ -136,7 +92,7 @@ public class GraphedChunk {
                             neighborShading = neighborChunkGraph.isShaded(neighbor.makeLegal());
                         }
 
-                        return neighborShading != GraphedChunk.SHADED;
+                        return neighborShading != true;
                     }
                 );
 
@@ -146,9 +102,5 @@ public class GraphedChunk {
         }
 
         return outlinedPortion;
-    }
-
-    public FullGeneratorLookup toLookup(MultiGenerator generator) {
-        return new FullGeneratorLookup(this.getBlockScaleMap(generator), this.getBiomeScaleMap(generator));
     }
 }

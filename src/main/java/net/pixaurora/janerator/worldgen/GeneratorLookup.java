@@ -28,7 +28,7 @@ public class GeneratorLookup {
         this.selections = this.generatorMap
             .stream()
             .distinct()
-            .map(generator -> new PlacementSelection(generator, GraphingUtils.getIndices(this.generatorMap, generator)))
+            .map(generator -> new PlacementSelection(generator, GraphingUtils.getCoordinates(this.generatorMap, generator)))
             .collect(Collectors.toMap(PlacementSelection::getUsedGenerator, Function.identity()));
         this.fallbackGenerator = this.getAllSelections()
             .stream()

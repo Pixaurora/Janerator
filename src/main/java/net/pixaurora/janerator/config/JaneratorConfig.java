@@ -81,11 +81,8 @@ public class JaneratorConfig {
         return this.generators.computeIfAbsent(
             dimension,
             (dim) -> new MultiGenerator(
-                preset.getGrapher(),
-                this.selectedFeatures,
-                defaultGenerator,
-                preset.getShadedGenerator(),
-                preset.getOutlinesGenerator()
+                preset.getOrganizer(),
+                this.selectedFeatures
             )
         );
     }

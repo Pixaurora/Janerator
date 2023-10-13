@@ -19,7 +19,10 @@ import net.pixaurora.janerator.Janerator;
 import net.pixaurora.janerator.RegistryCache;
 import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
 import net.pixaurora.janerator.graphing.grapher.FunctionGrapher;
+import net.pixaurora.janerator.shade.JaneratorLayer;
+import net.pixaurora.janerator.shade.method.NormalShading;
 import net.pixaurora.janerator.worldgen.FeatureFilter;
+import net.pixaurora.janerator.worldgen.generator.MultiGenOrganizer;
 
 public class ConfigFileManager {
     private final Path savePath;
@@ -75,7 +78,7 @@ public class ConfigFileManager {
     }
 
     public boolean save(JaneratorConfig config) {
-        JsonElement result = JaneratorConfig.CODEC.encodeStart(this.registryOps, config).getOrThrow(false, RuntimeException::new);
+        JsonElement result = JaneratorConfig.CODEC.encodeStart(this.registryOps, config).getOrThrow(true, RuntimeException::new);
 
         try {
             Files.writeString(this.savePath, this.serializer.toJson(result));
@@ -91,21 +94,28 @@ public class ConfigFileManager {
             List.of(
                 new GraphProperties(
                     Level.OVERWORLD,
-                    new FunctionGrapher(
-                        new GraphFunctionDefinition(
-                            List.of("x", "z"),
-                            List.of(),
-                            List.of(
-                                "phi = (1 + sqrt(5)) / 2",
-                                "log_phi = ln(phi)",
-                                "dist_squared = x^2 + z^2",
-                                "angle = ln(dist_squared) / log_phi"
-                            ),
-                            "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0"
-                        )
-                    ),
-                    DefaultGenerators.createShadedOverworldGenerator(),
-                    DefaultGenerators.createOutlineOverworldGenerator()
+                    new MultiGenOrganizer(
+                        List.of(
+                            new JaneratorLayer(
+                                new FunctionGrapher(
+                                    new GraphFunctionDefinition(
+                                        List.of("x", "z"),
+                                        List.of(),
+                                        List.of(
+                                            "phi = (1 + sqrt(5)) / 2",
+                                            "log_phi = ln(phi)",
+                                            "dist_squared = x^2 + z^2",
+                                            "angle = ln(dist_squared) / log_phi"
+                                        ),
+                                        "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0"
+                                    )
+                                ),
+                                new NormalShading(DefaultGenerators.createShadedOverworldGenerator())
+                                )
+                        ),
+                        DefaultGenerators.createUnshadedOverworldGenerator()
+                    )
+
                 )
             ),
             FeatureFilter.defaultInstance()

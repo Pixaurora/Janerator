@@ -1,17 +1,22 @@
 package net.pixaurora.janerator.worldgen;
 
 import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
+import net.pixaurora.janerator.worldgen.generator.MultiGenOrganizer;
 
 public interface JaneratorGenerator {
-    public default void janerator$setupMultigen(MultiGenerator parent) {
-        throw new RuntimeException("No implementation for `janerator$setGrapher` could be found.");
+    public default void janerator$setupMultiGen(MultiGenerator organizer) {
+        throw new RuntimeException("No implementation for `janerator$setupMultiGen` could be found.");
     }
 
     public default boolean janerator$isDoingMultigen() {
-        throw new RuntimeException("No implementation for `janerator$notMultiGenerating` could be found.");
+        throw new RuntimeException("No implementation for `janerator$isDoingMultigen` could be found.");
     }
 
     public default MultiGenerator janerator$getParent() {
         throw new RuntimeException("No implementation for `janerator$getParent` could be found.");
+    }
+
+    public default MultiGenOrganizer janerator$getOrganizer() {
+        return this.janerator$getParent().getOrganizer();
     }
 }

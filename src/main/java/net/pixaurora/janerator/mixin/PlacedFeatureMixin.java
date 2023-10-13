@@ -15,7 +15,7 @@ import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacementContext;
-import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
+import net.pixaurora.janerator.worldgen.generator.MultiGenOrganizer;
 
 @Mixin(PlacedFeature.class)
 public class PlacedFeatureMixin {
@@ -30,14 +30,14 @@ public class PlacedFeatureMixin {
         ChunkGenerator generator = context.generator();
 
         if (generator.janerator$isDoingMultigen()) {
-            MultiGenerator parent = generator.janerator$getParent();
-
             // Skip filtering for FlatLevelSource as they filter features at the block level instead
             boolean alwaysSkip = generator instanceof FlatLevelSource;
 
-            if (!alwaysSkip && parent.getSelectedFeatures().filtersOut(this.feature)) {
+            if (!alwaysSkip && generator.janerator$getParent().getSelectedFeatures().filtersOut(this.feature)) {
+                MultiGenOrganizer organizer = generator.janerator$getOrganizer();
+
                 featureStarts = featureStarts.filter(
-                    originPos -> parent.getGenerators(new ChunkPos(originPos)).getAt(originPos) == generator
+                    originPos -> organizer.getGenerators(new ChunkPos(originPos)).getAt(originPos) == generator
                 );
             }
         }

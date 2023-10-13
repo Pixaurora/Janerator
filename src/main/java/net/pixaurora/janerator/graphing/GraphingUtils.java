@@ -13,7 +13,7 @@ import net.pixaurora.janerator.config.GraphingConfigException;
 import net.pixaurora.janerator.config.ParserEvaluationException;
 
 public class GraphingUtils {
-    public static <T> List<Coordinate> getIndices(List<T>  items, T value) {
+    public static <T> List<Coordinate> getCoordinates(List<T>  items, T value) {
         return IntStream.range(0, items.size())
             .filter(index -> items.get(index).equals(value))
             .boxed()

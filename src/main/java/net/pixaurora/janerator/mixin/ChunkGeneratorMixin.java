@@ -12,15 +12,17 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
 import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
+import net.pixaurora.janerator.worldgen.generator.MultiGenOrganizer;
 
 @Mixin(ChunkGenerator.class)
 public class ChunkGeneratorMixin implements JaneratorGenerator {
     private MultiGenerator janerator$parent;
 
     @Override
-    public void janerator$setupMultigen(MultiGenerator parent) {
+    public void janerator$setupMultiGen(MultiGenerator parent) {
         this.janerator$parent = parent;
     }
 
@@ -47,13 +49,13 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
         StructureTemplateManager templateManager,
         CallbackInfo callbackInfo
     ) {
-        if (! this.janerator$isDoingMultigen()) {
+        if (!this.janerator$isDoingMultigen()) {
             return;
         }
 
         BlockPos pos = chunk.getPos().getMiddleBlockPosition(0);
 
-        if (this.janerator$getParent().getGrapher().isPointShaded(pos)) {
+        if (this.janerator$parent.getOrganizer().getGenerator(new Coordinate(pos)) != (ChunkGenerator)(Object) this) {
             callbackInfo.cancel();
         }
     }

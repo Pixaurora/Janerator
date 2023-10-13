@@ -38,6 +38,16 @@ public class DefaultGenerators {
         );
     }
 
+    public static ChunkGenerator createUnshadedOverworldGenerator() {
+        return createGenerator(
+            Biomes.MUSHROOM_FIELDS,
+            new FlatLayerInfo(1, Blocks.WHITE_CONCRETE),
+            new FlatLayerInfo(125, Blocks.GRAY_CONCRETE),
+
+            new FlatLayerInfo(1, Blocks.BEDROCK)
+        );
+    }
+
     public static ChunkGenerator createOutlineOverworldGenerator() {
         return new SlantedFlatGenerator(
             new FixedBiomeSource(getBiome(Biomes.MUSHROOM_FIELDS)),

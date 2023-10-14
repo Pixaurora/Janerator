@@ -18,6 +18,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.graphing.Coordinate;
+import net.pixaurora.janerator.shade.JaneratorLayerData;
 import net.pixaurora.janerator.shade.JaneratorLayer;
 import net.pixaurora.janerator.shade.method.ShadeData;
 import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
@@ -106,15 +107,17 @@ public class MultiGenOrganizer {
     }
 
     private FullGeneratorLookup createLookup(ChunkPos chunk) {
-        List<ChunkGenerator> shading = new ArrayList<>(Collections.nCopies(256, this.defaultGenerator));
+        List<ChunkGenerator> generatorShading = new ArrayList<>(Collections.nCopies(256, this.defaultGenerator));
+        List<JaneratorLayerData> layerShading = new ArrayList<>(Collections.nCopies(256, JaneratorLayerData.DEFAULT));
 
         for (JaneratorLayer layer : this.layers) {
             for (ShadeData shade : layer.shadesIn(chunk)) {
-                shading.set(shade.index(), shade.generator());
+                generatorShading.set(shade.index(), shade.generator());
+                layerShading.set(shade.index(), layer);
             }
         }
 
-        return new FullGeneratorLookup(shading, this.sampleForBiomes(shading));
+        return new FullGeneratorLookup(generatorShading, layerShading, this.sampleForBiomes(generatorShading));
     }
 
     public FullGeneratorLookup getGenerators(ChunkPos chunk) {
@@ -131,5 +134,9 @@ public class MultiGenOrganizer {
 
     public ChunkGenerator getGenerator(Coordinate pos) {
         return this.getGenerators(pos.toChunkPos()).getAt(pos);
+    }
+
+    public JaneratorLayerData getLayer(Coordinate pos) {
+        return this.getGenerators(pos.toChunkPos()).getLayerAt(pos);
     }
 }

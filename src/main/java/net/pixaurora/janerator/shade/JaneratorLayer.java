@@ -13,12 +13,13 @@ import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 import net.pixaurora.janerator.shade.method.ShadeData;
 import net.pixaurora.janerator.shade.method.ShadingMethod;
 
-public class JaneratorLayer {
+public class JaneratorLayer implements JaneratorLayerData {
     public static final Codec<JaneratorLayer> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
             ChunkGrapher.CODEC.fieldOf("grapher").forGetter(JaneratorLayer::getGrapher),
             ShadingMethod.CODEC.fieldOf("shading").forGetter(JaneratorLayer::getShading),
-            ShadingMethod.CODEC.optionalFieldOf("outline_shading").forGetter(JaneratorLayer::getOutlineShading)
+            ShadingMethod.CODEC.optionalFieldOf("outline_shading").forGetter(JaneratorLayer::getOutlineShading),
+            Codec.BOOL.fieldOf("generate_structures").orElse(false).forGetter(JaneratorLayer::generateStructures)
         ).apply(instance, JaneratorLayer::new)
     );
 
@@ -27,11 +28,15 @@ public class JaneratorLayer {
     private final ShadingMethod shadingMethod;
     private final Optional<ShadingMethod> outlineShading;
 
-    public JaneratorLayer(ChunkGrapher grapher, ShadingMethod shadingMethod, Optional<ShadingMethod> outlineShading) {
+    private final boolean generateStructures;
+
+    public JaneratorLayer(ChunkGrapher grapher, ShadingMethod shadingMethod, Optional<ShadingMethod> outlineShading, boolean generateStructures) {
         this.grapher = grapher;
 
         this.shadingMethod = shadingMethod;
         this.outlineShading = outlineShading;
+
+        this.generateStructures = generateStructures;
     }
 
     public ChunkGrapher getGrapher() {
@@ -44,6 +49,11 @@ public class JaneratorLayer {
 
     public Optional<ShadingMethod> getOutlineShading() {
         return outlineShading;
+    }
+
+    @Override
+    public boolean generateStructures() {
+        return this.generateStructures;
     }
 
     public List<ShadeData> shadesIn(ChunkPos chunk) {

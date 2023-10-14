@@ -71,7 +71,7 @@ public class WrappedBiomeResolver implements BiomeResolver {
                 randomState
             )
         );
-    
+
         return ((NoiseChunkAccessor) noiseChunk).janerator$invokeCachedClimateSampler(
             randomState.router(),
             ((NoiseGeneratorSettings)generator.janerator$getSettings().value()).spawnTarget()

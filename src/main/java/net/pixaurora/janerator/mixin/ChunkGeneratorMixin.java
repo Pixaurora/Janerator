@@ -15,7 +15,6 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.worldgen.JaneratorGenerator;
 import net.pixaurora.janerator.worldgen.generator.MultiGenerator;
-import net.pixaurora.janerator.worldgen.generator.MultiGenOrganizer;
 
 @Mixin(ChunkGenerator.class)
 public class ChunkGeneratorMixin implements JaneratorGenerator {
@@ -55,7 +54,7 @@ public class ChunkGeneratorMixin implements JaneratorGenerator {
 
         BlockPos pos = chunk.getPos().getMiddleBlockPosition(0);
 
-        if (this.janerator$parent.getOrganizer().getGenerator(new Coordinate(pos)) != (ChunkGenerator)(Object) this) {
+        if (!this.janerator$parent.getOrganizer().getLayer(new Coordinate(pos)).generateStructures()) {
             callbackInfo.cancel();
         }
     }

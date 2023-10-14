@@ -43,6 +43,10 @@ public class MultiGenerator extends ChunkGenerator {
 
         this.organizer = organizer;
         this.selectedFeatures = selectedFeatures;
+
+        for (ChunkGenerator subGenerator : this.organizer.involvedGenerators()) {
+            subGenerator.janerator$setupMultiGen(this);
+        }
     }
 
     public MultiGenOrganizer getOrganizer() {

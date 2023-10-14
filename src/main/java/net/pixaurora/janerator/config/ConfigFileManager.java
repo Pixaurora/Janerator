@@ -112,7 +112,8 @@ public class ConfigFileManager {
                                     )
                                 ),
                                 new NormalShading(DefaultGenerators.createShadedOverworldGenerator()),
-                                Optional.of(new NormalShading(DefaultGenerators.createOutlineOverworldGenerator()))
+                                Optional.of(new NormalShading(DefaultGenerators.createOutlineOverworldGenerator())),
+                                false
                             )
                         ),
                         DefaultGenerators.createUnshadedOverworldGenerator()

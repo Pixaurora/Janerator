@@ -12,25 +12,25 @@ import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.graphing.GraphingUtils;
 
 public class GeneratorLookup {
-    private List<ChunkGenerator> generatorMap;
-    private int chunkLength;
+    private final List<ChunkGenerator> generatorShading;
+    protected final int chunkLength;
 
-    private Map<ChunkGenerator, PlacementSelection> selections;
-    private ChunkGenerator fallbackGenerator;
+    private final Map<ChunkGenerator, PlacementSelection> selections;
+    private final ChunkGenerator dominantGenerator;
 
     public GeneratorLookup(
-        List<ChunkGenerator> generatorMap,
+        List<ChunkGenerator> generatorShading,
         int chunkLength
     ) {
-        this.generatorMap = generatorMap;
+        this.generatorShading = generatorShading;
         this.chunkLength = chunkLength;
 
-        this.selections = this.generatorMap
+        this.selections = this.generatorShading
             .stream()
             .distinct()
-            .map(generator -> new PlacementSelection(generator, GraphingUtils.getCoordinates(this.generatorMap, generator)))
+            .map(generator -> new PlacementSelection(generator, GraphingUtils.getCoordinates(this.generatorShading, generator)))
             .collect(Collectors.toMap(PlacementSelection::getUsedGenerator, Function.identity()));
-        this.fallbackGenerator = this.getAllSelections()
+        this.dominantGenerator = this.getAllSelections()
             .stream()
             .max((selection1, selection2) -> selection1.size() - selection2.size())
             .get().getUsedGenerator();
@@ -41,7 +41,7 @@ public class GeneratorLookup {
     }
 
     public ChunkGenerator getAt(Coordinate coordinate) {
-        return this.generatorMap.get(coordinate.makeLegal(this.chunkLength).toListIndex(this.chunkLength));
+        return this.generatorShading.get(coordinate.makeLegal(this.chunkLength).toListIndex(this.chunkLength));
     }
 
     public ChunkGenerator getAt(BlockPos pos) {
@@ -61,6 +61,6 @@ public class GeneratorLookup {
     }
 
     public ChunkGenerator getDefault() {
-        return this.fallbackGenerator;
+        return this.dominantGenerator;
     }
 }

@@ -2,7 +2,9 @@ package net.pixaurora.janerator.worldgen.generator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -17,6 +19,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.pixaurora.janerator.config.GraphingConfigException;
 import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.shade.JaneratorLayerData;
 import net.pixaurora.janerator.shade.JaneratorLayer;
@@ -26,20 +29,28 @@ import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
 public class MultiGenOrganizer {
     public static final Codec<MultiGenOrganizer> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
-            JaneratorLayer.CODEC.listOf().fieldOf("layers").forGetter(MultiGenOrganizer::getLayers),
-            ChunkGenerator.CODEC.fieldOf("default_generator").forGetter(MultiGenOrganizer::getDefaultGenerator)
+            ChunkGenerator.CODEC.fieldOf("default_generator").forGetter(MultiGenOrganizer::getDefaultGenerator),
+            Codec.unboundedMap(Codec.STRING, ChunkGenerator.CODEC).fieldOf("other_generators").forGetter(MultiGenOrganizer::getOtherGenerators),
+            JaneratorLayer.CODEC.listOf().fieldOf("layers").forGetter(MultiGenOrganizer::getLayers)
         ).apply(instance, MultiGenOrganizer::new)
     );
 
-    private final List<JaneratorLayer> layers;
     private final ChunkGenerator defaultGenerator;
+    private final Map<String, ChunkGenerator> otherGenerators;
+
+    private final List<JaneratorLayer> layers;
 
     private int generatorCount;
     private LoadingCache<ChunkPos, FullGeneratorLookup> selectionCache;
 
-    public MultiGenOrganizer(List<JaneratorLayer> layers, ChunkGenerator defaultShade) {
+    public MultiGenOrganizer(ChunkGenerator defaultGenerator, Map<String, ChunkGenerator> keyedGenerators, List<JaneratorLayer> layers) {
+        this.defaultGenerator = defaultGenerator;
+        this.otherGenerators = keyedGenerators;
+
         this.layers = layers;
-        this.defaultGenerator = defaultShade;
+
+        this.validateGeneratorKeys();
+
 
         this.generatorCount = this.involvedGenerators().size();
 
@@ -49,24 +60,60 @@ public class MultiGenOrganizer {
             .build(CacheLoader.from(this::createLookup));
     }
 
-    public List<JaneratorLayer> getLayers() {
-        return layers;
+    public ChunkGenerator getDefaultGenerator() {
+        return this.defaultGenerator;
     }
 
-    public ChunkGenerator getDefaultGenerator() {
-        return defaultGenerator;
+    public Map<String, ChunkGenerator> getOtherGenerators() {
+        return this.otherGenerators;
+    }
+
+    public List<JaneratorLayer> getLayers() {
+        return this.layers;
+    }
+
+    private void validateGeneratorKeys() {
+        Map<Integer, List<String>> layerErrors = new HashMap<>();
+
+        for (int layerNumber = 0; layerNumber < this.layers.size(); layerNumber++) {
+            JaneratorLayer layer = this.layers.get(layerNumber);
+
+            List<String> missingKeys = layer.involvedGeneratorKeys()
+                .stream()
+                .filter(key -> this.generatorByKey(key) == null)
+                .distinct()
+                .toList();
+
+            if (missingKeys.size() > 0) {
+                layerErrors.put(layerNumber, missingKeys);
+            }
+        }
+
+        if (layerErrors.size() > 0) {
+            throw new GraphingConfigException(
+                String.format(
+                    "Generator definitions are missing for the following keys: %s",
+                    String.join(
+                        "\n",
+                        layerErrors.entrySet().stream()
+                            .map(entry -> String.format("In Layer %d: [%s]", entry.getKey(), String.join(",", entry.getValue())))
+                            .toList()
+                    )
+                )
+            );
+        }
     }
 
     public List<ChunkGenerator> involvedGenerators() {
         List<ChunkGenerator> involvedGenerators = new ArrayList<>();
         involvedGenerators.add(this.defaultGenerator);
-        involvedGenerators.addAll(
-            this.layers.stream()
-                .flatMap(layer -> layer.getShading().involvedGenerators().stream())
-                .toList()
-        );
+        involvedGenerators.addAll(this.otherGenerators.values());
 
         return involvedGenerators;
+    }
+
+    public ChunkGenerator generatorByKey(String generatorKey) {
+        return generatorKey == "default" ? defaultGenerator : otherGenerators.get(generatorKey);
     }
 
     private ChunkGenerator sampleOne(List<ChunkGenerator> regularShading, int sectionX, int sectionZ) {
@@ -112,7 +159,7 @@ public class MultiGenOrganizer {
 
         for (JaneratorLayer layer : this.layers) {
             for (ShadeData shade : layer.shadesIn(chunk)) {
-                generatorShading.set(shade.index(), shade.generator());
+                generatorShading.set(shade.index(), this.generatorByKey(shade.generatorKey()));
                 layerShading.set(shade.index(), layer);
             }
         }

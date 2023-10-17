@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.quiltmc.loader.api.QuiltLoader;
@@ -96,6 +97,11 @@ public class ConfigFileManager {
                 new GraphProperties(
                     Level.OVERWORLD,
                     new MultiGenOrganizer(
+                        DefaultGenerators.createUnshadedOverworldGenerator(),
+                        Map.of(
+                            "grassy_mushroom", DefaultGenerators.createShadedOverworldGenerator(),
+                            "rainbow_outline", DefaultGenerators.createOutlineOverworldGenerator()
+                        ),
                         List.of(
                             new JaneratorLayer(
                                 new FunctionGrapher(
@@ -111,12 +117,11 @@ public class ConfigFileManager {
                                         "(z - x * tan(angle)) * sgn(tan(angle) * csc(angle)) > 0"
                                     )
                                 ),
-                                new NormalShading(DefaultGenerators.createShadedOverworldGenerator()),
-                                Optional.of(new NormalShading(DefaultGenerators.createOutlineOverworldGenerator())),
+                                new NormalShading("grassy_mushroom"),
+                                Optional.of(new NormalShading("rainbow_outline")),
                                 false
                             )
-                        ),
-                        DefaultGenerators.createUnshadedOverworldGenerator()
+                        )
                     )
 
                 )

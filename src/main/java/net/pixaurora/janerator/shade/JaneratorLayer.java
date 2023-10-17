@@ -51,6 +51,13 @@ public class JaneratorLayer implements JaneratorLayerData {
         return outlineShading;
     }
 
+    public List<String> involvedGeneratorKeys() {
+        List<String> keys = new ArrayList<>(this.shadingMethod.involvedGeneratorKeys());
+        this.outlineShading.ifPresent(outlineShading -> keys.addAll(outlineShading.involvedGeneratorKeys()));
+
+        return keys;
+    }
+
     @Override
     public boolean generateStructures() {
         return this.generateStructures;

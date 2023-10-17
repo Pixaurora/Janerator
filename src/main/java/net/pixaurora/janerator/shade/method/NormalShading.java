@@ -5,14 +5,13 @@ import java.util.List;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.pixaurora.janerator.config.SerialType;
 import net.pixaurora.janerator.graphing.Coordinate;
 
-public record NormalShading(ChunkGenerator generator) implements SimpleShadingMethod {
+public record NormalShading(String generatorKey) implements SimpleShadingMethod {
     public static final Codec<NormalShading> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
-            ChunkGenerator.CODEC.fieldOf("generator").forGetter(NormalShading::generator)
+            Codec.STRING.fieldOf("generator_key").forGetter(NormalShading::generatorKey)
         ).apply(instance, NormalShading::new)
     );
     public static final SerialType<ShadingMethod> TYPE = new SerialType<>("simple", CODEC);
@@ -24,11 +23,11 @@ public record NormalShading(ChunkGenerator generator) implements SimpleShadingMe
 
     @Override
     public ShadeData getShade(Coordinate pos) {
-        return new ShadeData(pos, this.generator);
+        return new ShadeData(pos, this.generatorKey);
     }
 
     @Override
-    public List<ChunkGenerator> involvedGenerators() {
-        return List.of(this.generator);
+    public List<String> involvedGeneratorKeys() {
+        return List.of(this.generatorKey);
     }
 }

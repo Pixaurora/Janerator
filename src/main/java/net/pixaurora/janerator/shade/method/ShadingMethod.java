@@ -7,6 +7,7 @@ import java.util.function.Function;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 
+import net.minecraft.world.level.ChunkPos;
 import net.pixaurora.janerator.config.SerialType;
 import net.pixaurora.janerator.config.SpecifiesType;
 import net.pixaurora.janerator.graphing.Coordinate;
@@ -28,7 +29,7 @@ public interface ShadingMethod extends SpecifiesType<ShadingMethod> {
         }
     );
 
-    public List<ShadeData> shadeIn(List<Coordinate> points);
+    public List<ShadeData> shadeIn(List<Coordinate> points, ChunkPos chunk);
 
     public List<String> involvedGeneratorKeys();
 

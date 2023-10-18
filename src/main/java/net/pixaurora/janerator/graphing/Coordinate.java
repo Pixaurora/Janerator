@@ -52,8 +52,16 @@ public record Coordinate(int x, int z) {
         return this.makeLegal(16);
     }
 
+    public double angle() {
+        return Math.atan2(this.z, this.x);
+    }
+
     public Coordinate offset(int x, int z) {
         return new Coordinate(this.x + x, this.z + z);
+    }
+
+    public Coordinate offset(Coordinate amount) {
+        return this.offset(amount.x, amount.z);
     }
 
     public Coordinate offsetIn(Direction8 direction) {

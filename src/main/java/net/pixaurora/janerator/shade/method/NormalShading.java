@@ -22,8 +22,8 @@ public record NormalShading(String generatorKey) implements SimpleShadingMethod 
     }
 
     @Override
-    public ShadeData getShade(Coordinate pos) {
-        return new ShadeData(pos, this.generatorKey);
+    public String getShade(Coordinate pos) {
+        return this.generatorKey;
     }
 
     @Override

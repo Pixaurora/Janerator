@@ -13,7 +13,7 @@ import net.pixaurora.janerator.config.SpecifiesType;
 import net.pixaurora.janerator.graphing.Coordinate;
 
 public interface ShadingMethod extends SpecifiesType<ShadingMethod> {
-    public static final List<SerialType<ShadingMethod>> TYPES = new ArrayList<>(List.of(NormalShading.TYPE));
+    public static final List<SerialType<ShadingMethod>> TYPES = new ArrayList<>(List.of(NormalShading.TYPE, PieShading.TYPE));
     public static final Codec<ShadingMethod> BASE_CODEC = new SerialType.Group<>("Shading method", TYPES).dispatchCodec();
     public static final Codec<ShadingMethod> CODEC = Codec.either(
         Codec.STRING,

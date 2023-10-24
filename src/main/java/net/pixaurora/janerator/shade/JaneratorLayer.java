@@ -66,8 +66,8 @@ public class JaneratorLayer implements JaneratorLayerData {
     public List<ShadeData> shadesIn(ChunkPos chunk) {
         GraphedChunk graph = this.grapher.getChunkGraph(chunk);
 
-        List<ShadeData> shades = new ArrayList<>(this.shadingMethod.shadeIn(graph.getShaded()));
-        this.outlineShading.ifPresent(outline -> shades.addAll(outline.shadeIn(graph.getOutlines())));
+        List<ShadeData> shades = new ArrayList<>(this.shadingMethod.shadeIn(graph.getShaded(), chunk));
+        this.outlineShading.ifPresent(outline -> shades.addAll(outline.shadeIn(graph.getOutlines(), chunk)));
 
         return shades;
     }

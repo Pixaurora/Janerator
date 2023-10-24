@@ -19,14 +19,14 @@ public class PieShading implements SimpleShadingMethod {
 
     private final List<String> generatorKeys;
 
-    private final double stepAmount;
-    private final int maxSlice;
+    private final double sliceArcLength;
+    private final int lastSliceIndex;
 
     public PieShading(List<String> generatorKeys) {
         this.generatorKeys = generatorKeys;
 
-        this.stepAmount = 2 * Math.PI / (generatorKeys.size());
-        this.maxSlice = generatorKeys.size() - 1;
+        this.sliceArcLength = 2 * Math.PI / (generatorKeys.size());
+        this.lastSliceIndex = generatorKeys.size() - 1;
     }
 
     @Override
@@ -40,8 +40,8 @@ public class PieShading implements SimpleShadingMethod {
     }
 
     private int getSlice(Coordinate pos) {
-        int slice = Mth.floor((pos.angle() + Math.PI) / this.stepAmount);
-        return Math.min(slice, maxSlice); // Because there is a straight 1-thick line that is out of bounds otherwise
+        int currentSlice = Mth.floor((pos.angle() + Math.PI) / this.sliceArcLength);
+        return Math.min(currentSlice, lastSliceIndex); // Because there is a straight 1-thick line that is out of bounds otherwise
     }
 
 	@Override

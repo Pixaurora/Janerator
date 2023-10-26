@@ -29,23 +29,23 @@ import net.pixaurora.janerator.worldgen.FullGeneratorLookup;
 public class MultiGenOrganizer {
     public static final Codec<MultiGenOrganizer> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
-            ChunkGenerator.CODEC.fieldOf("default_generator").forGetter(MultiGenOrganizer::getDefaultGenerator),
-            Codec.unboundedMap(Codec.STRING, ChunkGenerator.CODEC).fieldOf("other_generators").forGetter(MultiGenOrganizer::getOtherGenerators),
+            PreparedGenerators.CODEC.fieldOf("generators").forGetter(MultiGenOrganizer::getGenerators),
+            Codec.STRING.fieldOf("default_generator_key").forGetter(MultiGenOrganizer::getDefaultGeneratorKey),
             JaneratorLayer.CODEC.listOf().fieldOf("layers").forGetter(MultiGenOrganizer::getLayers)
         ).apply(instance, MultiGenOrganizer::new)
     );
 
-    private final ChunkGenerator defaultGenerator;
-    private final Map<String, ChunkGenerator> otherGenerators;
+    private final PreparedGenerators generators;
+    private final String defaultGeneratorKey;
 
     private final List<JaneratorLayer> layers;
 
     private int generatorCount;
     private LoadingCache<ChunkPos, FullGeneratorLookup> selectionCache;
 
-    public MultiGenOrganizer(ChunkGenerator defaultGenerator, Map<String, ChunkGenerator> keyedGenerators, List<JaneratorLayer> layers) {
-        this.defaultGenerator = defaultGenerator;
-        this.otherGenerators = keyedGenerators;
+    public MultiGenOrganizer(PreparedGenerators generators, String defaultGeneratorKey, List<JaneratorLayer> layers) {
+        this.generators = generators;
+        this.defaultGeneratorKey = defaultGeneratorKey;
 
         this.layers = layers;
 
@@ -60,12 +60,16 @@ public class MultiGenOrganizer {
             .build(CacheLoader.from(this::createLookup));
     }
 
-    public ChunkGenerator getDefaultGenerator() {
-        return this.defaultGenerator;
+    public String getDefaultGeneratorKey() {
+        return this.defaultGeneratorKey;
     }
 
-    public Map<String, ChunkGenerator> getOtherGenerators() {
-        return this.otherGenerators;
+    public ChunkGenerator getDefaultGenerator() {
+        return this.generators.get(defaultGeneratorKey);
+    }
+
+    public PreparedGenerators getGenerators() {
+        return this.generators;
     }
 
     public List<JaneratorLayer> getLayers() {
@@ -80,7 +84,7 @@ public class MultiGenOrganizer {
 
             List<String> missingKeys = layer.involvedGeneratorKeys()
                 .stream()
-                .filter(key -> this.generatorByKey(key) == null)
+                .filter(key -> this.generators.get(key) == null)
                 .distinct()
                 .toList();
 
@@ -106,14 +110,9 @@ public class MultiGenOrganizer {
 
     public List<ChunkGenerator> involvedGenerators() {
         List<ChunkGenerator> involvedGenerators = new ArrayList<>();
-        involvedGenerators.add(this.defaultGenerator);
-        involvedGenerators.addAll(this.otherGenerators.values());
+        involvedGenerators.addAll(this.generators.getAll());
 
         return involvedGenerators;
-    }
-
-    public ChunkGenerator generatorByKey(String generatorKey) {
-        return generatorKey == "default" ? defaultGenerator : otherGenerators.get(generatorKey);
     }
 
     private ChunkGenerator sampleOne(List<ChunkGenerator> regularShading, int sectionX, int sectionZ) {
@@ -154,12 +153,12 @@ public class MultiGenOrganizer {
     }
 
     private FullGeneratorLookup createLookup(ChunkPos chunk) {
-        List<ChunkGenerator> generatorShading = new ArrayList<>(Collections.nCopies(256, this.defaultGenerator));
+        List<ChunkGenerator> generatorShading = new ArrayList<>(Collections.nCopies(256, this.getDefaultGenerator()));
         List<JaneratorLayerData> layerShading = new ArrayList<>(Collections.nCopies(256, JaneratorLayerData.DEFAULT));
 
         for (JaneratorLayer layer : this.layers) {
             for (ShadeData shade : layer.shadesIn(chunk)) {
-                generatorShading.set(shade.index(), this.generatorByKey(shade.generatorKey()));
+                generatorShading.set(shade.index(), this.generators.get(shade.generatorKey()));
                 layerShading.set(shade.index(), layer);
             }
         }

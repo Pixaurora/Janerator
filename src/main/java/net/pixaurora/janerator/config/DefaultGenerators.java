@@ -3,12 +3,14 @@ package net.pixaurora.janerator.config;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.FixedBiomeSource;
@@ -22,6 +24,7 @@ import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.pixaurora.janerator.RegistryCache;
 import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
+import net.pixaurora.janerator.worldgen.generator.PreparedGenerators;
 import net.pixaurora.janerator.worldgen.generator.SlantedFlatGenerator;
 import net.pixaurora.janerator.worldgen.settings.SlantedFlatGeneratorSettings;
 
@@ -34,16 +37,6 @@ public class DefaultGenerators {
             new FlatLayerInfo(60, Blocks.STONE),
 
             new FlatLayerInfo(63, Blocks.DEEPSLATE),
-            new FlatLayerInfo(1, Blocks.BEDROCK)
-        );
-    }
-
-    public static ChunkGenerator createUnshadedOverworldGenerator() {
-        return createGenerator(
-            Biomes.MUSHROOM_FIELDS,
-            new FlatLayerInfo(1, Blocks.WHITE_CONCRETE),
-            new FlatLayerInfo(125, Blocks.GRAY_CONCRETE),
-
             new FlatLayerInfo(1, Blocks.BEDROCK)
         );
     }
@@ -104,6 +97,19 @@ public class DefaultGenerators {
         return new FlatLevelSource(
             new FlatLevelGeneratorSettings(optional, biome, placedFeatures)
                 .withBiomeAndLayers(layers, optional, biome)
+        );
+    }
+
+    public static PreparedGenerators getOverworldGenerators() {
+	return new PreparedGenerators(
+            Map.of(
+                "grassy_mushroom", createShadedOverworldGenerator(),
+                "rainbow_outline", createOutlineOverworldGenerator()
+            ),
+            Map.of(
+                 "default_overworld", Level.OVERWORLD
+            ),
+            RegistryCache.INSTANCE.getProvider(Registries.LEVEL_STEM)
         );
     }
 }

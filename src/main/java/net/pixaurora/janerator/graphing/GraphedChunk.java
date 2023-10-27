@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import net.minecraft.core.Direction8;
 import net.minecraft.world.level.ChunkPos;
 import net.pixaurora.janerator.graphing.grapher.ChunkGrapher;
 
@@ -70,13 +71,13 @@ public class GraphedChunk {
         return shadedCoordinates;
     }
 
-    public List<Coordinate> getOutlines() {
+    public List<Coordinate> getOutlines(Direction8[] neighborsToCheck) {
         List<Coordinate> outlinedPortion = new ArrayList<>();
 
         Map<ChunkPos, GraphedChunk> neighboringChunks = new HashMap<>(8);
 
         for (Coordinate coordinate : this.getShaded()) {
-            boolean hasContrastingNeighbor = coordinate.getNeighbors()
+            boolean hasContrastingNeighbor = coordinate.getNeighbors(neighborsToCheck)
                 .stream()
                 .anyMatch(
                     neighbor -> {

@@ -68,11 +68,7 @@ public record Coordinate(int x, int z) {
         return this.offset(direction.getStepX(), direction.getStepZ());
     }
 
-    public List<Coordinate> getNeighbors() {
-        return this.getNeighbors(Direction8.values());
-    }
-
-    public List<Coordinate> getNeighbors(Direction8... neighborDirections) {
+    public List<Coordinate> getNeighbors(Direction8[] neighborDirections) {
         List<Coordinate> neighbors = new ArrayList<>(neighborDirections.length);
 
         for (Direction8 direction : neighborDirections) {

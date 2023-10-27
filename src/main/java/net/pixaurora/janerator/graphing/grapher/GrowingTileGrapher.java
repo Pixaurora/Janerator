@@ -13,6 +13,7 @@ import net.pixaurora.janerator.graphing.Coordinate;
 import net.pixaurora.janerator.graphing.GraphFunction;
 import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
 import net.pixaurora.janerator.graphing.GraphedChunk;
+import net.pixaurora.janerator.graphing.OutlineType;
 
 public class GrowingTileGrapher implements ChunkGrapher {
     public static final Codec<GrowingTileGrapher> CODEC = RecordCodecBuilder.create(
@@ -130,8 +131,6 @@ public class GrowingTileGrapher implements ChunkGrapher {
         return this.cornerFunction.get().evaluate(cornerX, cornerZ) == 1.0;
     }
 
-    public static final Direction8[] CROSS = new Direction8[]{Direction8.WEST, Direction8.SOUTH, Direction8.NORTH, Direction8.EAST};
-
     @Override
     public boolean isPointShaded(Coordinate pos) {
         Tile xTile = this.convertToTile(pos.x());
@@ -144,7 +143,7 @@ public class GrowingTileGrapher implements ChunkGrapher {
 
         Coordinate offset = noOffset;
         int nudges = 0;
-        for (Direction8 direction : CROSS) {
+        for (Direction8 direction : OutlineType.INCLUDES_DIAGONALS.getNeighborsToCheck()) {
             Coordinate neighborPos = tilePos.offsetIn(direction);
 
             if (shade != this.isTileShaded(neighborPos)) {

@@ -115,6 +115,7 @@ public class ConfigFileManager {
                                 ),
                                 new NormalShading("grassy_mushroom"),
                                 Optional.of(new NormalShading("rainbow_outline")),
+                                false,
                                 false
                             )
                         )

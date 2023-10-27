@@ -44,8 +44,8 @@ public class PieShading implements SimpleShadingMethod {
         return Math.min(currentSlice, lastSliceIndex); // Because there is a straight 1-thick line that is out of bounds otherwise
     }
 
-	@Override
-	public String getShade(Coordinate pos) {
-		return this.generatorKeys.get(this.getSlice(pos));
-	}
+    @Override
+    public String getShade(Coordinate pos) {
+        return this.generatorKeys.get(this.getSlice(pos));
+    }
 }

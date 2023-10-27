@@ -8,13 +8,13 @@
 			"name": "Janerator",
 			"description": "A small server mod to generate superflat terrain in a normal world on the positive X coordinate.",
 			"contributors": {
-				"pixaurora": "Owner",
+				"Pixaurora": "Owner",
                 "LostLuma": "Contributor"
 			},
 			"contact": {
-				"homepage": "https://github.com/pixaurora/Janerator",
-				"issues": "https://github.com/pixaurora/Janerator/issues",
-				"sources": "https://github.com/pixaurora/Janerator"
+				"homepage": "https://github.com/Pixaurora/Janerator",
+				"issues": "https://github.com/Pixaurora/Janerator/issues",
+				"sources": "https://github.com/Pixaurora/Janerator"
 			},
 			"icon": "assets/janerator/icon.png",
             "license": "MIT"
@@ -28,7 +28,7 @@
 			},
             {
             "id": "minecraft",
-            "versions": "=1.20.2"
+            "versions": "<=1.20.3"
             }
 		]
 	},

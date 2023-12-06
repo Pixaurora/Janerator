@@ -22,7 +22,7 @@ import net.pixaurora.janerator.graphing.GraphFunctionDefinition;
 import net.pixaurora.janerator.graphing.grapher.FunctionGrapher;
 import net.pixaurora.janerator.shade.JaneratorLayer;
 import net.pixaurora.janerator.shade.method.NormalShading;
-import net.pixaurora.janerator.worldgen.FeatureFilter;
+import net.pixaurora.janerator.worldgen.feature.FeatureFilter;
 import net.pixaurora.janerator.worldgen.generator.MultiGenOrganizer;
 
 public class ConfigFileManager {

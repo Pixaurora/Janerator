@@ -25,10 +25,10 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.pixaurora.janerator.worldgen.FeatureFilter;
 import net.pixaurora.janerator.worldgen.GeneratorLookup;
 import net.pixaurora.janerator.worldgen.PlacementSelection;
 import net.pixaurora.janerator.worldgen.WrappedBiomeResolver;
+import net.pixaurora.janerator.worldgen.feature.FeatureFilter;
 
 public class MultiGenerator extends ChunkGenerator {
     private MultiGenOrganizer organizer;

@@ -33,7 +33,8 @@
 		]
 	},
 	"mixin": [
-        "janerator.mixins.json"
+        "janerator.mixins.json",
+        "janerator.test.mixins.json"
     ],
     "quilt_loom": {
         "injected_interfaces": {

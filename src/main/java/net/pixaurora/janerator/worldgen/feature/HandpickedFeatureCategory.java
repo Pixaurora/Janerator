@@ -1,12 +1,15 @@
 package net.pixaurora.janerator.worldgen.feature;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
 
 import net.minecraft.data.worldgen.features.AquaticFeatures;
 import net.minecraft.data.worldgen.features.CaveFeatures;
+import net.minecraft.data.worldgen.features.MiscOverworldFeatures;
 import net.minecraft.data.worldgen.features.NetherFeatures;
+import net.minecraft.data.worldgen.features.PileFeatures;
 import net.minecraft.data.worldgen.features.TreeFeatures;
 import net.minecraft.data.worldgen.features.VegetationFeatures;
 import net.minecraft.resources.ResourceKey;
@@ -35,22 +38,44 @@ public enum HandpickedFeatureCategory {
             TreeFeatures.MEGA_PINE, TreeFeatures.MEGA_SPRUCE, TreeFeatures.OAK, TreeFeatures.OAK_BEES_0002, TreeFeatures.OAK_BEES_002,
             TreeFeatures.OAK_BEES_005, TreeFeatures.PINE, TreeFeatures.SPRUCE, TreeFeatures.SUPER_BIRCH_BEES,
             TreeFeatures.SUPER_BIRCH_BEES_0002, TreeFeatures.SWAMP_OAK, TreeFeatures.TALL_MANGROVE, TreeFeatures.WARPED_FUNGUS,
-            TreeFeatures.WARPED_FUNGUS_PLANTED, VegetationFeatures.BAMBOO_NO_PODZOL, VegetationFeatures.BAMBOO_SOME_PODZOL,
-            VegetationFeatures.BAMBOO_VEGETATION, VegetationFeatures.BIRCH_TALL, VegetationFeatures.DARK_FOREST_VEGETATION,
-            VegetationFeatures.MANGROVE_VEGETATION, VegetationFeatures.MEADOW_TREES, VegetationFeatures.MUSHROOM_ISLAND_VEGETATION,
-            VegetationFeatures.TREES_BIRCH_AND_OAK, VegetationFeatures.TREES_GROVE, VegetationFeatures.TREES_JUNGLE,
-            VegetationFeatures.TREES_OLD_GROWTH_PINE_TAIGA, VegetationFeatures.TREES_OLD_GROWTH_SPRUCE_TAIGA, VegetationFeatures.TREES_PLAINS,
-            VegetationFeatures.TREES_SAVANNA, VegetationFeatures.TREES_SPARSE_JUNGLE, VegetationFeatures.TREES_TAIGA,
-            VegetationFeatures.TREES_WATER, VegetationFeatures.TREES_WINDSWEPT_HILLS)),
+            TreeFeatures.WARPED_FUNGUS_PLANTED, VegetationFeatures.BAMBOO_VEGETATION, VegetationFeatures.BIRCH_TALL,
+            VegetationFeatures.DARK_FOREST_VEGETATION, VegetationFeatures.MANGROVE_VEGETATION, VegetationFeatures.MEADOW_TREES,
+            VegetationFeatures.MUSHROOM_ISLAND_VEGETATION, VegetationFeatures.TREES_BIRCH_AND_OAK, VegetationFeatures.TREES_FLOWER_FOREST,
+            VegetationFeatures.TREES_GROVE, VegetationFeatures.TREES_JUNGLE, VegetationFeatures.TREES_OLD_GROWTH_PINE_TAIGA,
+            VegetationFeatures.TREES_OLD_GROWTH_SPRUCE_TAIGA, VegetationFeatures.TREES_PLAINS, VegetationFeatures.TREES_SAVANNA,
+            VegetationFeatures.TREES_SPARSE_JUNGLE, VegetationFeatures.TREES_TAIGA, VegetationFeatures.TREES_WATER,
+            VegetationFeatures.TREES_WINDSWEPT_HILLS)),
 
     /**
-     * Small surface plants that don't take up a lot of place and rest close to the
-     * ground.
+     * Small surface plants that don't take up a lot of space, don't replace the
+     * space they're anchored to, and rest close to the ground or the wall.
      *
-     * Notable examples include pumpkin patches, flowers, and a few others.
+     * Notable examples include pumpkin patches, flowers, and vines.
      */
-    SCATTERED_PLANTS(List.of(CaveFeatures.CAVE_VINE, CaveFeatures.CAVE_VINE_IN_MOSS, CaveFeatures.DRIPLEAF, CaveFeatures.MOSS_VEGETATION,
-            CaveFeatures.SPORE_BLOSSOM)),
+    SCATTERED_PLANTS(List.of(CaveFeatures.CAVE_VINE, CaveFeatures.CAVE_VINE_IN_MOSS, CaveFeatures.DRIPLEAF, CaveFeatures.GLOW_LICHEN,
+            CaveFeatures.MOSS_VEGETATION, CaveFeatures.SPORE_BLOSSOM, PileFeatures.PILE_MELON, PileFeatures.PILE_PUMPKIN,
+            VegetationFeatures.BAMBOO_NO_PODZOL, VegetationFeatures.FLOWER_CHERRY, VegetationFeatures.FLOWER_DEFAULT,
+            VegetationFeatures.FLOWER_FLOWER_FOREST, VegetationFeatures.FLOWER_MEADOW, VegetationFeatures.FLOWER_PLAIN,
+            VegetationFeatures.FLOWER_SWAMP, VegetationFeatures.FOREST_FLOWERS, VegetationFeatures.PATCH_BERRY_BUSH,
+            VegetationFeatures.PATCH_BROWN_MUSHROOM, VegetationFeatures.PATCH_CACTUS, VegetationFeatures.PATCH_DEAD_BUSH,
+            VegetationFeatures.PATCH_GRASS, VegetationFeatures.PATCH_GRASS_JUNGLE, VegetationFeatures.PATCH_LARGE_FERN,
+            VegetationFeatures.PATCH_MELON, VegetationFeatures.PATCH_PUMPKIN, VegetationFeatures.PATCH_RED_MUSHROOM,
+            VegetationFeatures.PATCH_SUGAR_CANE, VegetationFeatures.PATCH_SUNFLOWER, VegetationFeatures.PATCH_TAIGA_GRASS,
+            VegetationFeatures.PATCH_TALL_GRASS, VegetationFeatures.PATCH_WATERLILY, VegetationFeatures.SINGLE_PIECE_OF_GRASS,
+            VegetationFeatures.VINES)),
+
+    /**
+     * Features that replace the ground below them, turning it into sand, clay,
+     * podzol, and more.
+     *
+     * It may also replace the ceiling, but with the general rule that this feature
+     * replaces blocks more than it adds them.
+     */
+    REPLACES_FLOOR(List.of(CaveFeatures.DRIPSTONE_CLUSTER, CaveFeatures.CLAY_POOL_WITH_DRIPLEAVES, CaveFeatures.CLAY_WITH_DRIPLEAVES,
+            CaveFeatures.LUSH_CAVES_CLAY, CaveFeatures.MOSS_PATCH, CaveFeatures.MOSS_PATCH_BONEMEAL, CaveFeatures.MOSS_PATCH_CEILING,
+            CaveFeatures.SCULK_PATCH_ANCIENT_CITY, CaveFeatures.SCULK_PATCH_DEEP_DARK, CaveFeatures.SCULK_VEIN, MiscOverworldFeatures.DISK_CLAY,
+            MiscOverworldFeatures.DISK_GRASS, MiscOverworldFeatures.DISK_GRAVEL, MiscOverworldFeatures.DISK_SAND,
+            MiscOverworldFeatures.FOREST_ROCK, VegetationFeatures.BAMBOO_SOME_PODZOL)),
 
     /**
      * Some subsurface water plants and decoration, similar to the scattered plants.

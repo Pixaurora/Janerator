@@ -1,3 +1,5 @@
+# ⚠️ This repo has been transferred to Forgejo. New commits can now be found at [https://code.lostluma.net/Pixaurora/janerator](https://code.lostluma.net/Pixaurora/janerator). ⚠️
+
 # Janerator
 
 A mod for using multiple types of generators in a single Minecraft world to have more varied terrain, such as flat and normal.
